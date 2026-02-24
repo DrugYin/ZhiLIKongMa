@@ -2,6 +2,7 @@
 .container {
   height: 100vh;
   overflow: hidden;
+  overflow-x: hidden;
 }
 
 .header {
@@ -17,12 +18,13 @@
   justify-content: center;
   padding-top: 0;
   overflow-y: auto;
+  overflow-x: hidden;
 }
 
 .login-card,
 .first-login-card {
   width: 80%;
-  max-width: 500px;
+  /* max-width: 500px; */
   max-height: 85vh;
   margin: 0 auto;
   padding: 10px;
@@ -31,6 +33,8 @@
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
   text-align: center;
   overflow-y: auto;
+  overflow-x: hidden;
+  touch-action: pan-y;
 }
 
 .login-card-tab {
@@ -40,7 +44,7 @@
 }
 
 .bigger {
-  width: 90%;
+  width: 100%;
   font-size: 32rpx;
   --td-tab-font: var(--td-font-body-large);
 }
@@ -56,6 +60,8 @@
   justify-content: center;
   text-align: center;
   padding: 20px;
+  overflow-x: hidden;
+  touch-action: pan-y;
 }
 
 .switch-login-mode {
@@ -111,10 +117,23 @@
 }
 
 /* 注册表单样式调整 */
+.teacher-register-form {
+  gap: 12px;
+  align-items: stretch;
+  padding: 10px 0;
+  overflow-x: hidden;
+}
+
+.teacher-register-form .avatar-wrapper {
+  align-self: center;
+  margin: 0 0 8px 0;
+}
+
 .student-register-form {
   gap: 12px;
   align-items: stretch;
   padding: 10px 0;
+  overflow-x: hidden;
 }
 
 .student-register-form .avatar-wrapper {

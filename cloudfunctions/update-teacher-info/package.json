@@ -1,0 +1,9 @@
+{
+  "name": "update-teacher-info",
+  "version": "1.0.0",
+  "description": "更新教师信息",
+  "main": "index.js",
+  "dependencies": {
+    "wx-server-sdk": "~2.6.3"
+  }
+}

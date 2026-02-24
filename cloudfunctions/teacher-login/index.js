@@ -33,10 +33,19 @@ exports.main = async (event, context) => {
         msg: '密码错误'
       }
     }
+    const needImprove = !teacher.userName || !teacher.projectId
     return {
       code: 200,
       success: true,
-      data: teacher,
+      data: {
+        avatarUrl: teacher.avatarUrl || '/assets/default-avatar.png',
+        userName: teacher.userName || '',
+        projectId: teacher.projectId || '',
+        _id: teacher._id,
+        openid: teacher.openid || '',
+        phone: teacher.phone || '',
+        needImprove: needImprove
+      },
       msg: '登录成功'
     }
   } catch (e) {

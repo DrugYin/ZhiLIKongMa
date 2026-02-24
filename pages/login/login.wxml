@@ -13,14 +13,25 @@
         </t-tabs>
         <view wx:if="{{ isTeacherLogin }}" class="teacher-login-form">
           <view wx:if="{{ usePasswordLogin }}">
-            <t-input label="账号" placeholder="请输入账号" value="{{ loginAccount }}" />
             <t-input 
-              label="密码" 
+              placeholder="请输入账号" 
+              value="{{ loginAccount }}"
+              bind:change="onInputChange"
+              data-field="loginAccount"
+            >
+              <view slot="label" class="custom-required-label"> 账号 </view>
+            </t-input>
+            <t-input
               type="password" 
-              placeholder="请输入密码" 
-              value="{{ loginPassword }}" />
+              placeholder="请输入密码"
+              value="{{ loginPassword }}"
+              bind:change="onInputChange" 
+              data-field="loginPassword"
+            >
+              <view slot="label" class="custom-required-label"> 密码 </view>
+            </t-input>
             <button
-              bindtap="teacherLogin"
+              bindtap="teacherPasswordLogin"
               class="action-btn primary-btn"
             > 
               登录
@@ -50,23 +61,55 @@
     </view>
     <view wx:else class="first-login-card">
       <view wx:if="{{ isTeacherLogin }}" class="teacher-register-form">
-        
-      </view>
-      <view wx:else class="student-register-form">
-        <button class="avatar-wrapper" open-type="chooseAvatar" bind:chooseavatar="onChooseAvatar">
-          <image class="avatar" src="{{userInfo.avatarUrl || '/assets/default-avatar.png'}}" mode="aspectFill" />
+        <button class="avatar-wrapper" open-type="chooseAvatar" bind:chooseavatar="onChooseAvatar" data-field="teacherInfo.avatarUrl">
+          <image class="avatar" src="{{teacherInfo.avatarUrl || defaultAvatarUrl}}" mode="aspectFill" />
         </button>
-        <t-input placeholder="请输入真实姓名" value="{{ userInfo.userName }}" bind:change="onInputChange" data-field="userName">
+        <t-input placeholder="请输入真实姓名" value="{{ teacherInfo.name }}" bind:change="onInputChange" data-field="teacherInfo.name">
           <view slot="label" class="custom-required-label"> 姓名 </view>
         </t-input>
-        <t-input placeholder="请输入学校" value="{{ userInfo.school }}" bind:change="onInputChange" data-field="school">
+        <t-input
+          placeholder="输入手机号码"
+          value="{{ teacherInfo.phone }}"
+          type="number"
+          tips="{{ phoneError ? '手机号输入不正确' : ''}}"
+          bindchange="onPhoneInput"
+          data-field="teacherInfo.phone"
+        >
+          <view slot="label" class="custom-required-label"> 电话 </view>
+        </t-input>
+        <t-cell title="项目" arrow required hover note="{{ teacherInfo.project || '请选择' }}" bind:click="onProjectPicker" />
+        <t-picker
+          visible="{{ projectPickerVisible }}"
+          value="{{ teacherInfo.project }}"
+          data-key="teacherInfo.project"
+          title="选择项目"
+          cancelBtn="取消"
+          confirmBtn="确定"
+          usingCustomNavbar
+          bindcancel="onPickerCancel"
+          bindpick="onColumnChange"
+          bindchange="onPickerChange"
+        >
+          <t-picker-item options="{{ projects }}" />
+        </t-picker>
+        <t-button style="width: 60%" theme="primary" size="large" shape="round" bind:tap="teacherRegister" >提交并绑定微信</t-button>
+      </view>
+      <view wx:else 
+      class="student-register-form">
+        <button class="avatar-wrapper" open-type="chooseAvatar" bind:chooseavatar="onChooseAvatar" data-field="userInfo.avatarUrl">
+          <image class="avatar" src="{{userInfo.avatarUrl || defaultAvatarUrl}}" mode="aspectFill" />
+        </button>
+        <t-input placeholder="请输入真实姓名" value="{{ userInfo.userName }}" bind:change="onInputChange" data-field="userInfo.userName">
+          <view slot="label" class="custom-required-label"> 姓名 </view>
+        </t-input>
+        <t-input placeholder="请输入学校" value="{{ userInfo.school }}" bind:change="onInputChange" data-field="userInfo.school">
           <view slot="label" class="custom-required-label"> 学校 </view>
         </t-input>
         <t-cell title="年级" arrow required hover note="{{ userInfo.grade || '请选择' }}" bind:click="onGradePicker" />
         <t-picker
           visible="{{ gradePickerVisible }}"
           value="{{ userInfo.grade }}"
-          data-key="grade"
+          data-key="userInfo.grade"
           title="选择年级"
           cancelBtn="取消"
           confirmBtn="确定"
@@ -83,11 +126,11 @@
           type="number"
           tips="{{ phoneError ? '手机号输入不正确' : ''}}"
           bindchange="onPhoneInput"
-          data-field="phone"
+          data-field="userInfo.phone"
         >
           <view slot="label" class="custom-required-label"> 电话 </view>
         </t-input>
-        <t-input label="地址" placeholder="请输入地址" value="{{ userInfo.address }}" bind:change="onInputChange" data-field="address"/>
+        <t-input label="地址" placeholder="请输入地址" value="{{ userInfo.address }}" bind:change="onInputChange" data-field="userInfo.address"/>
         <t-button style="width: 60%" theme="primary" size="large" shape="round" bind:tap="studentRegister" >注册</t-button>
       </view>
     </view>
