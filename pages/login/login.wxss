@@ -1,0 +1,130 @@
+/* pages/login/login.wxss */
+.container {
+  height: 100vh;
+  overflow: hidden;
+}
+
+.header {
+  position: fixed;
+  top: 0;
+}
+
+.content {
+  height: 100vh;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding-top: 0;
+  overflow-y: auto;
+}
+
+.login-card,
+.first-login-card {
+  width: 80%;
+  max-width: 500px;
+  max-height: 85vh;
+  margin: 0 auto;
+  padding: 10px;
+  border-radius: 10px;
+  background-color: #fff;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+  text-align: center;
+  overflow-y: auto;
+}
+
+.login-card-tab {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.bigger {
+  width: 90%;
+  font-size: 32rpx;
+  --td-tab-font: var(--td-font-body-large);
+}
+
+.teacher-login-form,
+.student-login-form,
+.teacher-register-form,
+.student-register-form {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 20px;
+}
+
+.switch-login-mode {
+  text-align: center;
+  margin-top: 30rpx;
+  color: #007AFF;
+  font-size: 28rpx;
+}
+
+/* 按钮样式 */
+.action-btn {
+  width: 100%;
+  height: 88rpx;
+  border-radius: 44rpx;
+  font-size: 32rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.primary-btn {
+  background: linear-gradient(to right, #007AFF, #0056b3);
+  color: #fff;
+  margin-top: 20rpx;
+}
+
+/* 微信一键登录按钮 */
+.wechat-btn {
+  background: linear-gradient(to right, #07c160, #05a050);
+  color: #fff;
+  margin-bottom: 20rpx;
+}
+
+/* 头像 */
+.avatar-wrapper {
+  padding: 0;
+  width: 80px !important;
+  border-radius: 8px;
+  margin-bottom: 40px;
+}
+
+.avatar {
+  display: block;
+  width: 80px;
+  height: 80px;
+}
+
+.custom-required-label::after {
+  content: '*';
+  color: red;
+  font-size: 32rpx;
+  margin-left: 4rpx;
+}
+
+/* 注册表单样式调整 */
+.student-register-form {
+  gap: 12px;
+  align-items: stretch;
+  padding: 10px 0;
+}
+
+.student-register-form .avatar-wrapper {
+  align-self: center;
+  margin: 0 0 8px 0;
+}
+
+/* 减小表单元素间距 */
+.student-register-form t-input,
+.student-register-form t-cell,
+.student-register-form t-button {
+  margin-bottom: 4px;
+}

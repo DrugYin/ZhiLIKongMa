@@ -1,0 +1,9 @@
+{
+  "name": "register-student",
+  "version": "1.0.0",
+  "description": "注册学生",
+  "main": "index.js",
+  "dependencies": {
+    "wx-server-sdk": "~2.6.3"
+  }
+}

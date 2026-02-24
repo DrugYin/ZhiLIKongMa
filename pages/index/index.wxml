@@ -1,0 +1,10 @@
+<!--index.wxml-->
+<view class="container">
+  <view class="header">
+    <t-navbar title="智力控码" placeholder t-class-title="nav-title"/>
+  </view>
+  <view class="content">
+    主页
+  </view>
+  <custom-tab-bar />
+</view>

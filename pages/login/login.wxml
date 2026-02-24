@@ -1,0 +1,96 @@
+<!--pages/login/login.wxml-->
+<t-toast id="t-toast" />
+<view class="container">
+  <view class="header">
+    <t-navbar title="智力控码" placeholder t-class-title="nav-title" left-arrow bind:go-back="handleGoBack"/>
+  </view>
+  <view class="content">
+    <view wx:if="{{ !isFirstLogin }}" class="login-card">
+      <view class="login-card-tab">
+        <t-tabs class="bigger" bottom-line-mode="full" defaultValue="{{false}}" bind:change="onTabsChange">
+          <t-tab-panel label="学生登录" value="{{false}}" />
+          <t-tab-panel label="教师登录" value="{{true}}" />
+        </t-tabs>
+        <view wx:if="{{ isTeacherLogin }}" class="teacher-login-form">
+          <view wx:if="{{ usePasswordLogin }}">
+            <t-input label="账号" placeholder="请输入账号" value="{{ loginAccount }}" />
+            <t-input 
+              label="密码" 
+              type="password" 
+              placeholder="请输入密码" 
+              value="{{ loginPassword }}" />
+            <button
+              bindtap="teacherLogin"
+              class="action-btn primary-btn"
+            > 
+              登录
+            </button>
+          </view>
+          <view wx:else style="width: 70%;">
+            <button
+              bindtap="teacherLogin"
+              class="action-btn wechat-btn"
+            >
+              微信一键登录
+            </button>
+          </view>
+          <text class="switch-login-mode" bind:tap="handleChangeLoginType">{{ usePasswordLogin ? '使用微信一键登录' : '使用账号密码登录'}}</text>
+        </view>
+        <view wx:else class="student-login-form">
+          <view style="width: 70%;">
+            <button
+              bindtap="studentLogin"
+              class="action-btn wechat-btn"
+            >
+              微信一键登录
+            </button>
+          </view>
+        </view>
+      </view>
+    </view>
+    <view wx:else class="first-login-card">
+      <view wx:if="{{ isTeacherLogin }}" class="teacher-register-form">
+        
+      </view>
+      <view wx:else class="student-register-form">
+        <button class="avatar-wrapper" open-type="chooseAvatar" bind:chooseavatar="onChooseAvatar">
+          <image class="avatar" src="{{userInfo.avatarUrl || '/assets/default-avatar.png'}}" mode="aspectFill" />
+        </button>
+        <t-input placeholder="请输入真实姓名" value="{{ userInfo.userName }}" bind:change="onInputChange" data-field="userName">
+          <view slot="label" class="custom-required-label"> 姓名 </view>
+        </t-input>
+        <t-input placeholder="请输入学校" value="{{ userInfo.school }}" bind:change="onInputChange" data-field="school">
+          <view slot="label" class="custom-required-label"> 学校 </view>
+        </t-input>
+        <t-cell title="年级" arrow required hover note="{{ userInfo.grade || '请选择' }}" bind:click="onGradePicker" />
+        <t-picker
+          visible="{{ gradePickerVisible }}"
+          value="{{ userInfo.grade }}"
+          data-key="grade"
+          title="选择年级"
+          cancelBtn="取消"
+          confirmBtn="确定"
+          usingCustomNavbar
+          bindcancel="onPickerCancel"
+          bindpick="onColumnChange"
+          bindchange="onPickerChange"
+        >
+          <t-picker-item options="{{ grades }}" />
+        </t-picker>
+        <t-input
+          placeholder="输入手机号码"
+          value="{{ userInfo.phone }}"
+          type="number"
+          tips="{{ phoneError ? '手机号输入不正确' : ''}}"
+          bindchange="onPhoneInput"
+          data-field="phone"
+        >
+          <view slot="label" class="custom-required-label"> 电话 </view>
+        </t-input>
+        <t-input label="地址" placeholder="请输入地址" value="{{ userInfo.address }}" bind:change="onInputChange" data-field="address"/>
+        <t-button style="width: 60%" theme="primary" size="large" shape="round" bind:tap="studentRegister" >注册</t-button>
+      </view>
+    </view>
+  </view>
+
+</view>

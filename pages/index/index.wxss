@@ -1,0 +1,5 @@
+/**index.wxss**/
+.header {
+  position: fixed;
+  top: 0;
+}
