@@ -12,7 +12,6 @@ Page({
   onShow() {
     this.loadUserInfo()
     this.getTabBar().init('/pages/student/mine/mine')
-    console.log('userInfo', this.data.userInfo)
   },
 
   onLoad() {
