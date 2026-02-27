@@ -1,0 +1,10 @@
+<!--pages/student/setting/setting.wxml-->
+<view class="container">
+  <view class="header">
+    <t-navbar title="设置" placeholder t-class-title="nav-title" left-arrow bind:go-back="handleGoBack"/>
+  </view>
+  <view class="content">
+    主页
+  </view>
+  <custom-tab-bar />
+</view>

@@ -3,7 +3,8 @@
     "pages/index/index",
     "pages/student/mine/mine",
     "pages/login/login",
-    "pages/teacher/index"
+    "pages/teacher/index",
+    "pages/student/setting/setting"
   ],
   "tabBar": {
     "custom": true,
