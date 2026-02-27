@@ -28,7 +28,7 @@
       <t-cell-group theme="card" class="function-list">
         <t-cell title="✅ 已提交任务" hover arrow url="{{ isLogin ? '/pages/student/submissions/submissions' : '/pages/login/login' }}" />
         <t-cell title="🎓 我的班级" hover arrow url="{{ isLogin ? '/pages/student/class-manege/class-manege' : '/pages/login/login' }}" />
-        <t-cell title="⚙️ 设置" hover arrow url="{{ isLogin ? '/pages/student/setting/setting' : '/pages/login/login'}}" />
+        <t-cell title="⚙️ 账号设置" hover arrow url="{{ isLogin ? '/pages/student/setting/setting' : '/pages/login/login'}}" />
         <t-cell wx:if="{{ isLogin }}" title="🚪 退出登录" hover arrow bind:click="onLogout" />
         <t-dialog
           visible="{{ showLogout}}"

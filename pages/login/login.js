@@ -203,7 +203,6 @@ Page({
     this.setData({
       [`${field}`]: value
     });
-    
   },
 
   studentLogin() {

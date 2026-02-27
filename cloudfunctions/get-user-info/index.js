@@ -31,7 +31,16 @@ exports.main = async (event, context) => {
     return {
       code: 200,
       success: true,
-      data: student,
+      data: {
+        openid: student.openid,
+        avatarUrl: student.avatarUrl,
+        address: student.address,
+        grade: student.grade,
+        school: student.school,
+        userName: student.userName,
+        points: student.points,
+        phone: student.phone
+      },
       msg: '获取成功'
     }
 

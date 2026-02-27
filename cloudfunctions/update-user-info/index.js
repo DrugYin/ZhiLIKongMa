@@ -32,9 +32,11 @@ exports.main = async (event, context) => {
         ...userInfo
       }
     })
+    const result = await cloud.database().collection('students').doc(student._id).get()
     return {
       code: 200,
       success: true,
+      data: result.data,
       msg: '更新成功'
     }
     
@@ -42,7 +44,7 @@ exports.main = async (event, context) => {
     return {
       code: 500,
       success: false,
-      msg: '更新失败'
+      msg: '更新失败' + e
     }
   }
 }

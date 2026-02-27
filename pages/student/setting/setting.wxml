@@ -1,10 +1,78 @@
 <!--pages/student/setting/setting.wxml-->
+<t-toast id="t-toast" />
 <view class="container">
   <view class="header">
-    <t-navbar title="设置" placeholder t-class-title="nav-title" left-arrow bind:go-back="handleGoBack"/>
+    <t-navbar title="账号设置" placeholder t-class-title="nav-title" left-arrow bind:go-back="handleGoBack"/>
   </view>
   <view class="content">
-    主页
+    <!-- 头像 -->
+    <view>
+      <button class="avatar-wrapper" open-type="chooseAvatar" bind:chooseavatar="onChooseAvatar" data-field="userInfo.avatarUrl">
+        <image class="avatar" src="{{userInfo.avatarUrl || defaultAvatarUrl}}" mode="aspectFill" />
+      </button>
+      <text class="avatar-text">点击修改头像</text>
+    </view>
+    <!-- 信息 -->
+    <view class="info-wrapper">
+      <text class="info-title">基本信息</text>
+      <t-divider />
+      <t-input 
+        placeholder="请输入真实姓名" 
+        value="{{ userInfo.userName }}" 
+        bind:change="onInputChange" 
+        data-field="userInfo.userName" 
+        align="right"
+      >
+        <view slot="label" class="custom-required-label"> 姓名 </view>
+      </t-input>
+      <t-input 
+        placeholder="请输入学校" 
+        value="{{ userInfo.school }}" 
+        bind:change="onInputChange" 
+        data-field="userInfo.school" 
+        align="right"
+      >
+        <view slot="label" class="custom-required-label"> 学校 </view>
+      </t-input>
+      <t-cell title="年级" arrow required hover note="{{ userInfo.grade || '请选择' }}" bind:click="onGradePicker" />
+      <t-picker
+        visible="{{ gradePickerVisible }}"
+        value="{{ userInfo.grade }}"
+        data-key="userInfo.grade"
+        title="选择年级"
+        cancelBtn="取消"
+        confirmBtn="确定"
+        usingCustomNavbar
+        bindcancel="onPickerCancel"
+        bindpick="onColumnChange"
+        bindchange="onPickerChange"
+      >
+        <t-picker-item options="{{ grades }}" />
+      </t-picker>
+      <t-input
+        placeholder="输入手机号码"
+        value="{{ userInfo.phone }}"
+        type="number"
+        tips="{{ phoneError ? '手机号输入不正确' : ''}}"
+        bindchange="onPhoneInput"
+        data-field="userInfo.phone"
+        align="right"
+      >
+        <view slot="label" class="custom-required-label"> 电话 </view>
+      </t-input>
+      <t-input 
+        label="地址" 
+        placeholder="请输入地址" 
+        value="{{ userInfo.address }}" 
+        bind:change="onInputChange" 
+        data-field="userInfo.address" 
+        align="right"
+      />
+    </view>
+    <!-- 功能区 -->
+    <view class="action-wrapper">
+      <t-button wx:if="{{!loading}}" theme="primary" size="large" shape="round" bind:tap="onSave">保存修改</t-button>
+      <t-button wx:else theme="primary" size="large" loading shape="round">加载中</t-button>
+    </view>
   </view>
-  <custom-tab-bar />
 </view>

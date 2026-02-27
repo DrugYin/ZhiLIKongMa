@@ -21,7 +21,7 @@
   justify-content: space-between;
   background: linear-gradient(135deg, #728af6 0%, #e5cefd 100%);
   border-radius: 25rpx;
-  width: 70%;
+  width: 80%;
   margin: 40rpx auto;
   padding: 60rpx 40rpx;
 }
@@ -58,7 +58,7 @@
   display: flex;
   justify-content: center;
   margin: 40rpx auto;
-  width: 80%;
+  width: 90%;
   background: #fff;
   border-radius: 24rpx;
   box-shadow: 0 4rpx 16rpx rgba(0, 0, 0, 0.06);
@@ -90,7 +90,7 @@
 
 .function-card {
   margin: 40rpx auto;
-  width: 80%;
+  width: 90%;
   background: #fff;
   border-radius: 24rpx;
   box-shadow: 0 4rpx 16rpx rgba(0, 0, 0, 0.06);
