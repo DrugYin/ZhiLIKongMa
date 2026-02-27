@@ -7,11 +7,12 @@ Page({
     userInfo: [],
     loginCode: '',
     isLogin: false,
-    showLogout: false
+    showLogout: false,
   },
   onShow() {
     this.loadUserInfo()
     this.getTabBar().init('/pages/student/mine/mine')
+    console.log('userInfo', this.data.userInfo)
   },
 
   onLoad() {
@@ -62,8 +63,35 @@ Page({
     if (userInfo && (isStudentLogin || isTeacherLogin)) {
       this.setData({
         userInfo: userInfo,
-        isLogin: true
+        isLogin: true,
       })
+    }
+    this.updateUserInfo()
+  },
+
+  updateUserInfo() {
+    try {
+      const openid = wx.getStorageSync('openid')
+      wx.cloud.callFunction({
+        name: 'get-user-info',
+        data: {
+          openid: openid
+        }
+      }).then(res => {
+        if (res && res.result && res.result.code === 200) {
+          const userInfo = res.result.data
+          this.setData({
+            userInfo: userInfo
+          })
+          wx.setStorageSync('userInfo', userInfo)
+        }
+      })
+    } catch(e) {
+      wx.showToast({
+        title: '更新失败',
+        icon: 'none'
+      })
+      console.log(e)
     }
   },
 
