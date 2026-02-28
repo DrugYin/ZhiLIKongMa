@@ -65,7 +65,9 @@ Page({
         isLogin: true,
       })
     }
-    this.updateUserInfo()
+    if (this.data.isLogin) {
+      this.updateUserInfo()
+    }
   },
 
   updateUserInfo() {

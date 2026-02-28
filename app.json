@@ -4,7 +4,8 @@
     "pages/student/mine/mine",
     "pages/login/login",
     "pages/teacher/index",
-    "pages/student/setting/setting"
+    "pages/student/setting/setting",
+    "pages/student/training/training"
   ],
   "tabBar": {
     "custom": true,
@@ -23,7 +24,7 @@
     "navigationBarTextStyle": "black",
     "navigationStyle": "custom"
   },
-  "renderer": "skyline",
+  "renderer": "webview",
   "rendererOptions": {
     "skyline": {
       "defaultDisplayBlock": true,

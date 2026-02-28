@@ -3,3 +3,73 @@
   position: fixed;
   top: 0;
 }
+
+.content {
+  width: 100%;
+  margin-top: 10px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 20rpx 0;
+}
+
+.card-list {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 30rpx;
+}
+
+.training-card {
+  width: 80%;
+  height: 180rpx;
+  border-radius: 24rpx;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: flex-start;
+  padding-left: 40rpx;
+  box-shadow: 0 8rpx 20rpx rgba(0,0,0,0.1);
+  transition: transform 0.2s;
+  color: #fff;
+  font-weight: 500;
+}
+
+/* 按下时的反馈效果 */
+.training-card:active {
+  transform: translateY(4rpx);
+}
+
+/* 1. 班级卡片 */
+.class-card {
+  background: linear-gradient(45deg, #f093fb, #f5576c);
+}
+
+/* 2. 编程卡片 (蓝紫色) */
+.code-card {
+  background: linear-gradient(45deg, #667eea, #764ba2);
+}
+
+/* 2. 无人机卡片 (粉色/渐变) */
+.drone-card {
+  background: linear-gradient(45deg, #ff9a9e, #fecfef);
+  color: #333; /* 浅色背景配深色字更清楚 */
+}
+
+/* 3. 机器人卡片 (科技蓝) */
+.robot-card {
+  background: linear-gradient(45deg, #4facfe, #00f2fe);
+}
+
+/* 卡片内的文字样式 */
+.card-title {
+  font-size: 36rpx;
+  font-weight: bold;
+  margin-bottom: 8rpx;
+}
+
+.card-description {
+  font-size: 24rpx;
+  opacity: 0.9;
+}
