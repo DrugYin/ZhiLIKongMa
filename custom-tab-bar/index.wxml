@@ -1,6 +1,8 @@
 <!--components/custom-tar-bar/index.wxml-->
-<t-tab-bar value="{{value}}" bindchange="onChange" theme="tag" split="{{false}}">
-    <t-tab-bar-item wx:for="{{tabBar}}" wx:for-item="item" wx:for-index="index" wx:key="index" icon="{{item.icon}}" value="{{item.value}}">
-        {{item.label}}
-    </t-tab-bar-item>
-</t-tab-bar>
+<view class="custom-tab-bar" style="padding-bottom: {{bottomSafeHeight}}px">
+  <t-tab-bar value="{{value}}" bindchange="onChange" theme="tag" split="{{false}}">
+      <t-tab-bar-item wx:for="{{tabBar}}" wx:for-item="item" wx:for-index="index" wx:key="index" icon="{{item.icon}}" value="{{item.value}}">
+          {{item.label}}
+      </t-tab-bar-item>
+  </t-tab-bar>
+</view>

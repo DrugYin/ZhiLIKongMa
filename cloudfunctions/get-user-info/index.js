@@ -39,7 +39,8 @@ exports.main = async (event, context) => {
         school: student.school,
         userName: student.userName,
         points: student.points,
-        phone: student.phone
+        phone: student.phone,
+        useablePoints: student.useablePoints
       },
       msg: '获取成功'
     }

@@ -2,7 +2,7 @@
 <t-toast id="t-toast" />
 <view class="container">
   <view class="header">
-    <t-navbar title="智力控码" placeholder t-class-title="nav-title" left-arrow bind:go-back="handleGoBack"/>
+    <custom-navbar title="智力控码" titleClass="nav-title" showBack="{{true}}" bind:go-back="handleGoBack"/>
   </view>
   <view class="content">
     <view wx:if="{{ !isFirstLogin }}" class="login-card">

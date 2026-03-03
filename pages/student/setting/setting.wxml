@@ -2,7 +2,7 @@
 <t-toast id="t-toast" />
 <view class="container">
   <view class="header">
-    <t-navbar title="账号设置" placeholder t-class-title="nav-title" left-arrow bind:go-back="handleGoBack"/>
+    <custom-navbar title="账号设置" titleClass="nav-title" showBack="{{true}}" bind:go-back="handleGoBack"/>
   </view>
   <view class="content">
     <!-- 头像 -->

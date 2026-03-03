@@ -2,7 +2,7 @@
 <t-toast id="t-toast" />
 <view class="container">
   <view class="header">
-    <t-navbar title="智力控码" placeholder t-class-title="nav-title"/>
+    <custom-navbar title="智力控码" titleClass="nav-title"/>
   </view>
   <view class="content">
     <view class="user-card">
@@ -43,8 +43,4 @@
     </view>
 
   </view>
-  <view class="footer">
-    <custom-tab-bar />
-  </view>
-
 </view>

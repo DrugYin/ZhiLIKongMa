@@ -1,0 +1,9 @@
+<view class="custom-navbar-wrapper" style="padding-top: {{statusBarHeight}}px">
+  <t-navbar
+    title="{{title}}"
+    left-arrow="{{showBack}}"
+    placeholder="{{placeholder}}"
+    t-class-title="{{titleClass}}"
+    bind:go-back="handleGoBack"
+  />
+</view>

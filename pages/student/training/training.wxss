@@ -1,1 +1,30 @@
 /* pages/student/training/training.wxss */
+.fixed-header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  z-index: 1000;
+  overflow: visible;
+}
+
+.navbar-wrapper {
+  background-color: #fff;
+}
+
+.dropdown-wrapper {
+  background-color: #fff;
+  position: relative;
+  z-index: 999;
+}
+
+.content {
+  width: 100%;
+  padding-top: calc(88rpx);
+  display: flex;
+  flex-direction: column;
+}
+
+.dropdown-menu {
+  width: 100%;
+}

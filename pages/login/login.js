@@ -22,7 +22,8 @@ Page({
       grade: '',
       phone: '',
       address: '',
-      points: 0
+      points: 0,
+      useablePoints: 0
     },
     isLoading: false,
     grades: [

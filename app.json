@@ -5,7 +5,8 @@
     "pages/login/login",
     "pages/teacher/index",
     "pages/student/setting/setting",
-    "pages/student/training/training"
+    "pages/student/training/training",
+    "pages/rank/rank"
   ],
   "tabBar": {
     "custom": true,
@@ -40,7 +41,6 @@
   "lazyCodeLoading": "requiredComponents",
   "usingComponents": {
     "t-row": "tdesign-miniprogram/row/row",
-    "t-col": "tdesign-miniprogram/col/col",
-    "t-navbar": "tdesign-miniprogram/navbar/navbar"
+    "t-col": "tdesign-miniprogram/col/col"
   }
 }
