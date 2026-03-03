@@ -5,7 +5,7 @@ Page({
    * 页面的初始数据
    */
   data: {
-
+    rankType: 'week'
   },
 
   /**
@@ -13,6 +13,12 @@ Page({
    */
   onLoad(options) {
 
+  },
+
+  onTabsChange(e) {
+    this.setData({
+      rankType: e.detail.value
+    })
   },
 
   /**
@@ -26,7 +32,8 @@ Page({
    * 生命周期函数--监听页面显示
    */
   onShow() {
-
+    // console.log('rank show')
+    this.getTabBar().init('/pages/rank/rank')
   },
 
   /**

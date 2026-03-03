@@ -4,30 +4,6 @@
     <custom-navbar title="智力控码" titleClass="nav-title"/>
   </view>
   <view class="content">
-    <view class="card-list">
-      <!-- 编程 -->
-      <navigator url="/pages/student/training/training?projectId=1001" class="training-card code-card">
-        <text class="card-title">编程训练打卡</text>
-        <text class="card-description">查看并完成本周编程任务</text>
-      </navigator>
-
-      <!-- 无人机 -->
-      <navigator url="/pages/student/training/training?projectId=1003" class="training-card drone-card">
-        <text class="card-title">无人机训练打卡</text>
-        <text class="card-description">查看并完成本周飞行任务</text>
-      </navigator>
-
-      <!-- 机器人 -->
-      <navigator url="/pages/student/training/training?projectId=1002" class="training-card robot-card">
-        <text class="card-title">机器人训练打卡</text>
-        <text class="card-description">查看并完成本周机器人任务</text>
-      </navigator>
-
-      <!-- 班级管理 -->
-      <navigator url="/pages/student/class-manage/class-manage" class="training-card class-card">
-        <text class="card-title">我的班级</text>
-        <text class="card-description">查看已加入的班级</text>
-      </navigator>
-    </view>
+    
   </view>
 </view>

@@ -11,6 +11,10 @@ Component({
       icon: 'home',
       label: '首页',
     }, {
+      value: '/pages/rank/rank',
+      icon: 'leaderboard',
+      label: '排行',
+    }, {
       value: '/pages/student/mine/mine',
       icon: 'user',
       label: '我的',

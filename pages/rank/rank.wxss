@@ -1,1 +1,20 @@
 /* pages/rank/rank.wxss */
+
+.header {
+  position: fixed;
+  width: 100%;
+  left: 0;
+  top: 0;
+  z-index: 1000;
+  overflow: visible;
+}
+
+.navbar-wrapper {
+  background-color: #fff;
+}
+
+.tabs-wrapper {
+  background-color: #fff;
+  position: relative;
+  z-index: 999;
+}

@@ -16,6 +16,10 @@
         "text": "首页"
       },
       {
+        "pagePath": "pages/rank/rank",
+        "text": "排行榜"
+      },
+      {
         "pagePath": "pages/student/mine/mine",
         "text": "我的"
       }

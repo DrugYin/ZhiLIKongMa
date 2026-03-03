@@ -1,2 +1,17 @@
 <!--pages/rank/rank.wxml-->
-<text>pages/rank/rank.wxml</text>
+<view class="container">
+  <view class="header">
+    <view class="navbar-wrapper">
+      <custom-navbar title="智力控码" titleClass="nav-title"/>
+    </view>
+    <view class="tabs-wrapper">
+      <t-tabs defaultValue="week" bind:change="onTabsChange">
+        <t-tab-panel label="周榜" value="week" />
+        <t-tab-panel label="月榜" value="month" />
+        <t-tab-panel label="总榜" value="total" />
+      </t-tabs>
+    </view>
+  </view>
+  <view class="content">
+  </view>
+</view>

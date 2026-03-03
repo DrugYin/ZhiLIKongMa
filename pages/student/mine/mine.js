@@ -79,7 +79,7 @@ Page({
           openid: openid
         }
       }).then(res => {
-        console.log(res)
+        // console.log(res)
         if (res && res.result && res.result.code === 200) {
           const userInfo = res.result.data
           this.setData({
