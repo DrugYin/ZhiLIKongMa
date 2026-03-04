@@ -4,21 +4,9 @@ Component({
   properties: {},
   //  组件的初始数据
   data: {
-    value: '/pages/student/index',
+    value: '',
     bottomSafeHeight: 0,
-    tabBar: [{
-      value: '/pages/student/index',
-      icon: 'home',
-      label: '首页',
-    }, {
-      value: '/pages/student/rank/rank',
-      icon: 'leaderboard',
-      label: '排行',
-    }, {
-      value: '/pages/student/mine/mine',
-      icon: 'user',
-      label: '我的',
-    }]
+    tabBar: []
   },
 
   lifetimes: {
@@ -50,11 +38,52 @@ Component({
   },
 
   methods: {
-
+    
     init(e) {
       this.setData({
         value: e
       })
+    },
+
+    changeData(e) {
+      const { type } = e
+      if (type === 'student') {
+        this.setData({
+          tabBar: [{
+            value: '/pages/student/index',
+            icon: 'home',
+            label: '首页',
+          }, {
+            value: '/pages/student/rank/rank',
+            icon: 'leaderboard',
+            label: '排行',
+          }, {
+            value: '/pages/student/mine/mine',
+            icon: 'user',
+            label: '我的',
+          }]
+        })
+      } else {
+        this.setData({
+          tabBar: [{
+            value: '/pages/teacher/index',
+            icon: 'home',
+            label: '首页',
+          }, {
+            value: '/pages/teacher/pending/pending',
+            icon: 'pen-ball',
+            label: '审核'
+          }, {
+            value: '/pages/teacher/class-manage/class-manage',
+            icon: 'work',
+            label: '班级'
+          }, {
+            value: '/pages/teacher/mine/mine',
+            icon: 'user',
+            label: '我的'
+          }]
+        })
+      }
     },
 
     onChange(e) {

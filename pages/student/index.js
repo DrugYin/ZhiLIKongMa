@@ -1,6 +1,12 @@
 // index.js
 Page({
+
+  onLoad(options) {
+    this.getTabBar().changeData({ type: 'student' })
+  },
+
   onShow() {
+    this.getTabBar().changeData({ type: 'student' })
     this.getTabBar().init('/pages/student/index')
   },
 

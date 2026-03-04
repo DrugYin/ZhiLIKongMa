@@ -11,6 +11,7 @@ Page({
   },
   onShow() {
     this.loadUserInfo()
+    this.getTabBar().changeData({ type: 'student' })
     this.getTabBar().init('/pages/student/mine/mine')
   },
 

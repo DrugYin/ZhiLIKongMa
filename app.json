@@ -12,7 +12,8 @@
     "pages/teacher/class-manage/class-detail/class-detail",
     "pages/teacher/mission-manage/mission-manage",
     "pages/teacher/mission-manage/mission-detail/mission-detail",
-    "pages/teacher/mission-manage/mission-edit/mission-edit"
+    "pages/teacher/mission-manage/mission-edit/mission-edit",
+    "pages/teacher/mine/mine"
   ],
   "tabBar": {
     "custom": true,
@@ -27,6 +28,18 @@
       },
       {
         "pagePath": "pages/student/mine/mine",
+        "text": "我的"
+      }, {
+        "pagePath": "pages/teacher/index",
+        "text": "教师"
+      }, {
+        "pagePath": "pages/teacher/pending/pending",
+        "text": "审核"
+      }, {
+        "pagePath": "pages/teacher/class-manage/class-manage",
+        "text": "班级"
+      }, {
+        "pagePath": "pages/teacher/mine/mine",
         "text": "我的"
       }
     ]

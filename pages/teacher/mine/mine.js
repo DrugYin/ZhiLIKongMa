@@ -1,12 +1,11 @@
-// pages/rank/rank.js
+// pages/teacher/mine/mine.js
 Page({
 
   /**
    * 页面的初始数据
    */
   data: {
-    rankType: 'week',
-    enableRefresh: false
+
   },
 
   /**
@@ -14,12 +13,6 @@ Page({
    */
   onLoad(options) {
 
-  },
-
-  onTabsChange(e) {
-    this.setData({
-      rankType: e.detail.value
-    })
   },
 
   /**
@@ -33,9 +26,8 @@ Page({
    * 生命周期函数--监听页面显示
    */
   onShow() {
-    // console.log('rank show')
-    this.getTabBar().changeData({ type: 'student' })
-    this.getTabBar().init('/pages/student/rank/rank')
+    this.getTabBar().changeData({ type: 'teacher' })
+    this.getTabBar().init('/pages/teacher/mine/mine')
   },
 
   /**
