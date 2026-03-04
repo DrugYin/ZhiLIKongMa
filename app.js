@@ -36,13 +36,13 @@ App({
     const isTeacherLogin = wx.getStorageSync('isTeacherLogin')
     const isStudentLogin = wx.getStorageSync('isStudentLogin')
     if (isTeacherLogin) {
-      wx.navigateTo({
-        url: 'pages/teacher/index'
+      wx.reLaunch({
+        url: '/pages/teacher/index'
       })
     }
     if (isStudentLogin) {
-      wx.navigateTo({
-        url: 'pages/student/index'
+      wx.reLaunch({
+        url: '/pages/student/index'
       })
     }
   },

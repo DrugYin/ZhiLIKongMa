@@ -1,9 +1,93 @@
-<!--index.wxml-->
+<!--pages/student/index.wxml-->
 <view class="container">
   <view class="header">
-    <custom-navbar title="智力控码" titleClass="nav-title"/>
+    <custom-navbar title="智力控码" />
   </view>
+  
   <view class="content">
-    首页
+    <!-- 公告滚动条 -->
+    <view class="announcement-bar" wx:if="{{showAnnouncement}}">
+      <text class="announcement-icon">📢</text>
+      <text class="announcement-text">{{announcement}}</text>
+      <text class="announcement-close" bind:tap="closeAnnouncement">✕</text>
+    </view>
+
+    <!-- 荣誉卡片 -->
+    <view class="honor-card">
+      <view class="avatar-section">
+        <image class="user-avatar" src="{{tempAvatarUrl || '/assets/default-avatar.png'}}" mode="aspectFill" />
+      </view>
+      <view class="user-info">
+        <text class="user-name">{{userInfo.userName || '学员'}}</text>
+        <view class="user-rank">
+          <text class="rank-badge">{{userInfo.rank || '游隼'}}</text>
+          <text class="rank-separator">｜</text>
+          <text class="rank-points">总积分：{{userInfo.points || 0}}</text>
+        </view>
+        <view class="weekly-rank">
+          <text>本周排名：第{{userInfo.weeklyRank || 3}}名</text>
+          <text class="rank-progress" wx:if="{{userInfo.weeklyRankChange > 0}}">↑{{userInfo.weeklyRankChange}}</text>
+          <text class="rank-progress down" wx:elif="{{userInfo.weeklyRankChange < 0}}">↓{{Math.abs(userInfo.weeklyRankChange)}}</text>
+        </view>
+        <view class="recent-badge" wx:if="{{userInfo.recentBadge}}">
+          <text class="badge-icon">🏆</text>
+          <text>最近获得：{{userInfo.recentBadge}}</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- 个人数据看板 -->
+    <view class="stats-card">
+      <view class="stat-item">
+        <text class="stat-value">{{userStats.totalRank}}</text>
+        <text class="stat-label">总排名</text>
+      </view>
+      <view class="stat-divider"></view>
+      <view class="stat-item">
+        <text class="stat-value">{{userStats.completedTasks}}</text>
+        <text class="stat-label">总完成任务</text>
+      </view>
+      <view class="stat-divider"></view>
+      <view class="stat-item">
+        <text class="stat-value">{{userStats.badgeCount}}</text>
+        <text class="stat-label">徽章数</text>
+      </view>
+    </view>
+
+    <!-- 本周任务卡片 -->
+    <view class="task-card">
+      <view class="task-header">
+        <text class="task-name">{{currentTask.name || '黑羊赛道 - 第8周'}}</text>
+      </view>
+      <view class="task-description" wx:if="{{currentTask.description}}">
+        <text>{{currentTask.description}}</text>
+      </view>
+      <view class="task-progress">
+        <view class="progress-bar">
+          <view class="progress-fill" style="width: {{(taskProgress.current / taskProgress.total) * 100}}%"></view>
+        </view>
+        <text class="progress-text">{{taskProgress.current}}/{{taskProgress.total}}个</text>
+      </view>
+      <view class="task-actions">
+        <button class="btn-primary" bind:tap="goToCheckIn">去打卡</button>
+        <button class="btn-secondary" bind:tap="viewTaskDetail">查看更多</button>
+      </view>
+    </view>
+    
+    <!-- 快捷功能区 -->
+    <view class="quick-actions">
+      <view class="action-item" bind:tap="goToRank">
+        <view class="action-icon">🏅</view>
+        <text class="action-name">排行榜</text>
+      </view>
+      <view class="action-item" bind:tap="goToTaskCenter">
+        <view class="action-icon">📋</view>
+        <text class="action-name">任务中心</text>
+      </view>
+      <view class="action-item" bind:tap="goToBadgeWall">
+        <view class="action-icon">🎖️</view>
+        <text class="action-name">徽章墙</text>
+      </view>
+    </view>
   </view>
 </view>

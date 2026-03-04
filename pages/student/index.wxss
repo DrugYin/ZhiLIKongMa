@@ -1,15 +1,297 @@
-/**index.wxss**/
+/* pages/student/index.wxss */
+.container {
+  min-height: 100vh;
+}
+
 .header {
   position: fixed;
+  width: 100%;
+  left: 0;
   top: 0;
+  z-index: 1000;
 }
 
 .content {
-  width: 100%;
-  margin-top: 10px;
+  width: 85%;
+  padding: 0 30rpx 40rpx;
+}
+
+/* 公告滚动条 */
+.announcement-bar {
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 16rpx;
+  padding: 20rpx 24rpx;
+  margin-top: 120rpx;
+  margin-bottom: 24rpx;
+  display: flex;
+  align-items: center;
+  box-shadow: 0 4rpx 16rpx rgba(0, 0, 0, 0.08);
+}
+
+.announcement-icon {
+  font-size: 32rpx;
+  margin-right: 12rpx;
+}
+
+.announcement-text {
+  flex: 1;
+  font-size: 26rpx;
+  color: #666;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.announcement-close {
+  font-size: 28rpx;
+  color: #999;
+  margin-left: 16rpx;
+}
+
+/* 荣誉卡片 */
+.honor-card {
+  background: linear-gradient(135deg, #fff 0%, #f8f9ff 100%);
+  border-radius: 32rpx;
+  padding: 40rpx 40rpx 32rpx;
+  margin-bottom: 30rpx;
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 20rpx 0;
+  box-shadow: 0 12rpx 32rpx rgba(102, 126, 234, 0.2);
 }
 
+.avatar-section {
+  margin-bottom: 24rpx;
+}
+
+.user-avatar {
+  width: 200rpx;
+  height: 200rpx;
+  border-radius: 50%;
+  border: 8rpx solid #fff;
+  box-shadow: 0 12rpx 32rpx rgba(102, 126, 234, 0.3);
+}
+
+.user-info {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+}
+
+.user-name {
+  font-size: 40rpx;
+  font-weight: bold;
+  color: #333;
+  margin-bottom: 16rpx;
+}
+
+.user-rank {
+  display: flex;
+  align-items: center;
+  margin-bottom: 12rpx;
+}
+
+.rank-badge {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: #fff;
+  font-size: 24rpx;
+  padding: 6rpx 16rpx;
+  border-radius: 20rpx;
+  margin-right: 12rpx;
+}
+
+.rank-separator {
+  color: #999;
+  font-size: 24rpx;
+  margin-right: 8rpx;
+}
+
+.rank-points {
+  font-size: 26rpx;
+  color: #666;
+  font-weight: 600;
+}
+
+.weekly-rank {
+  font-size: 26rpx;
+  color: #666;
+  margin-bottom: 12rpx;
+  display: flex;
+  align-items: center;
+}
+
+.rank-progress {
+  font-size: 24rpx;
+  color: #52c41a;
+  margin-left: 12rpx;
+  font-weight: bold;
+}
+
+.rank-progress.down {
+  color: #ff4d4f;
+}
+
+.recent-badge {
+  display: flex;
+  align-items: center;
+  font-size: 24rpx;
+  color: #999;
+}
+
+.badge-icon {
+  font-size: 28rpx;
+  margin-right: 8rpx;
+}
+
+/* 任务卡片 */
+.task-card {
+  background: #fff;
+  border-radius: 24rpx;
+  padding: 32rpx;
+  margin-bottom: 30rpx;
+  box-shadow: 0 8rpx 24rpx rgba(0, 0, 0, 0.08);
+}
+
+.task-header {
+  margin-bottom: 16rpx;
+}
+
+.task-name {
+  font-size: 32rpx;
+  font-weight: 600;
+  color: #333;
+}
+
+.task-description {
+  font-size: 26rpx;
+  color: #999;
+  margin-bottom: 24rpx;
+  line-height: 1.6;
+}
+
+.task-progress {
+  display: flex;
+  align-items: center;
+  margin-bottom: 24rpx;
+}
+
+.progress-bar {
+  flex: 1;
+  height: 12rpx;
+  background: #f0f0f0;
+  border-radius: 6rpx;
+  margin-right: 16rpx;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+  border-radius: 6rpx;
+  transition: width 0.3s ease;
+}
+
+.progress-text {
+  font-size: 24rpx;
+  color: #666;
+}
+
+.task-actions {
+  display: flex;
+  gap: 20rpx;
+}
+
+.btn-primary {
+  flex: 1;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: #fff;
+  border: none;
+  border-radius: 12rpx;
+  height: 80rpx;
+  line-height: 80rpx;
+  font-size: 30rpx;
+  font-weight: 600;
+}
+
+.btn-primary::after {
+  border: none;
+}
+
+.btn-secondary {
+  flex: 1;
+  background: #f5f5f5;
+  color: #666;
+  border: none;
+  border-radius: 12rpx;
+  height: 80rpx;
+  line-height: 80rpx;
+  font-size: 30rpx;
+}
+
+.btn-secondary::after {
+  border: none;
+}
+
+/* 数据看板 */
+.stats-card {
+  background: #fff;
+  border-radius: 24rpx;
+  padding: 32rpx;
+  margin-bottom: 30rpx;
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  box-shadow: 0 8rpx 24rpx rgba(0, 0, 0, 0.08);
+}
+
+.stat-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex: 1;
+}
+
+.stat-value {
+  font-size: 48rpx;
+  font-weight: bold;
+  color: #667eea;
+  margin-bottom: 8rpx;
+}
+
+.stat-label {
+  font-size: 24rpx;
+  color: #999;
+}
+
+.stat-divider {
+  width: 2rpx;
+  height: 80rpx;
+  background: #f0f0f0;
+}
+
+/* 快捷功能 */
+.quick-actions {
+  background: #fff;
+  border-radius: 24rpx;
+  padding: 32rpx;
+  display: flex;
+  justify-content: space-around;
+  box-shadow: 0 8rpx 24rpx rgba(0, 0, 0, 0.08);
+}
+
+.action-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.action-icon {
+  font-size: 64rpx;
+  margin-bottom: 12rpx;
+}
+
+.action-name {
+  font-size: 26rpx;
+  color: #666;
+}
