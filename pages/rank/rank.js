@@ -5,7 +5,8 @@ Page({
    * 页面的初始数据
    */
   data: {
-    rankType: 'week'
+    rankType: 'week',
+    enableRefresh: false
   },
 
   /**

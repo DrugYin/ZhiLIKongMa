@@ -28,6 +28,23 @@ App({
     that.globalData.menuRight = systemInfo.screenWidth - menuButtonInfo.right;
     that.globalData.menuTop=  menuButtonInfo.top;
     that.globalData.menuHeight = menuButtonInfo.height;
+
+    this.checkLogin()
+  },
+
+  checkLogin() {
+    const isTeacherLogin = wx.getStorageSync('isTeacherLogin')
+    const isStudentLogin = wx.getStorageSync('isStudentLogin')
+    if (isTeacherLogin) {
+      wx.navigateTo({
+        url: 'pages/teacher/index'
+      })
+    }
+    if (isStudentLogin) {
+      wx.navigateTo({
+        url: 'pages/index/index'
+      })
+    }
   },
   
   getUserOpenid() {

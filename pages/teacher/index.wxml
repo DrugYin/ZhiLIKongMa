@@ -1,2 +1,6 @@
 <!--pages/teacher/index.wxml-->
-<text>pages/teacher/index.wxml</text>
+<view class="container">
+  <view class="header">
+    
+  </view>
+</view>
