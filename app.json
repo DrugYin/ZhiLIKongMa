@@ -6,7 +6,13 @@
     "pages/teacher/index",
     "pages/student/setting/setting",
     "pages/student/training/training",
-    "pages/student/rank/rank"
+    "pages/student/rank/rank",
+    "pages/teacher/pending/pending",
+    "pages/teacher/class-manage/class-manage",
+    "pages/teacher/class-manage/class-detail/class-detail",
+    "pages/teacher/mission-manage/mission-manage",
+    "pages/teacher/mission-manage/mission-detail/mission-detail",
+    "pages/teacher/mission-manage/mission-edit/mission-edit"
   ],
   "tabBar": {
     "custom": true,
