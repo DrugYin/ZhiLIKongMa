@@ -1,22 +1,22 @@
 {
   "pages": [
-    "pages/index/index",
+    "pages/student/index",
     "pages/student/mine/mine",
     "pages/login/login",
     "pages/teacher/index",
     "pages/student/setting/setting",
     "pages/student/training/training",
-    "pages/rank/rank"
+    "pages/student/rank/rank"
   ],
   "tabBar": {
     "custom": true,
     "list": [
       {
-        "pagePath": "pages/index/index",
+        "pagePath": "pages/student/index",
         "text": "首页"
       },
       {
-        "pagePath": "pages/rank/rank",
+        "pagePath": "pages/student/rank/rank",
         "text": "排行榜"
       },
       {

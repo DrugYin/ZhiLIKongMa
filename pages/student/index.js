@@ -1,7 +1,7 @@
 // index.js
 Page({
   onShow() {
-    this.getTabBar().init('/pages/index/index')
+    this.getTabBar().init('/pages/student/index')
   },
 
   onShareAppMessage() {

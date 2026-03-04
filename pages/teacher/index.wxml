@@ -1,6 +1,11 @@
 <!--pages/teacher/index.wxml-->
 <view class="container">
   <view class="header">
+    <view class="navbar-wrapper">
+      <custom-navbar title="智力控码" />
+    </view>
+  </view>
+  <view class="content">
     
   </view>
 </view>

@@ -34,7 +34,7 @@ Page({
    */
   onShow() {
     // console.log('rank show')
-    this.getTabBar().init('/pages/rank/rank')
+    this.getTabBar().init('/pages/student/rank/rank')
   },
 
   /**

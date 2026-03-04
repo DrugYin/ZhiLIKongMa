@@ -4,14 +4,14 @@ Component({
   properties: {},
   //  组件的初始数据
   data: {
-    value: '/pages/index/index',
+    value: '/pages/student/index',
     bottomSafeHeight: 0,
     tabBar: [{
-      value: '/pages/index/index',
+      value: '/pages/student/index',
       icon: 'home',
       label: '首页',
     }, {
-      value: '/pages/rank/rank',
+      value: '/pages/student/rank/rank',
       icon: 'leaderboard',
       label: '排行',
     }, {

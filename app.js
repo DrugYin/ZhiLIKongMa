@@ -42,7 +42,7 @@ App({
     }
     if (isStudentLogin) {
       wx.navigateTo({
-        url: 'pages/index/index'
+        url: 'pages/student/index'
       })
     }
   },
