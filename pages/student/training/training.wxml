@@ -6,7 +6,7 @@
     </view>
     <view class="dropdown-wrapper">
       <t-dropdown-menu class="dropdown-menu">
-        <t-dropdown-item label="项目" options="{{projects.options}}" placement="right" value="{{projects.value}}" data-field="projects" bindchange="onDropdownChange" />
+        <t-dropdown-item options="{{projects.options}}" placement="right" value="{{projects.value}}" data-field="projects" bindchange="onDropdownChange" />
         <t-dropdown-item options="{{classes.options}}" placement="right" value="{{classes.value}}" data-field="classes" bindchange="onDropdownChange" />
       </t-dropdown-menu>
     </view>

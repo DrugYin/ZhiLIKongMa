@@ -162,16 +162,17 @@ Page({
   /**
    * 去打卡
    */
-  goToCheckIn() {
+  goToCheckIn(e) {
     // TODO: 跳转到打卡页面
     // 1. 检查任务状态（是否已结束）
     // 2. 检查今日是否已打卡
     // 3. 跳转到训练打卡页面
-    wx.navigateTo({
-      url: '/pages/student/training/training'
+    wx.showToast({
+      title: '功能开发中',
+      icon: 'none'
     })
   },
-
+  
   /**
    * 查看任务详情
    */
@@ -179,9 +180,8 @@ Page({
     // TODO: 跳转到任务详情页面
     // 1. 传递任务ID
     // 2. 显示任务详细介绍、规则说明等
-    wx.showToast({
-      title: '功能开发中',
-      icon: 'none'
+    wx.navigateTo({
+      url: '/pages/student/training/training'
     })
   },
 
@@ -189,7 +189,7 @@ Page({
    * 跳转到排行榜
    */
   goToRank() {
-    wx.navigateTo({
+    wx.switchTab({
       url: '/pages/student/rank/rank'
     })
   },
