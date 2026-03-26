@@ -8,7 +8,10 @@
  * @param format 格式模板，默认 'YYYY-MM-DD HH:mm:ss'
  * @returns 格式化后的日期字符串
  */
-export function formatDate(date: Date | number | string, format: string = 'YYYY-MM-DD HH:mm:ss'): string {
+function formatDate(date, format) {
+  if (format === undefined) {
+    format = 'YYYY-MM-DD HH:mm:ss';
+  }
   const d = new Date(date);
   
   if (isNaN(d.getTime())) {
@@ -22,7 +25,9 @@ export function formatDate(date: Date | number | string, format: string = 'YYYY-
   const minutes = d.getMinutes();
   const seconds = d.getSeconds();
 
-  const pad = (n: number): string => n.toString().padStart(2, '0');
+  const pad = function (n) {
+    return n.toString().padStart(2, '0');
+  };
 
   return format
     .replace('YYYY', year.toString())
@@ -38,7 +43,7 @@ export function formatDate(date: Date | number | string, format: string = 'YYYY-
  * @param date 日期对象或时间戳
  * @returns 相对时间字符串
  */
-export function formatRelativeTime(date: Date | number | string): string {
+function formatRelativeTime(date) {
   const d = new Date(date);
   const now = new Date();
   const diff = now.getTime() - d.getTime();
@@ -68,7 +73,7 @@ export function formatRelativeTime(date: Date | number | string): string {
  * @param bytes 字节数
  * @returns 格式化后的文件大小
  */
-export function formatFileSize(bytes: number): string {
+function formatFileSize(bytes) {
   if (bytes === 0) return '0 B';
 
   const k = 1024;
@@ -83,7 +88,7 @@ export function formatFileSize(bytes: number): string {
  * @param phone 手机号
  * @returns 格式化后的手机号
  */
-export function formatPhone(phone: string): string {
+function formatPhone(phone) {
   if (!phone || phone.length !== 11) {
     return phone;
   }
@@ -95,7 +100,7 @@ export function formatPhone(phone: string): string {
  * @param idCard 身份证号
  * @returns 格式化后的身份证号
  */
-export function formatIdCard(idCard: string): string {
+function formatIdCard(idCard) {
   if (!idCard || idCard.length < 10) {
     return idCard;
   }
@@ -110,7 +115,10 @@ export function formatIdCard(idCard: string): string {
  * @param decimals 小数位数，默认2
  * @returns 格式化后的金额
  */
-export function formatMoney(amount: number, decimals: number = 2): string {
+function formatMoney(amount, decimals) {
+  if (decimals === undefined) {
+    decimals = 2;
+  }
   return amount.toFixed(decimals).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
 }
 
@@ -119,7 +127,7 @@ export function formatMoney(amount: number, decimals: number = 2): string {
  * @param num 数字
  * @returns 格式化后的数字
  */
-export function formatNumber(num: number): string {
+function formatNumber(num) {
   return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
 }
 
@@ -128,12 +136,14 @@ export function formatNumber(num: number): string {
  * @param seconds 秒数
  * @returns 格式化后的倒计时
  */
-export function formatCountdown(seconds: number): string {
+function formatCountdown(seconds) {
   const hours = Math.floor(seconds / 3600);
   const minutes = Math.floor((seconds % 3600) / 60);
   const secs = seconds % 60;
 
-  const pad = (n: number): string => n.toString().padStart(2, '0');
+  const pad = function (n) {
+    return n.toString().padStart(2, '0');
+  };
 
   if (hours > 0) {
     return `${pad(hours)}:${pad(minutes)}:${pad(secs)}`;
@@ -141,7 +151,7 @@ export function formatCountdown(seconds: number): string {
   return `${pad(minutes)}:${pad(secs)}`;
 }
 
-export default {
+module.exports = {
   formatDate,
   formatRelativeTime,
   formatFileSize,

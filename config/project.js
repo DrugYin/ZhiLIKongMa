@@ -2,51 +2,19 @@
  * 项目配置服务
  */
 
-import { configApi } from '../services/api';
-import { setProjects, getProjects, setConfig, getConfig } from '../services/storage';
-import { PROJECT_CODES, PROJECT_NAMES } from '../utils/constant';
-
-export interface ProjectInfo {
-  _id: string;
-  project_name: string;
-  project_code: string;
-  description: string;
-  cover_image: string;
-  icon: string;
-  difficulty_levels: Array<{
-    level: number;
-    name: string;
-    color: string;
-  }>;
-  task_categories: string[];
-  default_points: number;
-  sort_order: number;
-  status: string;
-  task_count: number;
-  student_count: number;
-}
-
-export interface SystemConfig {
-  points_register_gift: number;
-  points_per_task: number;
-  points_daily_limit: number;
-  lottery_enabled: boolean;
-  lottery_cost_points: number;
-  lottery_daily_limit: number;
-  class_max_members: number;
-  class_join_need_approval: boolean;
-  task_max_submissions: number;
-  task_overtime_penalty: number;
-}
+const { configApi } = require('../services/api');
+const { setProjects, getProjects, setConfig, getConfig } = require('../services/storage');
+const { PROJECT_CODES, PROJECT_NAMES } = require('../utils/constant');
 
 class ProjectService {
-  private static instance: ProjectService;
-  private projects: ProjectInfo[] = [];
-  private config: SystemConfig | null = null;
-  private projectsLoaded = false;
-  private configLoaded = false;
+  constructor() {
+    this.projects = [];
+    this.config = null;
+    this.projectsLoaded = false;
+    this.configLoaded = false;
+  }
 
-  static getInstance(): ProjectService {
+  static getInstance() {
     if (!ProjectService.instance) {
       ProjectService.instance = new ProjectService();
     }
@@ -56,7 +24,7 @@ class ProjectService {
   /**
    * 获取项目列表
    */
-  async getProjects(forceRefresh = false): Promise<ProjectInfo[]> {
+  async getProjects(forceRefresh = false) {
     if (!forceRefresh && this.projectsLoaded && this.projects.length > 0) {
       return this.projects;
     }
@@ -91,7 +59,7 @@ class ProjectService {
   /**
    * 根据 ID 获取项目
    */
-  async getProjectById(projectId: string): Promise<ProjectInfo | null> {
+  async getProjectById(projectId) {
     const projects = await this.getProjects();
     return projects.find(p => p._id === projectId) || null;
   }
@@ -99,7 +67,7 @@ class ProjectService {
   /**
    * 根据 code 获取项目
    */
-  async getProjectByCode(projectCode: string): Promise<ProjectInfo | null> {
+  async getProjectByCode(projectCode) {
     const projects = await this.getProjects();
     return projects.find(p => p.project_code === projectCode) || null;
   }
@@ -107,7 +75,7 @@ class ProjectService {
   /**
    * 获取项目选项（用于下拉选择）
    */
-  async getProjectOptions(): Promise<Array<{ label: string; value: string }>> {
+  async getProjectOptions() {
     const projects = await this.getProjects();
     return projects.map(p => ({
       label: p.project_name,
@@ -118,7 +86,7 @@ class ProjectService {
   /**
    * 获取项目难度选项
    */
-  async getDifficultyOptions(projectId: string): Promise<Array<{ label: string; value: number; color: string }>> {
+  async getDifficultyOptions(projectId) {
     const project = await this.getProjectById(projectId);
     if (!project) return [];
 
@@ -132,7 +100,7 @@ class ProjectService {
   /**
    * 获取项目分类选项
    */
-  async getCategoryOptions(projectId: string): Promise<string[]> {
+  async getCategoryOptions(projectId) {
     const project = await this.getProjectById(projectId);
     return project?.task_categories || [];
   }
@@ -140,7 +108,7 @@ class ProjectService {
   /**
    * 获取系统配置
    */
-  async getConfig(forceRefresh = false): Promise<SystemConfig> {
+  async getConfig(forceRefresh = false) {
     if (!forceRefresh && this.configLoaded && this.config) {
       return this.config;
     }
@@ -149,7 +117,7 @@ class ProjectService {
     if (!forceRefresh) {
       const cached = getConfig();
       if (cached) {
-        this.config = cached as SystemConfig;
+        this.config = cached;
         this.configLoaded = true;
         return this.config;
       }
@@ -177,10 +145,10 @@ class ProjectService {
   /**
    * 解析配置数据
    */
-  private parseConfig(configArray: any[]): SystemConfig {
-    const config: Partial<SystemConfig> = {};
-    configArray.forEach((item: any) => {
-      (config as any)[item.key] = item.value;
+  parseConfig(configArray) {
+    const config = {};
+    configArray.forEach((item) => {
+      config[item.key] = item.value;
     });
     return { ...this.getDefaultConfig(), ...config };
   }
@@ -188,7 +156,7 @@ class ProjectService {
   /**
    * 获取默认配置
    */
-  private getDefaultConfig(): SystemConfig {
+  getDefaultConfig() {
     return {
       points_register_gift: 50,
       points_per_task: 10,
@@ -206,7 +174,7 @@ class ProjectService {
   /**
    * 获取默认项目
    */
-  private getDefaultProjects(): ProjectInfo[] {
+  getDefaultProjects() {
     return [
       {
         _id: 'default_programming',
@@ -277,7 +245,7 @@ class ProjectService {
   /**
    * 清除缓存
    */
-  clearCache(): void {
+  clearCache() {
     this.projects = [];
     this.config = null;
     this.projectsLoaded = false;
@@ -285,5 +253,5 @@ class ProjectService {
   }
 }
 
-export const projectService = ProjectService.getInstance();
-export default projectService;
+const projectService = ProjectService.getInstance();
+module.exports = projectService;

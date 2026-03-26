@@ -3,28 +3,11 @@
  * 封装微信原生 toast 和 TDesign message 组件
  */
 
-interface ToastOptions {
-  title: string;
-  icon?: 'success' | 'error' | 'loading' | 'none';
-  duration?: number;
-  mask?: boolean;
-}
-
-interface ModalOptions {
-  title?: string;
-  content: string;
-  showCancel?: boolean;
-  cancelText?: string;
-  cancelColor?: string;
-  confirmText?: string;
-  confirmColor?: string;
-}
-
 /**
  * 显示消息提示框
  */
-export function showToast(options: ToastOptions | string): Promise<void> {
-  const opts: ToastOptions = typeof options === 'string' 
+function showToast(options) {
+  const opts = typeof options === 'string' 
     ? { title: options, icon: 'none' }
     : { icon: 'none', ...options };
 
@@ -43,21 +26,27 @@ export function showToast(options: ToastOptions | string): Promise<void> {
 /**
  * 显示成功提示
  */
-export function showSuccess(title: string, duration?: number): Promise<void> {
+function showSuccess(title, duration) {
   return showToast({ title, icon: 'success', duration });
 }
 
 /**
  * 显示错误提示
  */
-export function showError(title: string, duration?: number): Promise<void> {
+function showError(title, duration) {
   return showToast({ title, icon: 'error', duration });
 }
 
 /**
  * 显示加载提示
  */
-export function showLoading(title: string = '加载中...', mask: boolean = true): Promise<void> {
+function showLoading(title, mask) {
+  if (title === undefined) {
+    title = '加载中...';
+  }
+  if (mask === undefined) {
+    mask = true;
+  }
   return new Promise((resolve, reject) => {
     wx.showLoading({
       title,
@@ -71,15 +60,15 @@ export function showLoading(title: string = '加载中...', mask: boolean = true
 /**
  * 隐藏加载提示
  */
-export function hideLoading(): void {
+function hideLoading() {
   wx.hideLoading();
 }
 
 /**
  * 显示模态对话框
  */
-export function showModal(options: ModalOptions | string): Promise<boolean> {
-  const opts: ModalOptions = typeof options === 'string'
+function showModal(options) {
+  const opts = typeof options === 'string'
     ? { content: options }
     : options;
 
@@ -103,14 +92,20 @@ export function showModal(options: ModalOptions | string): Promise<boolean> {
 /**
  * 确认对话框
  */
-export function confirm(content: string, title: string = '确认'): Promise<boolean> {
+function confirm(content, title) {
+  if (title === undefined) {
+    title = '确认';
+  }
   return showModal({ title, content });
 }
 
 /**
  * 警告对话框
  */
-export function alert(content: string, title: string = '提示'): Promise<void> {
+function alert(content, title) {
+  if (title === undefined) {
+    title = '提示';
+  }
   return new Promise((resolve, reject) => {
     wx.showModal({
       title,
@@ -122,7 +117,7 @@ export function alert(content: string, title: string = '提示'): Promise<void> 
   });
 }
 
-export default {
+module.exports = {
   showToast,
   showSuccess,
   showError,

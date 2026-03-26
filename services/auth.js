@@ -2,50 +2,25 @@
  * 认证服务
  */
 
-import { userApi } from './api';
-import { setStorageSync, getStorageSync, removeStorage } from './storage';
-import { CACHE_KEYS } from '../utils/constant';
-
-export interface UserInfo {
-  _id: string;
-  user_name: string;
-  nick_name: string;
-  avatar_url: string;
-  phone: string;
-  school: string;
-  grade: string;
-  roles: string[];
-  current_role: 'student' | 'teacher';
-  points?: number;
-  total_points?: number;
-  status: string;
-  is_registered: boolean;
-  teacher_subject?: string;
-  teacher_project?: string;
-  teacher_title?: string;
-}
-
-export interface LoginResult {
-  openid: string;
-  is_registered: boolean;
-  user_info: UserInfo | null;
-}
+const { userApi } = require('./api');
+const { setStorageSync, getStorageSync, removeStorage } = require('./storage');
+const { CACHE_KEYS } = require('../utils/constant');
 
 /**
  * 认证服务类
  */
-export class AuthService {
+class AuthService {
   /**
    * 获取当前用户 openid
    */
-  static getOpenid(): string {
+  static getOpenid() {
     return getStorageSync(CACHE_KEYS.OPENID) || '';
   }
 
   /**
    * 检查用户是否已登录
    */
-  static isLoggedIn(): boolean {
+  static isLoggedIn() {
     const userInfo = this.getUserInfo();
     return userInfo !== null && userInfo.is_registered;
   }
@@ -53,7 +28,7 @@ export class AuthService {
   /**
    * 获取当前用户信息
    */
-  static getUserInfo(): UserInfo | null {
+  static getUserInfo() {
     const userInfoStr = getStorageSync(CACHE_KEYS.USER_INFO);
     if (!userInfoStr) return null;
     try {
@@ -66,7 +41,7 @@ export class AuthService {
   /**
    * 获取当前角色
    */
-  static getCurrentRole(): 'student' | 'teacher' {
+  static getCurrentRole() {
     const userInfo = this.getUserInfo();
     return userInfo?.current_role || 'student';
   }
@@ -74,7 +49,7 @@ export class AuthService {
   /**
    * 检查用户是否拥有指定角色
    */
-  static hasRole(role: 'student' | 'teacher'): boolean {
+  static hasRole(role) {
     const userInfo = this.getUserInfo();
     return userInfo?.roles?.includes(role) || false;
   }
@@ -82,7 +57,7 @@ export class AuthService {
   /**
    * 微信登录
    */
-  static async wxLogin(): Promise<LoginResult> {
+  static async wxLogin() {
     // 1. 获取 openid
     const loginRes = await userApi.login();
     if (!loginRes.success) {
@@ -105,14 +80,7 @@ export class AuthService {
   /**
    * 用户注册
    */
-  static async register(params: {
-    user_name: string;
-    phone: string;
-    school?: string;
-    grade?: string;
-    avatar_url?: string;
-    nick_name?: string;
-  }): Promise<UserInfo> {
+  static async register(params) {
     const res = await userApi.register(params);
 
     if (!res.success) {
@@ -127,7 +95,7 @@ export class AuthService {
   /**
    * 切换角色
    */
-  static async switchRole(role: 'student' | 'teacher'): Promise<boolean> {
+  static async switchRole(role) {
     const res = await userApi.switchRole(role);
 
     if (res.success) {
@@ -151,7 +119,7 @@ export class AuthService {
   /**
    * 申请教师权限
    */
-  static async applyTeacher(params: { subject: string; project: string }): Promise<boolean> {
+  static async applyTeacher(params) {
     const res = await userApi.applyTeacher(params);
 
     if (res.success) {
@@ -170,14 +138,14 @@ export class AuthService {
   /**
    * 更新用户信息
    */
-  static updateLocalUserInfo(userInfo: UserInfo): void {
+  static updateLocalUserInfo(userInfo) {
     setStorageSync(CACHE_KEYS.USER_INFO, JSON.stringify(userInfo));
   }
 
   /**
    * 退出登录
    */
-  static logout(): void {
+  static logout() {
     removeStorage(CACHE_KEYS.USER_INFO);
     removeStorage(CACHE_KEYS.OPENID);
   }
@@ -185,10 +153,12 @@ export class AuthService {
   /**
    * 跳转到登录页
    */
-  static navigateToLogin(redirectUrl?: string): void {
+  static navigateToLogin(redirectUrl) {
     const url = redirectUrl
       ? `/pages/login/index?redirect=${encodeURIComponent(redirectUrl)}`
       : '/pages/login/index';
     wx.navigateTo({ url });
   }
 }
+
+module.exports = AuthService;

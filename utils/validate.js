@@ -7,7 +7,7 @@
  * @param phone 手机号
  * @returns 是否有效
  */
-export function isValidPhone(phone: string): boolean {
+function isValidPhone(phone) {
   const reg = /^1[3-9]\d{9}$/;
   return reg.test(phone);
 }
@@ -17,7 +17,7 @@ export function isValidPhone(phone: string): boolean {
  * @param email 邮箱
  * @returns 是否有效
  */
-export function isValidEmail(email: string): boolean {
+function isValidEmail(email) {
   const reg = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
   return reg.test(email);
 }
@@ -27,7 +27,7 @@ export function isValidEmail(email: string): boolean {
  * @param idCard 身份证号
  * @returns 是否有效
  */
-export function isValidIdCard(idCard: string): boolean {
+function isValidIdCard(idCard) {
   const reg = /^[1-9]\d{5}(18|19|20)\d{2}((0[1-9])|(1[0-2]))(([0-2][1-9])|10|20|30|31)\d{3}[0-9Xx]$/;
   return reg.test(idCard);
 }
@@ -37,7 +37,7 @@ export function isValidIdCard(idCard: string): boolean {
  * @param password 密码
  * @returns 强度等级：0-弱，1-中，2-强
  */
-export function getPasswordStrength(password: string): number {
+function getPasswordStrength(password) {
   if (!password || password.length < 6) {
     return 0;
   }
@@ -84,7 +84,10 @@ export function getPasswordStrength(password: string): number {
  * @param minLength 最小长度，默认6
  * @returns 是否有效
  */
-export function isValidPassword(password: string, minLength: number = 6): boolean {
+function isValidPassword(password, minLength) {
+  if (minLength === undefined) {
+    minLength = 6;
+  }
   return password.length >= minLength;
 }
 
@@ -95,9 +98,15 @@ export function isValidPassword(password: string, minLength: number = 6): boolea
  * @param maxLength 最大长度，默认20
  * @returns 是否有效
  */
-export function isValidUsername(username: string, minLength: number = 2, maxLength: number = 20): boolean {
+function isValidUsername(username, minLength, maxLength) {
   if (!username) {
     return false;
+  }
+  if (minLength === undefined) {
+    minLength = 2;
+  }
+  if (maxLength === undefined) {
+    maxLength = 20;
   }
   const trimmed = username.trim();
   return trimmed.length >= minLength && trimmed.length <= maxLength;
@@ -110,7 +119,7 @@ export function isValidUsername(username: string, minLength: number = 2, maxLeng
  * @param maxLength 最大长度，默认20
  * @returns 是否有效
  */
-export function isValidNickname(nickname: string, minLength: number = 2, maxLength: number = 20): boolean {
+function isValidNickname(nickname, minLength, maxLength) {
   return isValidUsername(nickname, minLength, maxLength);
 }
 
@@ -119,7 +128,7 @@ export function isValidNickname(nickname: string, minLength: number = 2, maxLeng
  * @param value 值
  * @returns 是否为空
  */
-export function isEmpty(value: any): boolean {
+function isEmpty(value) {
   if (value === null || value === undefined) {
     return true;
   }
@@ -140,7 +149,7 @@ export function isEmpty(value: any): boolean {
  * @param url URL地址
  * @returns 是否有效
  */
-export function isValidUrl(url: string): boolean {
+function isValidUrl(url) {
   const reg = /^(https?:\/\/)?([\da-z\.-]+)\.([a-z\.]{2,6})([\/\w \.-]*)*\/?$/;
   return reg.test(url);
 }
@@ -150,7 +159,7 @@ export function isValidUrl(url: string): boolean {
  * @param value 值
  * @returns 是否为数字
  */
-export function isNumber(value: any): boolean {
+function isNumber(value) {
   return !isNaN(parseFloat(value)) && isFinite(value);
 }
 
@@ -161,7 +170,7 @@ export function isNumber(value: any): boolean {
  * @param max 最大值
  * @returns 是否在范围内
  */
-export function isInRange(value: number, min: number, max: number): boolean {
+function isInRange(value, min, max) {
   return value >= min && value <= max;
 }
 
@@ -170,7 +179,7 @@ export function isInRange(value: number, min: number, max: number): boolean {
  * @param cardNo 银行卡号
  * @returns 是否有效
  */
-export function isValidBankCard(cardNo: string): boolean {
+function isValidBankCard(cardNo) {
   const reg = /^[1-9]\d{15,18}$/;
   return reg.test(cardNo.replace(/\s/g, ''));
 }
@@ -180,12 +189,12 @@ export function isValidBankCard(cardNo: string): boolean {
  * @param name 姓名
  * @returns 是否有效
  */
-export function isValidChineseName(name: string): boolean {
+function isValidChineseName(name) {
   const reg = /^[\u4e00-\u9fa5]{2,20}$/;
   return reg.test(name);
 }
 
-export default {
+module.exports = {
   isValidPhone,
   isValidEmail,
   isValidIdCard,
