@@ -1,5 +1,7 @@
 // pages/login/login.js
-import Toast, { hideToast } from 'tdesign-miniprogram/toast';
+import auth from '../../services/auth';
+import { uploadFile } from '../../services/api';
+import toast from '../../utils/toast';
 
 Page({
 
@@ -8,24 +10,17 @@ Page({
    */
   data: {
     isLogin: false,
-    isTeacherLogin: false,
-    usePasswordLogin: false,
     isFirstLogin: false,
-    openid: '',
-    loginAccount: '',
-    loginPassword: '',
     defaultAvatarUrl: '/assets/default-avatar.png',
     userInfo: {
-      userName: '',
-      avatarUrl: '',
+      user_name: '',
+      avatar_url: '',
       school: '',
       grade: '',
       phone: '',
+      birthday: '',
       address: '',
-      points: 0,
-      useablePoints: 0
     },
-    isLoading: false,
     grades: [
       {label: '一年级', value: '一年级'},
       {label: '二年级', value: '二年级'},
@@ -40,90 +35,16 @@ Page({
       {label: '高二', value: '高二'},
       {label: '高三', value: '高三'},
     ],
-    projects: [
-      {label: '编程', value: '编程', projectId: '1001'},
-      {label: '机器人', value: '机器人', projectId: '1002'},
-      {label: '无人机', value: '无人机', projectId: '1003'},
-    ],
-    teacherInfo: {
-      name: '',
-      project: '',
-      projectId: '',
-      phone: '',
-      avatarUrl: ''
-    },
+    birthdayPickerVisible: false,
     gradePickerVisible: false,
-    projectPickerVisible: false,
-    phoneError: false
+    phoneError: false,
+    date: '',
   },
 
   /**
    * 生命周期函数--监听页面加载
    */
   onLoad(options) {
-    this.setData({
-      openid: wx.getStorageSync('openid')
-    })
-    this.checkLogin()
-    if (!this.data.isLogin) {
-      if (!options.userLogin) {
-        wx.showToast({
-          title: '请先登录',
-          icon: 'none'
-        })
-      }
-    } else {
-      wx.showToast({
-        title: '已登录',
-        icon: 'none'
-      })
-      wx.navigateBack()
-    }
-  },
-
-  checkLogin() {
-    const userInfo = wx.getStorageSync('userInfo')
-    const isStudentLogin = wx.getStorageSync('isStudentLogin')
-    const isTeacherLogin = wx.getStorageSync('isTeacherLogin')
-    if (userInfo || isStudentLogin || isTeacherLogin) {
-      this.setData({
-        isLogin: true,
-        userInfo: userInfo
-      })
-    }
-  },
-
-  handleGoBack() {
-    wx.navigateBack()
-  },
-
-  onTabsChange(e) {
-    this.setData({
-      isTeacherLogin: e.detail.value
-    })
-  },
-
-  handleChangeLoginType() {
-    this.setData({
-      usePasswordLogin: !this.data.usePasswordLogin
-    })
-  },
-
-  showLoading() {
-    Toast({
-      context: this,
-      selector: '#t-toast',
-      message: '加载中...',
-      theme: 'loading',
-      direction: 'column',
-    });
-  },
-
-  hideLoading() {
-    hideToast({
-      context: this,
-      selector: '#t-toast',
-    });
   },
 
   onChooseAvatar(e) {
@@ -140,50 +61,37 @@ Page({
     })
   },
 
-  onProjectPicker() {
+  onBirthdayPicker() {
     this.setData({
-      projectPickerVisible: true
+      birthdayPickerVisible: true
+    })
+    this.setData({
+      date: new Date().toLocaleDateString()
     })
   },
 
   onPickerChange(e) {
     const { key } = e.currentTarget.dataset;
-    const { value } = e.detail;
+    let { value } = e.detail;
+    if (key === 'userInfo.grade') {
+      value = value[0]
+    }
     this.setData({
       [`${key}`]: value
     });
-    if (key === 'teacherInfo.project') {
-      this.setData({
-        [`teacherInfo.projectId`]: this.data.projects[e.detail.columns[0].index].projectId
-      })
-    }
     this.onPickerCancel(e)
   },
 
-  onColumnChange(e) {
-    const { key } = e.currentTarget.dataset;
-    const { value } = e.detail;
+  onPickerCancel(e) {
     this.setData({
-      [`${key}`]: value
-    });
-    if (key === 'teacherInfo.project') {
-      this.setData({
-        [`teacherInfo.projectId`]: this.data.projects[e.detail.index].projectId
-      })
-    }
+      gradePickerVisible : false
+    })
   },
 
-  onPickerCancel(e) {
-    const { key } = e.currentTarget.dataset;
-    if (key === 'userInfo.grade') {
-      this.setData({
-        gradePickerVisible : false
-      })
-    } else {
-      this.setData({
-        projectPickerVisible: false
-      })
-    }
+  onBirthdayCancel(e) {
+    this.setData({
+      birthdayPickerVisible: false
+    })
   },
 
   onPhoneInput(e) {
@@ -206,320 +114,58 @@ Page({
     });
   },
 
-  studentLogin() {
-    this.showLoading()
-    wx.cloud.callFunction({
-      name: 'login',
-      data: {
-        openid: this.data.openid,
-        role: 'student'
-      }
-    }).then(res => {
-      this.hideLoading()
-      if (res.result.code === 200) {
+  onLogin() {
+    toast.showLoading('登录中...');
+    auth.wxLogin().then(res => {
+      if (res.is_registered) {
+        toast.hideLoading();
+        toast.showSuccess('登录成功');
+        setTimeout(() => {
+          wx.navigateBack();
+        }, 1000);
+      } else {
         this.setData({
-          isLogin: true,
-          userInfo: res.result.data
-        })
-        wx.setStorageSync('userInfo', res.result.data)
-        wx.setStorageSync('isStudentLogin', true)
-        wx.navigateBack()
-      } else if (res.result.code === 401) {
-        wx.showToast({
-          title: '首次登录请先完善信息',
-          icon: 'none'
-        })
-        this.setData({
-          isFirstLogin: true
-        })
-      } else {
-        wx.showToast({
-          title: '登录失败',
-          icon: 'none'
-        })
+          isFirstLogin: true,
+        });
+        toast.hideLoading();
+        toast.showToast('首次登录，请完善信息');
       }
     })
   },
 
-  studentRegister() {
-    const userInfo = this.data.userInfo
-    if (!userInfo.userName) {
-      wx.showToast({
-        title: '请输入姓名',
-        icon: 'none'
-      })
-      return ;
+  onRegister() {
+    if (!this.validateForm()) {
+      return;
     }
-    if (!userInfo.school) {
-      wx.showToast({
-        title: '请输入学校',
-        icon: 'none'
+    toast.showLoading('注册中...')
+    const cloudPath = `avatars/${Date.now()}_${Math.random().toString(36).substr(2, 9)}.jpg`
+    const filePath = this.data.userInfo.avatar_url
+    uploadFile(filePath, cloudPath).then(res => {
+      console.log('上传成功', res);
+      this.setData({
+        'userInfo.avatar_url': res.fileID
       })
-      return ;
-    }
-    if (!userInfo.grade) {
-      wx.showToast({
-        title: '请选择年级',
-        icon: 'none'
+      auth.register(this.data.userInfo).then(res => {
+        toast.hideLoading();
+        toast.showSuccess('注册成功');
+        setTimeout(() => {
+          wx.navigateBack();
+        }, 1000);
+      }).catch(e => {
+        toast.hideLoading();
+        toast.showToast('注册失败，请重试');
+        console.error('注册失败', e);
       })
-      return ;
-    }
-    if (!userInfo.phone || this.data.phoneError) {
-      wx.showToast({
-        title: '请输入正确手机号',
-        icon: 'none'
-      })
-      return ;
-    }
-    this.showLoading()
-
-    // 检查是否选择了头像，如果没有则使用默认头像
-    const avatarFilePath = userInfo.avatarUrl ? userInfo.avatarUrl : this.data.defaultAvatarUrl
-
-    // 判断是否需要上传头像
-    if (userInfo.avatarUrl) {
-      // 上传自定义头像到云存储
-      wx.cloud.uploadFile({
-        cloudPath: `avatars/${Date.now()}_${Math.random().toString(36).substr(2, 9)}.jpg`,
-        filePath: avatarFilePath,
-      }).then(uploadRes => {
-        if (uploadRes.fileID) {
-          userInfo.avatarUrl = uploadRes.fileID
-          return this.registerStudent(userInfo)
-        } else {
-          wx.showToast({
-            title: '头像上传失败',
-            icon: 'none'
-          })
-          return Promise.reject('头像上传失败')
-        }
-      }).catch(err => {
-        this.hideLoading()
-        console.error('注册失败:', err)
-      })
-    } else {
-      // 使用默认头像，直接注册
-      userInfo.avatarUrl = this.data.defaultAvatarUrl
-      this.registerStudent(userInfo)
-    }
-  },
-
-  registerStudent(userInfo) {
-    return wx.cloud.callFunction({
-      name: 'register-student',
-      data: {
-        openid: this.data.openid,
-        userInfo: userInfo
-      }
-    }).then(res => {
-      this.hideLoading()
-      if (res.result.code === 200) {
-        wx.showToast({
-          title: '注册成功',
-          icon: 'none'
-        })
-      } else {
-        wx.showToast({
-          title: res.result.msg,
-          icon: 'none'
-        })
-      }
-      wx.setStorageSync('userInfo', res.result.data)
-      wx.setStorageSync('isStudentLogin', true)
-      wx.navigateBack()
-    }).catch(err => {
-      this.hideLoading()
-      console.error('注册失败:', err)
     })
   },
 
-  teacherLogin() {
-    this.showLoading()
-    wx.cloud.callFunction({
-      name: 'login',
-      data: {
-        openid: this.data.openid,
-        role: 'teacher'
-      }
-    }).then(res => {
-      this.hideLoading()
-      if (res.result.code === 200) {
-        this.setData({
-          isLogin: true,
-          teacherInfo: res.result.data
-        })
-        wx.setStorageSync('teacherInfo', res.result.data)
-        wx.setStorageSync('isTeacherLogin', true)
-        wx.reLaunch({
-          url: '/pages/teacher/index'
-        })
-      } else if (res.result.code === 401) {
-        wx.showToast({
-          title: '该微信号未绑定教师账号',
-          icon: 'none'
-        })
-        this.setData({
-          usePasswordLogin: true
-        })
-      } else {
-        wx.showToast({
-          title: '登录失败',
-          icon: 'none'
-        })
-      }
-    })
+  validateForm() {
+    const { userInfo, phoneError } = this.data;
+    if (!userInfo.user_name || !userInfo.phone || !userInfo.school || !userInfo.grade || phoneError) {
+      toast.showToast('请完善必填信息');
+      return false;
+    }
+    return true;
   },
 
-  teacherPasswordLogin() {
-    const { teacherInfo, loginAccount, loginPassword } = this.data;
-    if (!loginAccount) {
-      wx.showToast({
-        title: '请输入账号',
-        icon: 'none'  
-      })
-      return ;
-    }
-    if (!loginPassword) {
-      wx.showToast({
-        title: '请输入密码',
-        icon: 'none'  
-      })
-      return ;
-    }
-    this.showLoading()
-    wx.cloud.callFunction({
-      name: 'teacher-login',
-      data: {
-        openid: this.data.openid,
-        account: loginAccount,
-        password: loginPassword
-      }
-    }).then(res => {
-      this.hideLoading()
-      if (res.result.code === 200) {
-        if (res.result.data.needImprove) {
-          this.setData({
-            isFirstLogin: true,
-            teacherInfo: res.result.data
-          })
-          wx.showToast({
-            title: '请完善信息',
-            icon: 'none'
-          })
-        } else {
-          this.setData({
-            isLogin: true,
-            teacherInfo: res.result.data
-          })
-          wx.setStorageSync('teacherInfo', res.result.data)
-          wx.setStorageSync('isTeacherLogin', true)
-          wx.showToast({
-            title: '登录成功',
-            icon: 'none'
-          })
-          wx.reLaunch({
-            url: '/pages/teacher/index'
-          })
-        }
-      } else {
-        wx.showToast({
-          title: res.result.msg,
-          icon: 'none'
-        })
-      }
-    })
-  },
-
-  teacherRegister() {
-    const teacherInfo = this.data.teacherInfo
-    if (!teacherInfo.name) {
-      wx.showToast({
-        title: '请输入姓名',
-        icon: 'none'
-      })
-      return ;
-    }
-    if (!teacherInfo.project) {
-      wx.showToast({
-        title: '请选择项目',
-        icon: 'none'
-      })
-      return ;
-    }
-    if (!teacherInfo.phone || this.data.phoneError) {
-      wx.showToast({
-        title: '请输入正确手机号',
-        icon: 'none'
-      })
-      return ;
-    }
-    this.showLoading()
-
-    // 检查是否选择了头像，如果没有则使用默认头像
-    const avatarFilePath = teacherInfo.avatarUrl ? teacherInfo.avatarUrl : this.data.defaultAvatarUrl
-
-    // 判断是否需要上传头像
-    if (teacherInfo.avatarUrl) {
-      // 上传自定义头像到云存储
-      wx.cloud.uploadFile({
-        cloudPath: `avatars/${Date.now()}_${Math.random().toString(36).substr(2, 9)}.jpg`,
-        filePath: avatarFilePath,
-      }).then(uploadRes => {
-        if (uploadRes.fileID) {
-          teacherInfo.avatarUrl = uploadRes.fileID
-          return this.registerTeacher(teacherInfo)
-        } else {
-          wx.showToast({
-            title: '头像上传失败',
-            icon: 'none'
-          })
-          return Promise.reject('头像上传失败')
-        }
-      }).catch(err => {
-        this.hideLoading()
-        console.error('注册失败:', err)
-      })
-    } else {
-      // 使用默认头像，直接注册
-      teacherInfo.avatarUrl = this.data.defaultAvatarUrl
-      this.registerTeacher(teacherInfo)
-    }
-  },
-
-  registerTeacher(teacherInfo) {
-    console.log('registerTeacher:', teacherInfo)
-    wx.cloud.callFunction({
-      name: 'update-teacher-info',
-      data: {
-        openid: this.data.openid,
-        teacherInfo: teacherInfo
-      }
-    }).then(res => {
-      this.hideLoading()
-      if (res.result.code === 200) {
-        wx.showToast({
-          title: '提交成功',
-          icon: 'none'
-        })
-        wx.setStorageSync('teacherInfo', res.result.data)
-        wx.setStorageSync('isTeacherLogin', true)
-        wx.reLaunch({
-          url: '/pages/teacher/index'
-        })
-      } else {
-        console.log(res.result)
-        wx.showToast({
-          title: '注册失败',
-          icon: 'none'
-        })
-      }
-    }).catch(err => {
-      this.hideLoading()
-      console.error('注册失败:', err)
-      wx.showToast({
-        title: '注册失败',
-        icon: 'none'
-      })
-    })
-  }
 })

@@ -63,7 +63,6 @@ class AuthService {
     if (!loginRes.success) {
       throw new Error(loginRes.message || '登录失败');
     }
-
     const openid = loginRes.data.openid;
     setStorageSync(CACHE_KEYS.OPENID, openid);
 
@@ -114,25 +113,6 @@ class AuthService {
     }
 
     throw new Error(res.message || '切换失败');
-  }
-
-  /**
-   * 申请教师权限
-   */
-  static async applyTeacher(params) {
-    const res = await userApi.applyTeacher(params);
-
-    if (res.success) {
-      // 更新本地缓存
-      const userInfo = this.getUserInfo();
-      if (userInfo) {
-        userInfo.roles = [...(userInfo.roles || []), 'teacher'];
-        setStorageSync(CACHE_KEYS.USER_INFO, JSON.stringify(userInfo));
-      }
-      return true;
-    }
-
-    throw new Error(res.message || '申请失败');
   }
 
   /**

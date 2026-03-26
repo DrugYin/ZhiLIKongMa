@@ -30,6 +30,20 @@ async function callFunction(config) {
 }
 
 /**
+ * 云存储
+ */
+function uploadFile(filePath, cloudPath) {
+  return new Promise((resolve, reject) => {
+    wx.cloud.uploadFile({
+      cloudPath,
+      filePath,
+      success: res => resolve(res),
+      fail: err => reject(err)
+    });
+  });
+}
+
+/**
  * 用户相关 API
  */
 const userApi = {
@@ -53,9 +67,6 @@ const userApi = {
     return callFunction({ name: 'switch-role', data: { role } });
   },
 
-  applyTeacher(data) {
-    return callFunction({ name: 'apply-teacher', data });
-  }
 };
 
 /**
@@ -153,6 +164,7 @@ const configApi = {
 
 module.exports = {
   callFunction,
+  uploadFile,
   userApi,
   classApi,
   taskApi,

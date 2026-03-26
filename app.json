@@ -63,7 +63,5 @@
   "sitemapLocation": "sitemap.json",
   "lazyCodeLoading": "requiredComponents",
   "usingComponents": {
-    "t-row": "tdesign-miniprogram/row/row",
-    "t-col": "tdesign-miniprogram/col/col"
   }
 }

@@ -30,32 +30,10 @@ Component({
    * 组件的初始数据
    */
   data: {
-    navBarHeight: app.globalData.navBarHeight,
-    menuRight: app.globalData.menuRight,
-    menuTop: app.globalData.menuTop,
-    menuHeight: app.globalData.menuHeight,
-    statusBarHeight: 0,
-    customBarHeight: 0
   },
 
   lifetimes: {
     attached() {
-      // 获取系统信息，适配不同机型的安全区
-      const windowInfo = wx.getWindowInfo();
-      const deviceInfo = wx.getDeviceInfo();
-
-      const { statusBarHeight } = windowInfo;
-
-      // 获取胶囊按钮位置信息
-      const menuButton = wx.getMenuButtonBoundingClientRect();
-
-      // 计算自定义导航栏高度
-      const customBarHeight = (menuButton.top - statusBarHeight) * 2 + menuButton.height + 10;
-
-      this.setData({
-        statusBarHeight,
-        customBarHeight
-      });
     }
   },
 

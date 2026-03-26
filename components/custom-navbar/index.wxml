@@ -1,11 +1,10 @@
-<view class="custom-navbar-wrapper" style="height:{{navBarHeight}}px;">
+<view class="custom-navbar-wrapper">
   <t-navbar
     title="{{title}}"
     left-arrow="{{showBack}}"
     placeholder="{{placeholder}}"
     t-class-title="{{titleClass}}"
     bind:go-back="handleGoBack"
-    style="height:{{navBarHeight}}px;"
   />
 </view>
 <!-- 占位，高度与顶部栏一样 -->
