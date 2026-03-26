@@ -1,7 +1,7 @@
 // pages/login/login.js
-import auth from '../../services/auth';
-import { uploadFile } from '../../services/api';
-import toast from '../../utils/toast';
+const AuthService = require('../../services/auth');
+const { uploadFile } = require('../../services/api');
+const toast = require('../../utils/toast');
 
 Page({
 
@@ -116,9 +116,10 @@ Page({
 
   onLogin() {
     toast.showLoading('登录中...');
-    auth.wxLogin().then(res => {
+    AuthService.wxLogin().then(res => {
       if (res.is_registered) {
         toast.hideLoading();
+        AuthService.updateLocalUserInfo(res.user_info)
         toast.showSuccess('登录成功');
         setTimeout(() => {
           wx.navigateBack();
@@ -145,7 +146,7 @@ Page({
       this.setData({
         'userInfo.avatar_url': res.fileID
       })
-      auth.register(this.data.userInfo).then(res => {
+      AuthService.register(this.data.userInfo).then(res => {
         toast.hideLoading();
         toast.showSuccess('注册成功');
         setTimeout(() => {

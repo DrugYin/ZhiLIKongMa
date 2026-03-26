@@ -1,5 +1,5 @@
 // app.js
-import auth from './services/auth';
+const auth = require('./services/auth');
 
 App({
 
@@ -13,7 +13,11 @@ App({
     });
     if (!auth.isLoggedIn()) {
       // 用户未登录，执行登录流程
-      auth.wxLogin().catch((error) => {
+      auth.wxLogin().then(res => {
+        if (res.is_registered) {
+          auth.updateLocalUserInfo(res.user_info);
+        }
+      }).catch((error) => {
         console.error('登录失败:', error);
       });
     }

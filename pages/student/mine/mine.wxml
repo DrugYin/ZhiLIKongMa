@@ -6,11 +6,11 @@
   </view>
   <view class="content">
     <view class="user-card">
-      <t-avatar class="avatar" size="large" image="{{userInfo.avatarUrl || '/assets/default-avatar.png'}}" />
+      <t-avatar class="avatar" size="large" image="{{userInfo.avatar_url || '/assets/default-avatar.png'}}" />
       <view class="user-info">
-        <text>{{ isLogin ? userInfo.userName : '游客' }}</text>
+        <text>{{ isLoggedIn ? userInfo.user_name : '游客' }}</text>
       </view>
-      <view class="login-btn" wx:if="{{ !isLogin }}" bind:tap="goLogin">
+      <view class="login-btn" wx:if="{{ !isLoggedIn }}" bind:tap="goLogin">
         <text>去登陆</text>
       </view>
     </view>
@@ -18,7 +18,7 @@
     <view class="points-card">
       <view class="points-item">
         <text class="points-icon">⭐</text>
-        <text class="points-value">{{isLogin ? userInfo.points || 0 : '-'}}</text>
+        <text class="points-value">{{isLoggedIn ? userInfo.points || 0 : '-'}}</text>
         <text class="points-label">积分</text>
       </view>
     </view>
@@ -26,12 +26,12 @@
     <!-- 功能列表 -->
     <view  class="function-card">
       <t-cell-group theme="card" class="function-list">
-        <t-cell title="✅ 已提交任务" hover arrow url="{{ isLogin ? '/pages/student/submissions/submissions' : '/pages/login/login' }}" />
-        <t-cell title="🎓 我的班级" hover arrow url="{{ isLogin ? '/pages/student/class-manege/class-manege' : '/pages/login/login' }}" />
-        <t-cell title="⚙️ 账号设置" hover arrow url="{{ isLogin ? '/pages/student/setting/setting' : '/pages/login/login'}}" />
-        <t-cell wx:if="{{ isLogin }}" title="🚪 退出登录" hover arrow bind:click="onLogout" />
+        <t-cell title="✅ 已提交任务" hover arrow url="{{ isLoggedIn ? '/pages/student/submissions/submissions' : '/pages/login/login' }}" />
+        <t-cell title="🎓 我的班级" hover arrow url="{{ isLoggedIn ? '/pages/student/class-manege/class-manege' : '/pages/login/login' }}" />
+        <t-cell title="⚙️ 账号设置" hover arrow url="{{ isLoggedIn ? '/pages/student/setting/setting' : '/pages/login/login'}}" />
+        <t-cell wx:if="{{isLoggedIn}}" title="🚪 退出登录" hover arrow bind:click="onLogout" />
         <t-dialog
-          visible="{{ showLogout}}"
+          visible="{{showLogout}}"
           title="退出登录"
           content="确定退出登录"
           confirm-btn="{{ { content: '确定', variant: 'base', theme: 'danger' } }}"

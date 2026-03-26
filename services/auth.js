@@ -22,7 +22,7 @@ class AuthService {
    */
   static isLoggedIn() {
     const userInfo = this.getUserInfo();
-    return userInfo !== null && userInfo.is_registered;
+    return userInfo !== null && userInfo.is_registered === true;
   }
 
   /**
@@ -69,10 +69,18 @@ class AuthService {
     // 2. 查询用户信息
     const userRes = await userApi.getUserInfo();
 
+    const isRegistered = userRes?.is_registered || false;
+    const userInfo = userRes?.data || null;
+    
+    // 将 is_registered 合并到用户信息中，确保存储的用户信息包含此字段
+    if (userInfo) {
+      userInfo.is_registered = isRegistered;
+    }
+
     return {
       openid,
-      is_registered: userRes.data?.is_registered || false,
-      user_info: userRes.data || null
+      is_registered: isRegistered,
+      user_info: userInfo
     };
   }
 

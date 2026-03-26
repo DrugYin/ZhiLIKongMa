@@ -1,29 +1,62 @@
 // mine.js
-import Toast, { hideToast } from 'tdesign-miniprogram/toast';
+const AuthService = require('../../../services/auth');
 
 const app = getApp();
 Page({
   data: {
-    userInfo: [],
-    loginCode: '',
-    isLogin: false,
+    userInfo: {},
     showLogout: false,
+    isLoggedIn: false,
   },
-  onShow() {
-    this.loadUserInfo()
-    this.getTabBar().changeData({ type: 'student' })
-    this.getTabBar().init('/pages/student/mine/mine')
-  },
-
+  
   onLoad() {
-
+    this.checkLogin()
   },
 
+  checkLogin() {
+    if (AuthService.isLoggedIn()) {
+      this.setData({
+        isLoggedIn: true,
+        userInfo: AuthService.getUserInfo()
+      })
+      console.log(this.data)
+    }
+  },
+
+  
   goLogin: function () {
     wx.navigateTo({
       url: '/pages/login/login?userLogin=true'
     })
   },
+  
+  onLogout() {
+    this.setData({
+      showLogout: true
+    })
+  },
+
+  closeDialog() {
+    this.setData({
+      showLogout: false
+    })
+  },
+
+  handleLogout() {
+    AuthService.logout()
+    this.setData({
+      isLoggedIn: false,
+      userInfo: {}
+    })
+    this.closeDialog()
+  },
+
+  onShow() {
+    this.checkLogin()
+    this.getTabBar().changeData({ type: 'student' })
+    this.getTabBar().init('/pages/student/mine/mine')
+  },
+  
 
   onShareAppMessage() {
     return {
@@ -39,90 +72,5 @@ Page({
     }
   },
 
-  showLoading() {
-    Toast({
-      context: this,
-      selector: '#t-toast',
-      message: '加载中...',
-      theme: 'loading',
-      direction: 'column',
-    });
-  },
-
-  hideLoading() {
-    hideToast({
-      context: this,
-      selector: '#t-toast',
-    });
-  },
-
-  loadUserInfo() {
-    const userInfo = wx.getStorageSync('userInfo')
-    const isStudentLogin = wx.getStorageSync('isStudentLogin')
-    const isTeacherLogin = wx.getStorageSync('isTeacherLogin')
-    if (userInfo && (isStudentLogin || isTeacherLogin)) {
-      this.setData({
-        userInfo: userInfo,
-        isLogin: true,
-      })
-    }
-    if (this.data.isLogin) {
-      this.updateUserInfo()
-    }
-  },
-
-  updateUserInfo() {
-    try {
-      const openid = wx.getStorageSync('openid')
-      wx.cloud.callFunction({
-        name: 'get-user-info',
-        data: {
-          openid: openid
-        }
-      }).then(res => {
-        // console.log(res)
-        if (res && res.result && res.result.code === 200) {
-          const userInfo = res.result.data
-          this.setData({
-            userInfo: userInfo
-          })
-          wx.setStorageSync('userInfo', userInfo)
-        }
-      })
-    } catch(e) {
-      wx.showToast({
-        title: '更新失败',
-        icon: 'none'
-      })
-      console.log(e)
-    }
-  },
-
-  onLogout() {
-    this.setData({
-      showLogout: true
-    })
-  },
-
-  closeDialog() {
-    this.setData({
-      showLogout: false
-    })
-  },
-
-  handleLogout() {
-    this.setData({
-      showLogout: false
-    })
-    this.showLoading()
-    wx.removeStorageSync('userInfo')
-    wx.removeStorageSync('isStudentLogin')
-    wx.removeStorageSync('isTeacherLogin')
-    this.setData({
-      userInfo: [],
-      isLogin: false
-    })
-    this.hideLoading()
-  }
 
 })
