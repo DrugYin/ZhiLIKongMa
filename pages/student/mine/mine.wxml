@@ -29,6 +29,7 @@
         <t-cell title="✅ 已提交任务" hover arrow url="{{ isLoggedIn ? '/pages/student/submissions/submissions' : '/pages/login/login' }}" />
         <t-cell title="🎓 我的班级" hover arrow url="{{ isLoggedIn ? '/pages/student/class-manege/class-manege' : '/pages/login/login' }}" />
         <t-cell title="⚙️ 账号设置" hover arrow url="{{ isLoggedIn ? '/pages/student/setting/setting' : '/pages/login/login'}}" />
+        <t-cell wx:if="{{isTeacher}}" title="🧑‍🏫 前往教师端" hover arrow  />
         <t-cell wx:if="{{isLoggedIn}}" title="🚪 退出登录" hover arrow bind:click="onLogout" />
         <t-dialog
           visible="{{showLogout}}"

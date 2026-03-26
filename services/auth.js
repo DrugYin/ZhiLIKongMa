@@ -21,14 +21,14 @@ class AuthService {
    * 检查用户是否已登录
    */
   static isLoggedIn() {
-    const userInfo = this.getUserInfo();
+    const userInfo = this.getLocalUserInfo();
     return userInfo !== null && userInfo.is_registered === true;
   }
 
   /**
    * 获取当前用户信息
    */
-  static getUserInfo() {
+  static getLocalUserInfo() {
     const userInfoStr = getStorageSync(CACHE_KEYS.USER_INFO);
     if (!userInfoStr) return null;
     try {
@@ -36,6 +36,22 @@ class AuthService {
     } catch {
       return null;
     }
+  }
+
+  /**
+   * 查询用户信息
+   */
+  static async getUserInfo() {
+    const userRes = await userApi.getUserInfo();
+
+    const isRegistered = userRes?.is_registered || false;
+    const userInfo = userRes?.data || null;
+    
+    // 将 is_registered 合并到用户信息中，确保存储的用户信息包含此字段
+    if (userInfo) {
+      userInfo.is_registered = isRegistered;
+    }
+    return userInfo
   }
 
   /**
@@ -67,15 +83,11 @@ class AuthService {
     setStorageSync(CACHE_KEYS.OPENID, openid);
 
     // 2. 查询用户信息
-    const userRes = await userApi.getUserInfo();
+    const userInfo = await this.getUserInfo();
 
-    const isRegistered = userRes?.is_registered || false;
-    const userInfo = userRes?.data || null;
+    const isRegistered = userInfo?.is_registered || false;
     
     // 将 is_registered 合并到用户信息中，确保存储的用户信息包含此字段
-    if (userInfo) {
-      userInfo.is_registered = isRegistered;
-    }
 
     return {
       openid,

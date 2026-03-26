@@ -1,7 +1,7 @@
 // pages/login/login.js
-const AuthService = require('../../services/auth');
-const { uploadFile } = require('../../services/api');
-const toast = require('../../utils/toast');
+import AuthService from '../../services/auth'
+import toast from '../../utils/toast'
+import { uploadFile } from '../../services/api'
 
 Page({
 
@@ -149,9 +149,7 @@ Page({
       AuthService.register(this.data.userInfo).then(res => {
         toast.hideLoading();
         toast.showSuccess('注册成功');
-        setTimeout(() => {
-          wx.navigateBack();
-        }, 1000);
+        this.onLogin()
       }).catch(e => {
         toast.hideLoading();
         toast.showToast('注册失败，请重试');

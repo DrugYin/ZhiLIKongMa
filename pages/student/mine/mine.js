@@ -1,5 +1,5 @@
 // mine.js
-const AuthService = require('../../../services/auth');
+import AuthService from '../../../services/auth'
 
 const app = getApp();
 Page({
@@ -7,6 +7,7 @@ Page({
     userInfo: {},
     showLogout: false,
     isLoggedIn: false,
+    isTeacher: false
   },
   
   onLoad() {
@@ -17,9 +18,13 @@ Page({
     if (AuthService.isLoggedIn()) {
       this.setData({
         isLoggedIn: true,
-        userInfo: AuthService.getUserInfo()
+        userInfo: AuthService.getLocalUserInfo()
       })
-      console.log(this.data)
+      if (AuthService.hasRole('teacher')) {
+        this.setData({
+          isTeacher: true
+        })
+      }
     }
   },
 
@@ -72,5 +77,8 @@ Page({
     }
   },
 
+  onPullDownRefresh() {
+
+  }
 
 })

@@ -1,5 +1,5 @@
 // app.js
-const auth = require('./services/auth');
+import AuthService from './services/auth'
 
 App({
 
@@ -11,11 +11,11 @@ App({
       // 是否在将用户访问记录到用户管理中，在控制台中可见，默认为false
       traceUser: false,
     });
-    if (!auth.isLoggedIn()) {
+    if (!AuthService.isLoggedIn()) {
       // 用户未登录，执行登录流程
-      auth.wxLogin().then(res => {
+      AuthService.wxLogin().then(res => {
         if (res.is_registered) {
-          auth.updateLocalUserInfo(res.user_info);
+          AuthService.updateLocalUserInfo(res.user_info);
         }
       }).catch((error) => {
         console.error('登录失败:', error);
