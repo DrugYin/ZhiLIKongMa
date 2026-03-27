@@ -2,9 +2,9 @@
  * 项目配置服务
  */
 
-const { configApi } = require('../services/api');
-const { setProjects, getProjects, setConfig, getConfig } = require('../services/storage');
-const { PROJECT_CODES, PROJECT_NAMES } = require('../utils/constant');
+import { configApi } from '../services/api';
+import { setProjects, getProjects, setConfig, getConfig } from '../services/storage';
+import { PROJECT_CODES, PROJECT_NAMES } from '../utils/constant';
 
 class ProjectService {
   constructor() {

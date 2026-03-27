@@ -1,0 +1,15 @@
+<view class="loading-container {{show ? '' : 'hidden'}} {{mask ? 'with-mask' : ''}}">
+  <view class="loading-wrapper {{vertical ? 'vertical' : 'horizontal'}}">
+    <view class="loading-spinner size-{{size}}">
+      <view class="spinner-dot"></view>
+      <view class="spinner-dot"></view>
+      <view class="spinner-dot"></view>
+      <view class="spinner-dot"></view>
+      <view class="spinner-dot"></view>
+      <view class="spinner-dot"></view>
+      <view class="spinner-dot"></view>
+      <view class="spinner-dot"></view>
+    </view>
+    <view class="loading-text" wx:if="{{text}}">{{text}}</view>
+  </view>
+</view>

@@ -1,0 +1,132 @@
+/* components/loading/loading.wxss */
+.loading-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20rpx;
+}
+
+.loading-container.hidden {
+  display: none;
+}
+
+.loading-container.with-mask {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: 9999;
+}
+
+.loading-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 30rpx;
+  background-color: rgba(0, 0, 0, 0.75);
+  border-radius: 16rpx;
+}
+
+.loading-wrapper.vertical {
+  flex-direction: column;
+}
+
+.loading-wrapper.vertical .loading-text {
+  margin-top: 16rpx;
+}
+
+.loading-wrapper.horizontal {
+  flex-direction: row;
+}
+
+.loading-wrapper.horizontal .loading-text {
+  margin-left: 16rpx;
+}
+
+.loading-spinner {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.loading-spinner.size-small {
+  width: 40rpx;
+  height: 40rpx;
+}
+
+.loading-spinner.size-medium {
+  width: 60rpx;
+  height: 60rpx;
+}
+
+.loading-spinner.size-large {
+  width: 80rpx;
+  height: 80rpx;
+}
+
+.spinner-dot {
+  position: absolute;
+  width: 8rpx;
+  height: 8rpx;
+  background: #ffffff;
+  border-radius: 50%;
+  animation: spinner-rotate 1.2s linear infinite;
+}
+
+.spinner-dot:nth-child(1) {
+  transform: rotate(0deg) translate(25rpx);
+  animation-delay: -1.1s;
+}
+
+.spinner-dot:nth-child(2) {
+  transform: rotate(45deg) translate(25rpx);
+  animation-delay: -1.0s;
+}
+
+.spinner-dot:nth-child(3) {
+  transform: rotate(90deg) translate(25rpx);
+  animation-delay: -0.9s;
+}
+
+.spinner-dot:nth-child(4) {
+  transform: rotate(135deg) translate(25rpx);
+  animation-delay: -0.8s;
+}
+
+.spinner-dot:nth-child(5) {
+  transform: rotate(180deg) translate(25rpx);
+  animation-delay: -0.7s;
+}
+
+.spinner-dot:nth-child(6) {
+  transform: rotate(225deg) translate(25rpx);
+  animation-delay: -0.6s;
+}
+
+.spinner-dot:nth-child(7) {
+  transform: rotate(270deg) translate(25rpx);
+  animation-delay: -0.5s;
+}
+
+.spinner-dot:nth-child(8) {
+  transform: rotate(315deg) translate(25rpx);
+  animation-delay: -0.4s;
+}
+
+@keyframes spinner-rotate {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.2;
+  }
+}
+
+.loading-text {
+  color: #ffffff;
+  font-size: 26rpx;
+  text-align: center;
+}

@@ -1,4 +1,5 @@
 {
+  "enablePullDownRefresh": true,
   "usingComponents": {
     "custom-navbar": "/components/custom-navbar/index",
     "t-avatar": "tdesign-miniprogram/avatar/avatar",

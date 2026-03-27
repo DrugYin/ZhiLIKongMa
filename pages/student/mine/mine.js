@@ -27,7 +27,6 @@ Page({
       }
     }
   },
-
   
   goLogin: function () {
     wx.navigateTo({
@@ -78,7 +77,9 @@ Page({
   },
 
   onPullDownRefresh() {
-
+    if (this.data.isLoggedIn) {
+      
+    }
   }
 
 })

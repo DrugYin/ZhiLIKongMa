@@ -1,0 +1,40 @@
+<view class="empty-container {{show ? '' : 'hidden'}}">
+  <view class="empty-icon icon-{{icon}} size-{{imageSize}}">
+    <block wx:if="{{icon === 'default'}}">
+      <view class="empty-image">
+        <text class="icon-text">📭</text>
+      </view>
+    </block>
+    <block wx:elif="{{icon === 'search'}}">
+      <view class="empty-image">
+        <text class="icon-text">🔍</text>
+      </view>
+    </block>
+    <block wx:elif="{{icon === 'data'}}">
+      <view class="empty-image">
+        <text class="icon-text">📊</text>
+      </view>
+    </block>
+    <block wx:elif="{{icon === 'network'}}">
+      <view class="empty-image">
+        <text class="icon-text">🌐</text>
+      </view>
+    </block>
+    <block wx:elif="{{icon === 'order'}}">
+      <view class="empty-image">
+        <text class="icon-text">📋</text>
+      </view>
+    </block>
+    <block wx:elif="{{icon === 'message'}}">
+      <view class="empty-image">
+        <text class="icon-text">💬</text>
+      </view>
+    </block>
+  </view>
+  
+  <view class="empty-title" wx:if="{{title}}">{{title}}</view>
+  <view class="empty-description" wx:if="{{description}}">{{description}}</view>
+  <view class="empty-button" wx:if="{{buttonText}}">
+    <button class="empty-btn" bindtap="onButtonTap">{{buttonText}}</button>
+  </view>
+</view>

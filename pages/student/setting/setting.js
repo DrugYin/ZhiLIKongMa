@@ -1,4 +1,5 @@
 // pages/student/setting/setting.js
+import Toast from '../../../utils/toast'
 
 Page({
 
@@ -9,32 +10,10 @@ Page({
     
   },
 
-  showLoading() {
-    Toast({
-      context: this,
-      selector: '#t-toast',
-      message: '加载中...',
-      theme: 'loading',
-      direction: 'column',
-    });
-  },
-
-  hideLoading() {
-    hideToast({
-      context: this,
-      selector: '#t-toast',
-    });
-  },
-
-  handleGoBack() {
-    wx.navigateBack()
-  },
-
   /**
    * 生命周期函数--监听页面加载
    */
   onLoad(options) {
-    this.getUserInfo()
   },
 
   onChooseAvatar(e) {
@@ -74,19 +53,14 @@ Page({
 
   onPickerChange(e) {
     const { key } = e.currentTarget.dataset;
-    const { value } = e.detail;
+    let { value } = e.detail;
+    if (key === 'userInfo.grade') {
+      value = value[0]
+    }
     this.setData({
       [`${key}`]: value
     });
     this.onPickerCancel(e)
-  },
-
-  onColumnChange(e) {
-    const { key } = e.currentTarget.dataset;
-    const { value } = e.detail;
-    this.setData({
-      [`${key}`]: value
-    });
   },
 
   onPickerCancel(e) {
@@ -97,138 +71,11 @@ Page({
   },
 
   getUserInfo() {
-    this.showLoading()
-    const openid = wx.getStorageSync('openid')
-    try {
-      wx.cloud.callFunction({
-        name: 'get-user-info',
-        data: {
-          openid: openid
-        }
-      }).then(res => {
-        this.hideLoading()
-        if (res && res.result && res.result.code === 200) {
-          this.setData({
-            userInfo: res.result.data
-          })
-        } else {
-          wx.showToast({
-            title: '获取用户信息失败',
-            icon: 'none'
-          })
-          wx.navigateBack()
-          console.error(e)
-        }
-      })
-    } catch(e) {
-      wx.showToast({
-        title: '获取用户信息失败',
-        icon: 'none'
-      })
-      wx.navigateBack()
-      console.error(e)
-    }
+    
   },
 
   onSave() {
-    var userInfo = this.data.userInfo
-    if (!userInfo.userName) {
-      wx.showToast({
-        title: '请输入姓名',
-        icon: 'none'
-      })
-      return ;
-    }
-    if (!userInfo.school) {
-      wx.showToast({
-        title: '请输入学校',
-        icon: 'none'
-      })
-      return ;
-    }
-    if (!userInfo.grade) {
-      wx.showToast({
-        title: '请选择年级',
-        icon: 'none'
-      })
-      return ;
-    }
-    if (!userInfo.phone || this.data.phoneError) {
-      wx.showToast({
-        title: '请输入正确的手机号码',
-        icon: 'none'
-      })
-      return ;
-    }
-    this.showLoading()
-    this.setData({
-      loading: true
-    })
-    // 判断是否需要上传头像
-    if (this.data.avatarChanged && userInfo.avatarUrl && !userInfo.avatarUrl.startsWith('cloud://')) {
-      // 用户选择了新头像，上传自定义头像到云存储
-      wx.cloud.uploadFile({
-        cloudPath: `avatars/${Date.now()}_${Math.random().toString(36).substr(2, 9)}.jpg`,
-        filePath: userInfo.avatarUrl,
-      }).then(uploadRes => {
-        if (uploadRes.fileID) {
-          userInfo.avatarUrl = uploadRes.fileID
-          return this.updateUserInfo(userInfo)
-        } else {
-          wx.showToast({
-            title: '头像上传失败',
-            icon: 'none'
-          })
-          return Promise.reject('头像上传失败')
-        }
-      }).catch(err => {
-        this.hideLoading()
-        console.error('保存失败:', err)
-      })
-    } else {
-      // 头像未修改，或者是云存储链接，直接保存
-      if (!userInfo.avatarUrl) {
-        userInfo.avatarUrl = this.data.defaultAvatarUrl
-      }
-      this.updateUserInfo(userInfo)
-    }
-  },
-
-  updateUserInfo(userInfo) {
-    const openid = wx.getStorageSync('openid')
-    return wx.cloud.callFunction({
-      name: 'update-user-info',
-      data: {
-        openid: openid,
-        userInfo: userInfo
-      }
-    }).then(res => {
-      this.hideLoading()
-      this.setData({
-        loading: false
-      })
-      if (res.result.code === 200) {
-        wx.showToast({
-          title: '更新成功',
-          icon: 'none'
-        })
-        this.setData({
-          userInfo: res.result.data
-        })
-        wx.setStorageSync('userInfo', res.result.data)
-      } else {
-        wx.showToast({
-          title: res.result.msg,
-          icon: 'none'
-        })
-      }
-    }).catch(err => {
-      this.hideLoading()
-      this.setData({
-        loading: false
-      })
-      console.error('保存失败:', err)
-    })
+    
   },
 
   /**
