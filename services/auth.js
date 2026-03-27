@@ -136,10 +136,25 @@ class AuthService {
   }
 
   /**
-   * 更新用户信息
+   * 更新本地用户信息
    */
   static updateLocalUserInfo(userInfo) {
     setStorageSync(CACHE_KEYS.USER_INFO, JSON.stringify(userInfo));
+  }
+
+  /**
+   * 更新用户信息
+   */
+
+  static async updateUserInfo(userInfo) {
+    const res = await userApi.updateUser(userInfo);
+    if (!res.success) {
+      throw new Error(res.message || '更新失败');
+    }
+    this.getUserInfo().then(updatedInfo => {
+      this.updateLocalUserInfo(updatedInfo);
+    });
+    return res;
   }
 
   /**

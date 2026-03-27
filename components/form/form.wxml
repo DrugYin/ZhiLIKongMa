@@ -1,0 +1,54 @@
+<!-- 表单组件模板 -->
+<view class="form-container">
+  <view class="form-page">
+
+    <view class="avatar-section">
+      <button class="avatar-wrapper" open-type="chooseAvatar" bind:chooseavatar="onChooseAvatar" data-field="userInfo.avatar_url">
+        <image class="avatar" src="{{userInfo.avatar_url || defaultAvatarUrl}}" mode="aspectFill" />
+      </button>
+      <text class="avatar-text">点击修改头像</text>
+    </view>
+    <t-input placeholder="请输入真实姓名" value="{{ userInfo.user_name }}" bind:change="onInputChange" data-field="userInfo.user_name">
+      <view slot="label" class="custom-required-label"> 姓名 </view>
+    </t-input>
+    <t-input placeholder="请输入学校" value="{{ userInfo.school }}" bind:change="onInputChange" data-field="userInfo.school">
+      <view slot="label" class="custom-required-label"> 学校 </view>
+    </t-input>
+    <t-cell title="年级" arrow required hover note="{{ userInfo.grade || '请选择' }}" bind:click="onGradePicker" />
+    <t-picker 
+      visible="{{ gradePickerVisible }}" 
+      value="{{ userInfo.grade }}" 
+      data-key="userInfo.grade" 
+      title="选择年级" cancelBtn="取消" 
+      confirmBtn="确定"
+      bindcancel="onPickerCancel" 
+      bindchange="onPickerChange"
+    >
+      <t-picker-item options="{{ grades }}" />
+    </t-picker>
+    <t-input placeholder="输入手机号码" value="{{ userInfo.phone }}" type="number" tips="{{ phoneError ? '手机号输入不正确' : ''}}" bindchange="onPhoneInput" data-field="userInfo.phone">
+      <view slot="label" class="custom-required-label"> 电话 </view>
+    </t-input>
+    <t-cell title="生日" arrow hover note="{{ userInfo.birthday || '请选择' }}" bind:click="onBirthdayPicker" />
+    <t-date-time-picker
+      visible="{{ birthdayPickerVisible }}"
+      value="{{ userInfo.birthday }}"
+      data-key="userInfo.birthday"
+      auto-close
+      mode="date"
+      format="YYYY-MM-DD"
+      default-value="{{date}}"
+      start="{{'2000-01-01'}}"
+      end="{{date}}"
+      title="选择生日"
+      cancelBtn="取消"
+      confirmBtn="确定"
+      bindcancel="onBirthdayCancel"
+      bindchange="onPickerChange"
+    />
+    <t-input placeholder="请输入地址" value="{{ userInfo.address }}"label="地址" bindchange="onInputChange" data-field="userInfo.address" />
+  </view>
+  <slot>
+    
+  </slot>
+</view>

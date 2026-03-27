@@ -12,7 +12,6 @@ Page({
   data: {
     isLogin: false,
     isFirstLogin: false,
-    defaultAvatarUrl: '/assets/default-avatar.png',
     userInfo: {
       user_name: '',
       avatar_url: '',
@@ -22,84 +21,12 @@ Page({
       birthday: '',
       address: '',
     },
-    grades: GRADE_OPTIONS,
-    birthdayPickerVisible: false,
-    gradePickerVisible: false,
-    phoneError: false,
-    date: '',
   },
 
   /**
    * 生命周期函数--监听页面加载
    */
   onLoad(options) {
-  },
-
-  onChooseAvatar(e) {
-    const { field } = e.currentTarget.dataset
-    const { avatarUrl } = e.detail 
-    this.setData({
-      [`${field}`]: avatarUrl
-    })
-  },
-
-  onGradePicker() {
-    this.setData({
-      gradePickerVisible: true
-    })
-  },
-
-  onBirthdayPicker() {
-    this.setData({
-      birthdayPickerVisible: true
-    })
-    this.setData({
-      date: new Date().toLocaleDateString()
-    })
-  },
-
-  onPickerChange(e) {
-    const { key } = e.currentTarget.dataset;
-    let { value } = e.detail;
-    if (key === 'userInfo.grade') {
-      value = value[0]
-    }
-    this.setData({
-      [`${key}`]: value
-    });
-    this.onPickerCancel(e)
-  },
-
-  onPickerCancel(e) {
-    this.setData({
-      gradePickerVisible : false
-    })
-  },
-
-  onBirthdayCancel(e) {
-    this.setData({
-      birthdayPickerVisible: false
-    })
-  },
-
-  onPhoneInput(e) {
-    const { field } = e.currentTarget.dataset
-    const { phoneError } = this.data;
-    const value = e.detail.value;
-    const isPhoneNumber = /^[1][3,4,5,7,8,9][0-9]{9}$/.test(value);
-
-    this.setData({
-      [`${field}`]: value,
-      phoneError: !isPhoneNumber
-    });
-  },
-
-  onInputChange(e) {
-    const { field } = e.currentTarget.dataset;
-    const { value } = e.detail;
-    this.setData({
-      [`${field}`]: value
-    });
   },
 
   onLogin() {
@@ -123,18 +50,18 @@ Page({
   },
 
   onRegister() {
-    if (!this.validateForm()) {
+    const Form = this.selectComponent('#register-form')
+    let { userInfo } = Form.getFormData()
+    if (!this.validateForm(userInfo)) {
       return;
     }
     toast.showLoading('注册中...')
     const cloudPath = `avatars/${Date.now()}_${Math.random().toString(36).substr(2, 9)}.jpg`
-    const filePath = this.data.userInfo.avatar_url
+    const filePath = userInfo.avatar_url
     uploadFile(filePath, cloudPath).then(res => {
       console.log('上传成功', res);
-      this.setData({
-        'userInfo.avatar_url': res.fileID
-      })
-      AuthService.register(this.data.userInfo).then(res => {
+      userInfo.avatar_url = res.fileID
+      AuthService.register(userInfo).then(res => {
         toast.hideLoading();
         toast.showSuccess('注册成功');
         this.onLogin()
@@ -146,8 +73,9 @@ Page({
     })
   },
 
-  validateForm() {
-    const { userInfo, phoneError } = this.data;
+  validateForm(userInfo) {
+    console.log('userInfo', userInfo)
+    const { phoneError } = this.selectComponent('#register-form').getFormData()
     if (!userInfo.user_name || !userInfo.phone || !userInfo.school || !userInfo.grade || phoneError) {
       toast.showToast('请完善必填信息');
       return false;

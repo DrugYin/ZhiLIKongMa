@@ -17,7 +17,7 @@ Component({
     // 是否占位
     placeholder: {
       type: Boolean,
-      value: true
+      value: false
     },
     // 自定义标题样式类
     titleClass: {
