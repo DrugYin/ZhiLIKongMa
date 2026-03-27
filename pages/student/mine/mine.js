@@ -20,7 +20,7 @@ Page({
         isLoggedIn: true,
         userInfo: AuthService.getLocalUserInfo()
       })
-      if (AuthService.hasRole('teacher')) {
+      if (AuthService.hasRole('student')) {
         this.setData({
           isTeacher: true
         })

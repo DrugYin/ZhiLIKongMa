@@ -58,7 +58,7 @@ class AuthService {
    * 获取当前角色
    */
   static getCurrentRole() {
-    const userInfo = this.getUserInfo();
+    const userInfo = this.getLocalUserInfo();
     return userInfo?.current_role || 'student';
   }
 
@@ -66,7 +66,7 @@ class AuthService {
    * 检查用户是否拥有指定角色
    */
   static hasRole(role) {
-    const userInfo = this.getUserInfo();
+    const userInfo = this.getLocalUserInfo();
     return userInfo?.roles?.includes(role) || false;
   }
 
