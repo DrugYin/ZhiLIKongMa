@@ -91,6 +91,14 @@ const classApi = {
 
   handleApplication(data) {
     return callFunction({ name: 'handle-join-application', data });
+  },
+
+  getClassMembers(data) {
+    return callFunction({ name: 'get-class-members', data });
+  },
+
+  removeMember(class_id, member_openid) {
+    return callFunction({ name: 'remove-member', data: { class_id, member_openid } });
   }
 };
 

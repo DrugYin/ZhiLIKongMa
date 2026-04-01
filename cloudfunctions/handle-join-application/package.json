@@ -1,0 +1,9 @@
+{
+  "name": "handle-join-application",
+  "version": "1.0.0",
+  "description": "Handle join class application cloud function",
+  "main": "index.js",
+  "dependencies": {
+    "wx-server-sdk": "^2.6.3"
+  }
+}
