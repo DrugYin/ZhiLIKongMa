@@ -36,8 +36,8 @@
         "pagePath": "pages/teacher/pending/pending",
         "text": "审核"
       }, {
-        "pagePath": "pages/teacher/class-manage/class-manage",
-        "text": "班级"
+        "pagePath": "pages/teacher/mission-manage/mission-manage",
+        "text": "任务"
       }, {
         "pagePath": "pages/teacher/mine/mine",
         "text": "我的"
@@ -46,7 +46,9 @@
   },
   "window": {
     "navigationBarTextStyle": "black",
-    "navigationStyle": "custom"
+    "navigationStyle": "custom",
+    "backgroundColor": "#f3f3f3",
+    "backgroundTextStyle": "dark"
   },
   "renderer": "webview",
   "rendererOptions": {

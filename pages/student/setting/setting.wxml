@@ -1,7 +1,7 @@
 <!--pages/student/setting/setting.wxml-->
 <view class="container">
   <view class="header">
-    <custom-navbar title="账号设置" titleClass="nav-title" showBack="{{true}}" />
+    <custom-navbar placeholder="{{true}}" title="账号设置" showBack="{{true}}" />
   </view>
   <view class="content">
     <form-component id="user-form" userInfo="{{userInfo}}">

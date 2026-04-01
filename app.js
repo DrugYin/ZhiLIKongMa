@@ -20,6 +20,19 @@ App({
       }).catch((error) => {
         console.error('登录失败:', error);
       });
+    } else {
+      AuthService.getUserInfo().then(res => {
+        if (res.is_registered) {
+          AuthService.updateLocalUserInfo(res);
+        }
+        if (res.current_role === 'teacher') {
+          wx.reLaunch({
+            url: '/pages/teacher/index'
+          })
+        }
+      }).catch(e => {
+        console.error('获取用户信息失败:', e);
+      })
     }
 
   },

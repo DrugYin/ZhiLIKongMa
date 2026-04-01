@@ -2,7 +2,7 @@
 <view class="container">
   <view class="header">
     <view class="navbar-wrapper">
-      <custom-navbar title="智力控码" />
+      <custom-navbar placeholder="{{true}}" title="智力控码" />
     </view>
   </view>
   <view class="content">
@@ -59,7 +59,7 @@
         <text class="action-name">提交审核</text>
       </view>
       <view class="action-item" bind:tap="goToClassManage">
-        <view class="action-icon">👥</view>
+        <view class="action-icon">🎓</view>
         <text class="action-name">班级管理</text>
       </view>
     </view>

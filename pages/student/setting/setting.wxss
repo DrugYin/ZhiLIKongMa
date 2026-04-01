@@ -1,13 +1,10 @@
 /* pages/student/setting/setting.wxss */
 
 .header {
-  position: fixed;
-  top: 0;
+  width: 100%;
 }
 
 .content {
-  /* min-height: 100vh; */
-  /* width: 85%; */
   background-color: #f3f3f3;
   padding-top: 20rpx;
 }

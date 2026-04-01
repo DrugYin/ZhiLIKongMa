@@ -26,7 +26,7 @@ class AuthService {
   }
 
   /**
-   * 获取当前用户信息
+   * 获取本地用户信息
    */
   static getLocalUserInfo() {
     const userInfoStr = getStorageSync(CACHE_KEYS.USER_INFO);
@@ -119,17 +119,12 @@ class AuthService {
 
     if (res.success) {
       // 更新本地缓存
-      const userInfo = this.getUserInfo();
+      let userInfo = await this.getUserInfo();
       if (userInfo) {
         userInfo.current_role = role;
         setStorageSync(CACHE_KEYS.USER_INFO, JSON.stringify(userInfo));
       }
       return true;
-    }
-
-    if (res.data?.need_apply) {
-      // 需要申请教师权限
-      return false;
     }
 
     throw new Error(res.message || '切换失败');

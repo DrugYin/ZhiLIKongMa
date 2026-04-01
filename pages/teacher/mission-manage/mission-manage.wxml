@@ -1,2 +1,15 @@
 <!--pages/teacher/mission-manage/mission-manage.wxml-->
-<text>pages/teacher/mission-manage/mission-manage.wxml</text>
+<view class="container">
+  <view class="header">
+    <custom-navbar placeholder="{{true}}" title="智力控码" />
+  </view>
+  <view class="body">
+    renwu
+  </view>
+</view>
+<t-fab
+  y-bounds="{{[50, 100]}}"
+  using-custom-navbar
+  draggable
+  icon="add"
+/>

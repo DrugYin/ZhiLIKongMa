@@ -1,12 +1,7 @@
 /* pages/student/mine/mine.wxss */
 
-.container {
-  height: 100vh;
-}
-
 .header {
-  position: fixed;
-  top: 0;
+  width: 100%;
 }
 
 .content {

@@ -1,5 +1,6 @@
 // mine.js
 import AuthService from '../../../services/auth'
+import Toast from '../../../utils/toast'
 
 const app = getApp();
 Page({
@@ -20,7 +21,7 @@ Page({
         isLoggedIn: true,
         userInfo: AuthService.getLocalUserInfo()
       })
-      if (AuthService.hasRole('student')) {
+      if (AuthService.hasRole('teacher')) {
         this.setData({
           isTeacher: true
         })
@@ -31,6 +32,23 @@ Page({
   goLogin: function () {
     wx.navigateTo({
       url: '/pages/login/login?userLogin=true'
+    })
+  },
+
+  goToTeacher() {
+    Toast.showLoading('切换中...')
+    AuthService.switchRole('teacher').then(res => {
+      if (res) {
+        Toast.showSuccess('切换成功')
+        setTimeout(() => {
+          wx.reLaunch({
+            url: '/pages/teacher/index'
+          })
+        }, 1000)
+      }
+    }).catch(e => {
+      Toast.showError(e.message)
+      console.error(e)
     })
   },
   
@@ -50,7 +68,8 @@ Page({
     AuthService.logout()
     this.setData({
       isLoggedIn: false,
-      userInfo: {}
+      userInfo: {},
+      isTeacher: false
     })
     this.closeDialog()
   },
@@ -78,7 +97,22 @@ Page({
 
   onPullDownRefresh() {
     if (this.data.isLoggedIn) {
-      
+      Toast.showLoading('加载中...')
+      AuthService.getUserInfo().then(res => {
+        Toast.hideLoading()
+        AuthService.updateLocalUserInfo(res)
+        this.setData({
+          userInfo: res
+        })
+        this.checkLogin()
+        wx.stopPullDownRefresh()
+      }).catch(e => {
+        Toast.showError(e.message)
+        console.error(e)
+        wx.stopPullDownRefresh()
+      })
+    } else {
+      wx.stopPullDownRefresh()
     }
   }
 

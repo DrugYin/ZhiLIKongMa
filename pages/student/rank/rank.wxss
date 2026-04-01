@@ -1,12 +1,7 @@
 /* pages/rank/rank.wxss */
 
 .header {
-  position: fixed;
   width: 100%;
-  left: 0;
-  top: 0;
-  z-index: 1000;
-  overflow: visible;
 }
 
 .navbar-wrapper {
@@ -19,7 +14,7 @@
   z-index: 999;
 }
 
-.content {
+.body {
   width: 100%;
-  margin-top: 60rpx;
+  margin-top: 20rpx;
 }

@@ -1,7 +1,7 @@
 <!--pages/login/login.wxml-->
 <view class="container">
   <view class="header">
-    <custom-navbar title="智力控码" showBack="{{true}}" />
+    <custom-navbar placeholder="{{true}}" title="智力控码" showBack="{{true}}" />
   </view>
   <view class="content">
     <view wx:if="{{!isFirstLogin}}" class="login-page">

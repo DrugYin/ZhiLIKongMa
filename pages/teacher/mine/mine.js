@@ -1,4 +1,7 @@
 // pages/teacher/mine/mine.js
+import AuthService from '../../../services/auth'
+import Toast from '../../../utils/toast'
+
 Page({
 
   /**
@@ -15,13 +18,22 @@ Page({
 
   },
 
-  /**
-   * 生命周期函数--监听页面初次渲染完成
-   */
-  onReady() {
-
+  goToStudent() {
+    Toast.showLoading('切换中...')
+    AuthService.switchRole('student').then(res => {
+      if (res) {
+        Toast.showSuccess('切换成功')
+        setTimeout(() => {
+          wx.reLaunch({
+            url: '/pages/student/index'
+          })
+        }, 1000)
+      }
+    }).catch(e => {
+      Toast.showError(e.message)
+    })
   },
-
+  
   /**
    * 生命周期函数--监听页面显示
    */
@@ -29,6 +41,14 @@ Page({
     this.getTabBar().changeData({ type: 'teacher' })
     this.getTabBar().init('/pages/teacher/mine/mine')
   },
+
+  /**
+   * 生命周期函数--监听页面初次渲染完成
+   */
+  onReady() {
+
+  },
+
 
   /**
    * 生命周期函数--监听页面隐藏

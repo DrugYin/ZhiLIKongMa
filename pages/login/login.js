@@ -83,4 +83,10 @@ Page({
     return true;
   },
 
+  handleSkip() {
+    wx.switchTab({
+      url: '/pages/student/index'
+    })
+  },
+
 })

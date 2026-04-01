@@ -2,7 +2,7 @@
 <view class="container">
   <view class="header">
     <view class="navbar-wrapper">
-      <custom-navbar title="智力控码" placeholder="{{true}}" titleClass="nav-title"/>
+      <custom-navbar title="智力控码" placeholder="{{true}}" />
     </view>
     <view class="tabs-wrapper">
       <t-tabs defaultValue="week" bind:change="onTabsChange">
@@ -19,7 +19,7 @@
     bind:refresh="onRefresh"
     bind:scroll="onScroll"
   >
-    <view class="content">
+    <view class="body">
       排行
     </view>
   </t-pull-down-refresh>

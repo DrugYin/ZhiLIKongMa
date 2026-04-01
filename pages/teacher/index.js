@@ -202,7 +202,7 @@ Page({
    */
   goToMissionManage() {
     // TODO: 跳转到任务管理页面
-    wx.navigateTo({
+    wx.switchTab({
       url: '/pages/teacher/mission-manage/mission-manage'
     })
   },
@@ -211,7 +211,7 @@ Page({
    * 跳转到班级管理
    */
   goToClassManage() {
-    wx.switchTab({
+    wx.navigateTo({
       url: '/pages/teacher/class-manage/class-manage',
     })
   },

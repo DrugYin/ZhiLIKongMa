@@ -1,7 +1,7 @@
 <!--pages/student/index.wxml-->
 <view class="container">
   <view class="header">
-    <custom-navbar title="智力控码" />
+    <custom-navbar placeholder="{{true}}" title="智力控码" />
   </view>
   
   <view class="content">
@@ -50,7 +50,7 @@
       <view class="stat-divider"></view>
       <view class="stat-item">
         <text class="stat-value">{{userStats.badgeCount}}</text>
-        <text class="stat-label">徽章数</text>
+        <text class="stat-label">待完成任务</text>
       </view>
     </view>
 
@@ -85,8 +85,8 @@
         <text class="action-name">任务中心</text>
       </view>
       <view class="action-item" bind:tap="goToBadgeWall">
-        <view class="action-icon">🎖️</view>
-        <text class="action-name">徽章墙</text>
+        <view class="action-icon">🎓</view>
+        <text class="action-name">我的班级</text>
       </view>
     </view>
   </view>

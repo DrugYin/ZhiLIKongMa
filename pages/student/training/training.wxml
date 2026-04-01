@@ -2,7 +2,7 @@
 <view class="container">
   <view class="fixed-header">
     <view class="navbar-wrapper">
-      <custom-navbar title="训练打卡" titleClass="nav-title" showBack="{{true}}" bind:go-back="handleGoBack"/>
+      <custom-navbar placeholder="{{true}}" title="训练打卡" showBack="{{true}}" />
     </view>
     <view class="dropdown-wrapper">
       <t-dropdown-menu class="dropdown-menu">

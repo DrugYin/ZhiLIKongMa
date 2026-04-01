@@ -1,19 +1,12 @@
 /* pages/student/index.wxss */
-.container {
-  min-height: 100vh;
-}
 
 .header {
-  position: fixed;
   width: 100%;
-  left: 0;
-  top: 0;
-  z-index: 1000;
 }
 
 .content {
   width: 85%;
-  padding: 0 30rpx 40rpx;
+  padding: 20rpx 30rpx 40rpx;
 }
 
 /* 公告滚动条 */
