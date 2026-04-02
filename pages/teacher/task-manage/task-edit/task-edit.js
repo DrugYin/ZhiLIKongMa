@@ -1,4 +1,4 @@
-// pages/teacher/mission-manage/mission-detail/mission-detail.js
+// pages/teacher/task-manage/task-edit/task-edit.js
 Page({
 
   /**

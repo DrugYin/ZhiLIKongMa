@@ -50,7 +50,7 @@
 
     <!-- 常用功能快速入口 -->
     <view class="quick-actions">
-      <view class="action-item" bind:tap="goToMissionManage">
+      <view class="action-item" bind:tap="goToTaskManage">
         <view class="action-icon">📋</view>
         <text class="action-name">任务管理</text>
       </view>

@@ -1,4 +1,4 @@
-// pages/teacher/mission-manage/mission-edit/mission-edit.js
+// pages/teacher/task-manage/task-manage.js
 Page({
 
   /**
@@ -26,7 +26,8 @@ Page({
    * 生命周期函数--监听页面显示
    */
   onShow() {
-
+    this.getTabBar().changeData({ type: 'teacher' })
+    this.getTabBar().init('/pages/teacher/task-manage/task-manage')
   },
 
   /**

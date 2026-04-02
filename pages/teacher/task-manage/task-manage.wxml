@@ -1,4 +1,4 @@
-<!--pages/teacher/mission-manage/mission-manage.wxml-->
+<!--pages/teacher/task-manage/task-manage.wxml-->
 <view class="container">
   <view class="header">
     <custom-navbar placeholder="{{true}}" title="智力控码" />

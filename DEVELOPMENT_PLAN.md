@@ -150,13 +150,13 @@ ZhiLiKongMa/
 │       │   ├── class-manage.wxml
 │       │   ├── class-manage.wxss
 │       │   └── class-detail/  # 班级详情
-│       ├── mission-manage/    # 任务管理
-│       │   ├── mission-manage.js
-│       │   ├── mission-manage.json
-│       │   ├── mission-manage.wxml
-│       │   ├── mission-manage.wxss
-│       │   ├── mission-detail/ # 任务详情
-│       │   └── mission-edit/   # 任务编辑
+│       ├── task-manage/       # 任务管理
+│       │   ├── task-manage.js
+│       │   ├── task-manage.json
+│       │   ├── task-manage.wxml
+│       │   ├── task-manage.wxss
+│       │   ├── task-detail/   # 任务详情
+│       │   └── task-edit/     # 任务编辑
 │       ├── mine/              # 我的页面
 │       └── pending/           # 审核页面
 │
@@ -186,7 +186,7 @@ ZhiLiKongMa/
 
 | 类型 | 规范 | 示例 |
 |------|------|------|
-| 页面文件 | 小写 + 连字符 | `class-manage/`, `mission-detail/` |
+| 页面文件 | 小写 + 连字符 | `class-manage/`, `task-detail/` |
 | 组件文件 | 小写 + 连字符 | `custom-navbar/`, `loading/` |
 | 云函数 | 小写 + 连字符 | `login/`, `register/`, `get-user-info/` |
 | 工具文件 | 小写 + 连字符 | `format.js`, `validate.js` |
@@ -884,9 +884,9 @@ chore(deps): 更新依赖版本
 │  ├── 审核 (teacher/pending)                                      │
 │  ├── 班级管理 (teacher/class-manage)                             │
 │  │   └── 班级详情 (class-detail)                                 │
-│  ├── 任务管理 (teacher/mission-manage)                           │
-│  │   ├── 任务详情 (mission-detail)                               │
-│  │   └── 任务编辑 (mission-edit)                                 │
+│  ├── 任务管理 (teacher/task-manage)                              │
+│  │   ├── 任务详情 (task-detail)                                  │
+│  │   └── 任务编辑 (task-edit)                                    │
 │  └── 我的 (teacher/mine)                                         │
 └─────────────────────────────────────────────────────────────────┘
 ```
@@ -953,9 +953,9 @@ const TEACHER_TABBAR = [
     "pages/teacher/pending/pending",
     "pages/teacher/class-manage/class-manage",
     "pages/teacher/class-manage/class-detail/class-detail",
-    "pages/teacher/mission-manage/mission-manage",
-    "pages/teacher/mission-manage/mission-detail/mission-detail",
-    "pages/teacher/mission-manage/mission-edit/mission-edit",
+    "pages/teacher/task-manage/task-manage",
+    "pages/teacher/task-manage/task-detail/task-detail",
+    "pages/teacher/task-manage/task-edit/task-edit",
     "pages/teacher/mine/mine"
   ],
   "tabBar": {
@@ -982,7 +982,7 @@ const TEACHER_TABBAR = [
         "text": "审核"
       },
       {
-        "pagePath": "pages/teacher/mission-manage/mission-manage",
+        "pagePath": "pages/teacher/task-manage/task-manage",
         "text": "任务"
       },
       {

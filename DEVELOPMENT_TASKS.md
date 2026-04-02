@@ -53,7 +53,7 @@ ZhiLiKongMa/
 │   └── teacher/         # 教师端页面
 │       ├── index.js     # 首页
 │       ├── class-manage/ # 班级管理
-│       ├── mission-manage/ # 任务管理
+│       ├── task-manage/ # 任务管理
 │       ├── mine/        # 我的
 │       └── pending/     # 审核
 ├── services/            # 服务层

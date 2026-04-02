@@ -200,10 +200,10 @@ Page({
   /**
    * 跳转到任务管理
    */
-  goToMissionManage() {
+  goToTaskManage() {
     // TODO: 跳转到任务管理页面
     wx.switchTab({
-      url: '/pages/teacher/mission-manage/mission-manage'
+      url: '/pages/teacher/task-manage/task-manage'
     })
   },
 

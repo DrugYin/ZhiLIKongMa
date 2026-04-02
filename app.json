@@ -10,9 +10,9 @@
     "pages/teacher/pending/pending",
     "pages/teacher/class-manage/class-manage",
     "pages/teacher/class-manage/class-detail/class-detail",
-    "pages/teacher/mission-manage/mission-manage",
-    "pages/teacher/mission-manage/mission-detail/mission-detail",
-    "pages/teacher/mission-manage/mission-edit/mission-edit",
+    "pages/teacher/task-manage/task-manage",
+    "pages/teacher/task-manage/task-detail/task-detail",
+    "pages/teacher/task-manage/task-edit/task-edit",
     "pages/teacher/mine/mine"
   ],
   "tabBar": {
@@ -36,7 +36,7 @@
         "pagePath": "pages/teacher/pending/pending",
         "text": "审核"
       }, {
-        "pagePath": "pages/teacher/mission-manage/mission-manage",
+        "pagePath": "pages/teacher/task-manage/task-manage",
         "text": "任务"
       }, {
         "pagePath": "pages/teacher/mine/mine",

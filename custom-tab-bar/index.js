@@ -74,7 +74,7 @@ Component({
             icon: 'pen-ball',
             label: '审核'
           }, {
-            value: '/pages/teacher/mission-manage/mission-manage',
+            value: '/pages/teacher/task-manage/task-manage',
             icon: 'task',
             label: '任务'
           }, {
