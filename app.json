@@ -10,6 +10,7 @@
     "pages/teacher/pending/pending",
     "pages/teacher/class-manage/class-manage",
     "pages/teacher/class-manage/class-detail/class-detail",
+    "pages/teacher/class-manage/class-edit/class-edit",
     "pages/teacher/task-manage/task-manage",
     "pages/teacher/task-manage/task-detail/task-detail",
     "pages/teacher/task-manage/task-edit/task-edit",

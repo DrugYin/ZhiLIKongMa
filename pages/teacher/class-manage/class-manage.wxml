@@ -4,8 +4,21 @@
     <view class="navbar-wrapper">
       <custom-navbar title="班级管理" showBack="{{true}}" placeholder="{{true}}" />
     </view>
+    <view class="dropdown-wrapper">
+      <t-dropdown-menu class="dropdown-menu">
+        <t-dropdown-item options="{{projects.options}}" placement="right" value="{{projects.value}}" data-field="projects" bindchange="onDropdownChange" />
+        <t-dropdown-item options="{{classes.options}}" placement="right" value="{{classes.value}}" data-field="classes" bindchange="onDropdownChange" />
+      </t-dropdown-menu>
+    </view>
   </view>
   <view class="content">
     
   </view>
 </view>
+<t-fab
+  y-bounds="{{[50, 100]}}"
+  using-custom-navbar
+  draggable
+  icon="add"
+  bind:click="goToAddClass"
+/>

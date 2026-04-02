@@ -27,14 +27,14 @@
 |------|----------|----------|
 | 用户系统 | 学生注册/登录、教师账号登录、微信授权登录 | ✅ 已完成 |
 | 项目系统 | 训练项目配置（编程、无人机、机器人） | 🟡 本地配置已完成，后台管理待开发 |
-| 班级系统 | 创建班级、加入班级、班级成员管理 | 🟡 云函数已完成，前端待接入 |
+| 班级系统 | 创建班级、加入班级、班级成员管理 | 🟡 云函数已完成，列表筛选与新建/编辑页已接入，详情待完善 |
 | 任务系统 | 发布任务（task）、任务分类、截止时间、积分设置 | 🟡 页面骨架已完成，云函数待开发 |
 | 提交系统 | 学生提交作业、图片/文件上传、提交记录 | ⬜ 待开发 |
 | 审核系统 | 教师审核批改、评分、反馈 | 🟡 审核入口页已建，功能待开发 |
 | 积分系统 | 积分累计、积分消费、积分排行 | ⬜ 待开发 |
 | 抽奖系统 | 积分抽奖、奖品管理 | ⬜ 待开发 |
 | 排行榜 | 学生积分排行、任务完成排行 | 🟡 页面已建，数据待接入 |
-| 配置系统 | 后台参数配置、系统设置 | 🟡 本地配置服务已完成，后台配置待开发 |
+| 配置系统 | 后台参数配置、系统设置 | 🟡 本地配置服务与 `get-projects` 云函数已完成，后台配置待开发 |
 
 ### 1.3 用户角色
 
@@ -102,6 +102,7 @@ ZhiLiKongMa/
 │   ├── get-class-detail/      # 获取班级详情
 │   ├── get-class-members/     # 获取班级成员
 │   ├── get-classes/           # 获取班级列表
+│   ├── get-projects/          # 获取项目列表
 │   ├── get-user-info/         # 获取用户信息
 │   ├── get-user-roles/        # 获取用户角色
 │   ├── handle-join-application/ # 处理入班申请
@@ -156,7 +157,8 @@ ZhiLiKongMa/
 │       │   ├── class-manage.json
 │       │   ├── class-manage.wxml
 │       │   ├── class-manage.wxss
-│       │   └── class-detail/  # 班级详情
+│       │   ├── class-detail/  # 班级详情
+│       │   └── class-edit/    # 班级新建/编辑
 │       ├── task-manage/       # 任务管理
 │       │   ├── task-manage.js
 │       │   ├── task-manage.json
@@ -774,6 +776,7 @@ chore(deps): 更新依赖版本
 | handle-join-application | 处理入班申请 | ✅ 已完成 |
 | get-class-members | 获取班级成员 | ✅ 已完成 |
 | remove-member | 移除成员 | ✅ 已完成 |
+| get-projects | 获取项目列表 | ✅ 已完成 |
 
 ### 7.2 待实现的云函数
 
@@ -796,7 +799,7 @@ chore(deps): 更新依赖版本
 | get-statistics | 获取统计数据 | P1 | ⬜ 待开发 |
 | get-config | 获取系统配置 | P0 | ⬜ 待开发 |
 | update-config | 更新配置 | P0 | ⬜ 待开发 |
-| get-projects | 获取项目列表 | P0 | ⬜ 待开发 |
+| get-projects | 获取项目列表 | P0 | ✅ 已完成 |
 | create-project | 创建项目 | P1 | ⬜ 待开发 |
 | update-project | 更新项目 | P1 | ⬜ 待开发 |
 
@@ -890,7 +893,8 @@ chore(deps): 更新依赖版本
 │  ├── 首页 (teacher/index)                                        │
 │  ├── 审核 (teacher/pending)                                      │
 │  ├── 班级管理 (teacher/class-manage)                             │
-│  │   └── 班级详情 (class-detail)                                 │
+│  │   ├── 班级详情 (class-detail)                                 │
+│  │   └── 班级编辑 (class-edit)                                   │
 │  ├── 任务管理 (teacher/task-manage)                              │
 │  │   ├── 任务详情 (task-detail)                                  │
 │  │   └── 任务编辑 (task-edit)                                    │
@@ -960,6 +964,7 @@ const TEACHER_TABBAR = [
     "pages/teacher/pending/pending",
     "pages/teacher/class-manage/class-manage",
     "pages/teacher/class-manage/class-detail/class-detail",
+    "pages/teacher/class-manage/class-edit/class-edit",
     "pages/teacher/task-manage/task-manage",
     "pages/teacher/task-manage/task-detail/task-detail",
     "pages/teacher/task-manage/task-edit/task-edit",
@@ -1012,7 +1017,7 @@ const TEACHER_TABBAR = [
 1. **默认项目配置** - 内置编程、无人机、机器人三类默认项目
 2. **默认系统配置** - 内置积分、抽奖、班级、任务相关默认参数
 3. **本地缓存** - 配置数据支持本地缓存，减少重复读取
-4. **服务层预留** - 已预留 `get-config`、`get-projects` 调用入口，待后端云函数接入
+4. **服务层与云函数已接入** - `get-projects` 已提供云函数实现，`get-config` 调用入口仍待后端接入
 
 ### 9.2 可配置参数清单
 
@@ -1293,7 +1298,7 @@ const ERROR_CODE = {
 
 ---
 
-**文档版本**: v3.0.0
+**文档版本**: v3.1.0
 **最后更新**: 2026-4-2
 **编写者**: 开发团队
-**更新说明**: 根据当前仓库实际代码进度同步文档，补充已实现班级云函数，修正配置与任务模块状态说明
+**更新说明**: 同步班级管理前端进度与 `get-projects` 云函数状态，补充 `class-edit` 页面路由与结构说明

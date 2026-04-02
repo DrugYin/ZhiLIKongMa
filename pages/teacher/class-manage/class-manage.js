@@ -1,5 +1,6 @@
 // pages/teacher/class-manage/class-manage.js
 const projectService = require('../../../config/project')
+const Toast = require('../../../utils/toast')
 Page({
 
   /**
@@ -24,8 +25,22 @@ Page({
    * 生命周期函数--监听页面加载
    */
   onLoad(options) {
+    this.loadProjects()
+  },
+
+  loadProjects() {
+    Toast.showLoading('加载中...')
     projectService.getProjectOptions().then(res => {
-      console.log(res);
+      const projects = this.data.projects
+      projects.options.push(...res)
+      this.setData({
+        projects
+      })
+    }).catch((error) => {
+      console.error('[class-manage] loadProjects error:', error)
+      Toast.showToast('项目列表加载失败')
+    }).finally(() => {
+      Toast.hideLoading()
     })
   },
 
@@ -34,6 +49,12 @@ Page({
     const { value } = e.detail
     this.setData({
       [`${field}.value`]: value
+    })
+  },
+
+  goToAddClass(e) {
+    wx.navigateTo({
+      url: '/pages/teacher/class-manage/class-edit/class-edit'
     })
   },
 

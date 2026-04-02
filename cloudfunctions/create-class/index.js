@@ -70,7 +70,6 @@ exports.main = async (event) => {
     const className = String(event.class_name || '').trim();
     const projectCode = String(event.project_code || '').trim();
     const projectName = String(event.project_name || '').trim();
-    const grade = String(event.grade || '').trim();
     const description = String(event.description || '').trim();
     const maxMembers = Number(event.max_members || 50);
 
@@ -99,7 +98,6 @@ exports.main = async (event) => {
       teacher_name: teacher.user_name || teacher.nick_name || '',
       project_code: projectCode,
       project_name: projectName,
-      grade,
       description,
       max_members: maxMembers,
       member_count: 0,

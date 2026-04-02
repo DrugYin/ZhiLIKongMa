@@ -84,7 +84,7 @@ class ProjectService {
     const projects = await this.getProjects();
     return projects.map(p => ({
       label: p.project_name,
-      value: p._id
+      value: p.project_code
     }));
   }
 

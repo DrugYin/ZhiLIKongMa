@@ -1,7 +1,7 @@
 // pages/teacher/class-manage/class-edit/class-edit.js
-const projectService = require('../../../config/project')
-const ClassService = require('../../../services/class')
-const Toast = require('../../../utils/toast')
+const projectService = require('../../../../config/project')
+const ClassService = require('../../../../services/class')
+const Toast = require('../../../../utils/toast')
 
 Page({
 
@@ -24,7 +24,6 @@ Page({
       class_name: '',
       project_code: '',
       project_name: '',
-      grade: '',
       max_members: 30,
       class_time: '',
       location: '',
@@ -146,7 +145,6 @@ Page({
         class_name: classInfo.class_name || '',
         project_code: classInfo.project_code || '',
         project_name: classInfo.project_name || '',
-        grade: classInfo.grade || '',
         max_members: classInfo.max_members || 30,
         class_time: classInfo.class_time || '',
         location: classInfo.location || '',
@@ -214,11 +212,6 @@ Page({
       return false
     }
 
-    if (!classForm.grade.trim()) {
-      Toast.showToast('请填写适用年级')
-      return false
-    }
-
     if (!Number.isInteger(Number(classForm.max_members)) || Number(classForm.max_members) <= 0) {
       Toast.showToast('请填写正确的人数上限')
       return false
@@ -245,7 +238,6 @@ Page({
       const payload = {
         ...this.data.classForm,
         class_name: this.data.classForm.class_name.trim(),
-        grade: this.data.classForm.grade.trim(),
         location: this.data.classForm.location.trim(),
         class_time: this.data.classForm.class_time.trim(),
         description: this.data.classForm.description.trim(),
@@ -257,13 +249,13 @@ Page({
 
       const classId = result && result._id
       if (classId) {
-        wx.redirectTo({
-          url: `/pages/teacher/class-manage/class-detail/class-detail?class_id=${classId}`
-        })
-        return
+        setTimeout(() => {
+          wx.redirectTo({
+            url: `/pages/teacher/class-manage/class-detail/class-detail?class_id=${classId}`
+          })
+          return
+        }, 1000)
       }
-
-      wx.navigateBack()
     } catch (error) {
       console.error('[class-edit] onSubmit error:', error)
       Toast.showToast(error.message || '班级创建失败')

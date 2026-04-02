@@ -58,14 +58,6 @@
           bind:click="openProjectPicker"
         />
         <t-input
-          label="适用年级"
-          placeholder="例如：三至五年级"
-          value="{{classForm.grade}}"
-          clearable
-          data-field="grade"
-          bind:change="onInputChange"
-        />
-        <t-input
           label="人数上限"
           type="number"
           placeholder="建议 20-40 人"
@@ -102,14 +94,15 @@
       <view class="card-title">班级说明</view>
       <view class="textarea-wrapper">
         <t-textarea
+          autosize
           placeholder="可填写教学目标、课程节奏、班级要求等信息"
-          maxlength="200"
           indicator
           value="{{classForm.description}}"
           data-field="description"
           bind:change="onInputChange"
         />
       </view>
+      <t-divider />
     </view>
 
     <view class="tips-card">
