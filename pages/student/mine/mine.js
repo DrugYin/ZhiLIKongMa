@@ -1,6 +1,6 @@
 // mine.js
-import AuthService from '../../../services/auth'
-import Toast from '../../../utils/toast'
+const AuthService = require('../../../services/auth')
+const Toast = require('../../../utils/toast')
 
 const app = getApp();
 Page({

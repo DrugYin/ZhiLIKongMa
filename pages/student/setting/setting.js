@@ -1,7 +1,7 @@
 // pages/student/setting/setting.js
-import { uploadFile } from '../../../services/api'
-import Toast from '../../../utils/toast'
-import AuthService from '../../../services/auth'
+const { uploadFile } = require('../../../services/api')
+const Toast = require('../../../utils/toast')
+const AuthService = require('../../../services/auth')
 
 Page({
 

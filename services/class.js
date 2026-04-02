@@ -1,4 +1,4 @@
-import { classApi } from './api';
+const { classApi } = require('./api');
 
 class ClassService {
   /**

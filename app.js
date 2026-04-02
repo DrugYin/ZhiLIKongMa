@@ -1,5 +1,5 @@
 // app.js
-import AuthService from './services/auth'
+const AuthService = require('./services/auth')
 
 App({
 

@@ -2,9 +2,9 @@
  * 认证服务
  */
 
-import { userApi } from './api';
-import { setStorageSync, getStorageSync, removeStorage } from './storage';
-import { CACHE_KEYS } from '../utils/constant';
+const { userApi } = require('./api');
+const { setStorageSync, getStorageSync, removeStorage } = require('./storage');
+const { CACHE_KEYS } = require('../utils/constant');
 
 /**
  * 认证服务类

@@ -1,8 +1,8 @@
 // pages/login/login.js
-import AuthService from '../../services/auth'
-import toast from '../../utils/toast'
-import { uploadFile } from '../../services/api'
-import { GRADE_OPTIONS } from '../../utils/constant'
+const AuthService = require('../../services/auth')
+const toast = require('../../utils/toast')
+const { uploadFile } = require('../../services/api')
+const { GRADE_OPTIONS } = require('../../utils/constant')
 
 Page({
 

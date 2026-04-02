@@ -1,4 +1,4 @@
-import { GRADE_OPTIONS } from '../../utils/constant'
+const { GRADE_OPTIONS } = require('../../utils/constant')
 
 Component({
   properties: {

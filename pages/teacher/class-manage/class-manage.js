@@ -1,18 +1,40 @@
 // pages/teacher/class-manage/class-manage.js
+const projectService = require('../../../config/project')
 Page({
 
   /**
    * 页面的初始数据
    */
   data: {
-
+    projects: {
+      value: 'all',
+      options: [
+        {value: 'all', label: '全部'}
+      ]
+    },
+    classes: {
+      value: 'all',
+      options: [
+        {value: 'all', label: '全部'}
+      ]
+    }
   },
 
   /**
    * 生命周期函数--监听页面加载
    */
   onLoad(options) {
+    projectService.getProjectOptions().then(res => {
+      console.log(res);
+    })
+  },
 
+  onDropdownChange(e) {
+    const { field } = e.currentTarget.dataset
+    const { value } = e.detail
+    this.setData({
+      [`${field}.value`]: value
+    })
   },
 
   /**
