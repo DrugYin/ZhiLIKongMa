@@ -1,0 +1,156 @@
+<!--pages/teacher/class-manage/class-edit/class-edit.wxml-->
+<view class="container">
+  <view class="header">
+    <custom-navbar title="{{pageTitle}}" showBack="{{true}}" placeholder="{{true}}" />
+  </view>
+
+  <scroll-view class="content" scroll-y enhanced>
+    <view class="hero-card">
+      <view class="hero-copy">
+        <view class="hero-title-row">
+          <text class="hero-title">{{pageTitle}}</text>
+          <t-tag theme="{{isEdit ? 'warning' : 'primary'}}" variant="light">
+            {{isEdit ? '编辑模式' : '新建模式'}}
+          </t-tag>
+        </view>
+        <text class="hero-desc">{{pageDesc}}</text>
+      </view>
+    </view>
+
+    <view wx:if="{{isEdit && classInfo}}" class="summary-card">
+      <view class="summary-title">当前班级信息</view>
+      <view class="summary-grid">
+        <view class="summary-item">
+          <text class="summary-label">班级邀请码</text>
+          <text class="summary-value">{{classInfo.class_code || '--'}}</text>
+        </view>
+        <view class="summary-item">
+          <text class="summary-label">当前人数</text>
+          <text class="summary-value">{{classInfo.member_count || 0}} 人</text>
+        </view>
+        <view class="summary-item">
+          <text class="summary-label">待审核申请</text>
+          <text class="summary-value">{{classInfo.pending_application_count || 0}} 条</text>
+        </view>
+        <view class="summary-item">
+          <text class="summary-label">任课老师</text>
+          <text class="summary-value">{{classInfo.teacher_name || '--'}}</text>
+        </view>
+      </view>
+    </view>
+
+    <view class="form-card">
+      <view class="card-title">基础设置</view>
+      <t-cell-group>
+        <t-input
+          label="班级名称"
+          placeholder="例如：周六编程提高班"
+          value="{{classForm.class_name}}"
+          clearable
+          data-field="class_name"
+          bind:change="onInputChange"
+        />
+        <t-cell
+          title="所属项目"
+          note="{{classForm.project_name || '请选择项目方向'}}"
+          arrow
+          hover
+          bind:click="openProjectPicker"
+        />
+        <t-input
+          label="适用年级"
+          placeholder="例如：三至五年级"
+          value="{{classForm.grade}}"
+          clearable
+          data-field="grade"
+          bind:change="onInputChange"
+        />
+        <t-input
+          label="人数上限"
+          type="number"
+          placeholder="建议 20-40 人"
+          value="{{classForm.max_members}}"
+          data-field="max_members"
+          bind:change="onNumberChange"
+        />
+      </t-cell-group>
+    </view>
+
+    <view class="form-card">
+      <view class="card-title">教学安排</view>
+      <t-cell-group>
+        <t-input
+          label="上课时间"
+          placeholder="例如：每周六 09:00-11:00"
+          value="{{classForm.class_time}}"
+          clearable
+          data-field="class_time"
+          bind:change="onInputChange"
+        />
+        <t-input
+          label="上课地点"
+          placeholder="例如：创新实验室 301"
+          value="{{classForm.location}}"
+          clearable
+          data-field="location"
+          bind:change="onInputChange"
+        />
+      </t-cell-group>
+    </view>
+
+    <view class="form-card">
+      <view class="card-title">班级说明</view>
+      <view class="textarea-wrapper">
+        <t-textarea
+          placeholder="可填写教学目标、课程节奏、班级要求等信息"
+          maxlength="200"
+          indicator
+          value="{{classForm.description}}"
+          data-field="description"
+          bind:change="onInputChange"
+        />
+      </view>
+    </view>
+
+    <view class="tips-card">
+      <view class="card-title">填写建议</view>
+      <t-divider align="left">让家长和学生更容易理解班级安排</t-divider>
+      <view class="tips-list">
+        <text class="tip-item">1. 班级名称尽量带上时间段或难度层级，便于快速区分。</text>
+        <text class="tip-item">2. 适用年级建议写成范围，后续筛选和展示会更直观。</text>
+        <text class="tip-item">3. 若暂未接入编辑接口，编辑模式下可以先完成信息核对。</text>
+      </view>
+    </view>
+
+    <view wx:if="{{loading}}" class="loading-panel">
+      <text class="loading-text">正在加载班级信息...</text>
+    </view>
+
+    <view class="footer-placeholder"></view>
+  </scroll-view>
+
+  <view class="footer">
+    <t-button
+      theme="primary"
+      size="large"
+      block
+      loading="{{saving}}"
+      disabled="{{loading}}"
+      bind:tap="onSubmit"
+    >
+      {{submitText}}
+    </t-button>
+  </view>
+</view>
+
+<t-picker
+  visible="{{projectPickerVisible}}"
+  value="{{[classForm.project_code]}}"
+  title="选择所属项目"
+  cancelBtn="取消"
+  confirmBtn="确定"
+  bindcancel="closeProjectPicker"
+  bindchange="onProjectChange"
+>
+  <t-picker-item options="{{projectOptions}}" />
+</t-picker>
