@@ -64,8 +64,8 @@ Page({
     })
   },
 
-  handleLogout() {
-    AuthService.logout()
+  async handleLogout() {
+    await AuthService.logout()
     this.setData({
       isLoggedIn: false,
       userInfo: {},
@@ -76,8 +76,11 @@ Page({
 
   onShow() {
     this.checkLogin()
-    this.getTabBar().changeData({ type: 'student' })
-    this.getTabBar().init('/pages/student/mine/mine')
+    const tabBar = this.getTabBar && this.getTabBar()
+    if (tabBar) {
+      tabBar.changeData({ type: 'student' })
+      tabBar.init('/pages/student/mine/mine')
+    }
   },
   
 

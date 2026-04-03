@@ -30,12 +30,18 @@ Page({
 
   getUserInfo() {
     Toast.showLoading('加载中...')
-    AuthService.getUserInfo().then(res => {
-      Toast.hideLoading()
-      this.setData({
-        userInfo: res
+    AuthService.getUserInfo()
+      .then(res => {
+        this.setData({
+          userInfo: res || {}
+        })
       })
-    })
+      .catch(err => {
+        Toast.showError(err.message || '加载用户信息失败')
+      })
+      .finally(() => {
+        Toast.hideLoading()
+      })
   },
 
   async onSave() {
@@ -52,8 +58,8 @@ Page({
         userInfo.avatar_url = res.fileID
         this.handleUpdate(userInfo)
       }).catch(e => {
-        toast.hideLoading();
-        toast.showToast('头像上传失败，请重试');
+        Toast.hideLoading();
+        Toast.showToast('头像上传失败，请重试');
         console.error('头像上传失败', e);
       })
     } else {

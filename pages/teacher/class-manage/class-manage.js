@@ -127,8 +127,9 @@ Page({
     let page = 1
     let hasMore = true
     const result = []
+    const MAX_PAGES = 5
 
-    while (hasMore) {
+    while (hasMore && page <= MAX_PAGES) {
       const response = await ClassService.getClasses({
         role: 'teacher',
         page,
