@@ -149,6 +149,20 @@ exports.main = async (event) => {
           update_time: now
         }
       });
+
+      await db.collection('class_join_applications').where({
+        student_openid: application.student_openid,
+        status: 'pending',
+        _id: _.neq(applicationId)
+      }).update({
+        data: {
+          status: 'rejected',
+          review_remark: '学生已加入其他班级',
+          review_by: OPENID,
+          review_time: now,
+          update_time: now
+        }
+      });
     }
 
     await writeOperationLog(

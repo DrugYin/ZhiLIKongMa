@@ -93,6 +93,14 @@ const classApi = {
     return callFunction({ name: 'get-class-detail', data: { class_id } });
   },
 
+  getClassInviteInfo(class_code) {
+    return callFunction({ name: 'get-class-invite-info', data: { class_code } });
+  },
+
+  getMyClassStatus() {
+    return callFunction({ name: 'get-my-class-status' });
+  },
+
   joinClass(class_code, apply_reason) {
     return callFunction({ name: 'join-class', data: { class_code, apply_reason } });
   },

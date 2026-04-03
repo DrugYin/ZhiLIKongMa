@@ -83,7 +83,6 @@ exports.main = async (event) => {
     }
 
     const pendingRes = await db.collection('class_join_applications').where({
-      class_id: classInfo._id,
       student_openid: OPENID,
       status: 'pending'
     }).count();
