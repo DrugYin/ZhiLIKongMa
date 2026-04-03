@@ -70,6 +70,8 @@ exports.main = async (event) => {
     const className = String(event.class_name || '').trim();
     const projectCode = String(event.project_code || '').trim();
     const projectName = String(event.project_name || '').trim();
+    const classTime = String(event.class_time || '').trim();
+    const location = String(event.location || '').trim();
     const description = String(event.description || '').trim();
     const maxMembers = Number(event.max_members || 50);
 
@@ -98,6 +100,8 @@ exports.main = async (event) => {
       teacher_name: teacher.user_name || teacher.nick_name || '',
       project_code: projectCode,
       project_name: projectName,
+      class_time: classTime,
+      location,
       description,
       max_members: maxMembers,
       member_count: 0,
@@ -113,6 +117,8 @@ exports.main = async (event) => {
     await writeOperationLog(OPENID, 'teacher', 'create_class', result._id, {
       class_name: className,
       class_code: classCode,
+      class_time: classTime,
+      location,
       max_members: maxMembers
     }, now);
 

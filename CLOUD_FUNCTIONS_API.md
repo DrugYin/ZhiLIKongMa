@@ -323,7 +323,8 @@ AuthService.updateUserInfo(data)
   class_name: '黑羊编程 3 班',
   project_code: 'programming',
   project_name: '编程',
-  grade: '三年级',
+  class_time: '周六 09:00-11:00',
+  location: 'A301 教室',
   description: '周六上午班',
   max_members: 50
 }
@@ -347,7 +348,8 @@ AuthService.updateUserInfo(data)
     teacher_name: '王老师',
     project_code: 'programming',
     project_name: '编程',
-    grade: '三年级',
+    class_time: '周六 09:00-11:00',
+    location: 'A301 教室',
     description: '周六上午班',
     max_members: 50,
     member_count: 0,

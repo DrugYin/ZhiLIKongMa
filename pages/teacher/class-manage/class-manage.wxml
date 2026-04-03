@@ -12,7 +12,72 @@
     </view>
   </view>
   <view class="content">
-    
+    <view wx:if="{{loading}}" class="state-card">
+      <text class="state-title">班级列表加载中</text>
+      <text class="state-desc">正在同步最新班级信息，请稍候。</text>
+    </view>
+
+    <block wx:elif="{{displayClasses.length}}">
+      <view wx:for="{{displayClasses}}" wx:key="_id" class="class-card">
+        <view class="card-top">
+          <view class="card-title-group">
+            <text class="class-name">{{item.class_name || '未命名班级'}}</text>
+            <text class="class-project">{{item.projectText}}</text>
+          </view>
+          <text class="status-tag {{item.statusClass}}">{{item.statusText}}</text>
+        </view>
+
+        <view class="class-meta-grid">
+          <view class="meta-item">
+            <text class="meta-label">邀请码</text>
+            <text class="meta-value">{{item.class_code || '未生成'}}</text>
+          </view>
+          <view class="meta-item">
+            <text class="meta-label">人数</text>
+            <text class="meta-value">{{item.memberText}}</text>
+          </view>
+          <view class="meta-item">
+            <text class="meta-label">上课时间</text>
+            <text class="meta-value">{{item.classTimeText}}</text>
+          </view>
+          <view class="meta-item">
+            <text class="meta-label">上课地点</text>
+            <text class="meta-value">{{item.locationText}}</text>
+          </view>
+        </view>
+
+        <view class="class-desc">{{item.descriptionText}}</view>
+
+        <view class="card-footer">
+          <view class="time-group">
+            <text class="time-text">创建于 {{item.createTimeText}}</text>
+            <text class="time-text">更新于 {{item.updateTimeText}}</text>
+          </view>
+          <view class="action-group">
+            <button
+              class="action-btn action-btn-secondary"
+              data-class-id="{{item._id}}"
+              bindtap="goToEditClass"
+            >
+              编辑
+            </button>
+            <button
+              class="action-btn action-btn-danger"
+              data-class-id="{{item._id}}"
+              data-class-name="{{item.class_name}}"
+              bindtap="onDeleteClass"
+            >
+              删除
+            </button>
+          </view>
+        </view>
+      </view>
+    </block>
+
+    <view wx:else class="state-card empty-card">
+      <text class="state-title">暂无班级</text>
+      <text class="state-desc">{{emptyText}}</text>
+    </view>
   </view>
 </view>
 <t-fab
