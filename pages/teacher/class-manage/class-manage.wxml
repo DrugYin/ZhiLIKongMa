@@ -18,7 +18,13 @@
     </view>
 
     <block wx:elif="{{displayClasses.length}}">
-      <view wx:for="{{displayClasses}}" wx:key="_id" class="class-card">
+      <view
+        wx:for="{{displayClasses}}"
+        wx:key="_id"
+        class="class-card"
+        data-class-id="{{item._id}}"
+        bindtap="goToClassDetail"
+      >
         <view class="card-top">
           <view class="card-title-group">
             <text class="class-name">{{item.class_name || '未命名班级'}}</text>
@@ -57,7 +63,7 @@
             <button
               class="action-btn action-btn-secondary"
               data-class-id="{{item._id}}"
-              bindtap="goToEditClass"
+              catchtap="goToEditClass"
             >
               编辑
             </button>
@@ -65,7 +71,7 @@
               class="action-btn action-btn-danger"
               data-class-id="{{item._id}}"
               data-class-name="{{item.class_name}}"
-              bindtap="onDeleteClass"
+              catchtap="onDeleteClass"
             >
               删除
             </button>

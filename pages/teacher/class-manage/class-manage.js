@@ -274,6 +274,17 @@ Page({
     })
   },
 
+  goToClassDetail(e) {
+    const { classId } = e.currentTarget.dataset
+    if (!classId) {
+      return
+    }
+
+    wx.navigateTo({
+      url: `/pages/teacher/class-manage/class-detail/class-detail?class_id=${classId}`
+    })
+  },
+
   goToEditClass(e) {
     const { classId } = e.currentTarget.dataset
     if (!classId) {
