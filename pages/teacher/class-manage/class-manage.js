@@ -307,7 +307,18 @@ Page({
       return
     }
 
-    Toast.showToast('删除接口待接入，当前仅完成页面交互')
+    Toast.showLoading('正在删除班级...')
+
+    try {
+      await ClassService.deleteClass(classId)
+      Toast.hideLoading()
+      await Toast.showSuccess('班级已删除')
+      await this.loadClasses({ silent: true })
+    } catch (error) {
+      console.error('[class-manage] onDeleteClass error:', error)
+      Toast.hideLoading()
+      Toast.showToast(error.message || '删除班级失败')
+    }
   },
 
   /**

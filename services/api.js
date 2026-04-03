@@ -77,6 +77,14 @@ const classApi = {
     return callFunction({ name: 'create-class', data });
   },
 
+  updateClass(data) {
+    return callFunction({ name: 'update-class', data });
+  },
+
+  deleteClass(class_id) {
+    return callFunction({ name: 'delete-class', data: { class_id } });
+  },
+
   getClasses(data) {
     return callFunction({ name: 'get-classes', data });
   },

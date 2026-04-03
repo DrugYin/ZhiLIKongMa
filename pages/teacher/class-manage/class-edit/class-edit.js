@@ -43,7 +43,7 @@ Page({
       isEdit,
       pageTitle: isEdit ? '编辑班级' : '新建班级',
       pageDesc: isEdit
-        ? '可以调整班级的展示信息，保存能力待后端接口接入。'
+        ? '可以调整班级基础信息，保存后会同步更新班级详情页展示。'
         : '完善班级信息后即可创建，后续可继续补充成员与任务配置。',
       submitText: isEdit ? '保存修改' : '创建班级'
     })
@@ -154,11 +154,6 @@ Page({
   },
 
   openProjectPicker() {
-    if (this.data.isEdit) {
-      Toast.showToast('编辑模式下暂不支持切换项目')
-      return
-    }
-
     this.setData({
       projectPickerVisible: true
     })
@@ -225,11 +220,6 @@ Page({
       return
     }
 
-    if (this.data.isEdit) {
-      Toast.showToast('编辑接口待接入，当前已支持信息回填')
-      return
-    }
-
     this.setData({
       saving: true
     })
@@ -244,8 +234,14 @@ Page({
         max_members: Number(this.data.classForm.max_members)
       }
 
-      const result = await ClassService.createClass(payload)
-      await Toast.showSuccess('班级创建成功')
+      const result = this.data.isEdit
+        ? await ClassService.updateClass({
+          class_id: this.data.classId,
+          ...payload
+        })
+        : await ClassService.createClass(payload)
+
+      await Toast.showSuccess(this.data.isEdit ? '班级更新成功' : '班级创建成功')
 
       const classId = result && result._id
       if (classId) {
@@ -258,7 +254,7 @@ Page({
       }
     } catch (error) {
       console.error('[class-edit] onSubmit error:', error)
-      Toast.showToast(error.message || '班级创建失败')
+      Toast.showToast(error.message || (this.data.isEdit ? '班级更新失败' : '班级创建失败'))
     } finally {
       this.setData({
         saving: false

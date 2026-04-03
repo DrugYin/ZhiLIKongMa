@@ -13,6 +13,28 @@ class ClassService {
   }
 
   /**
+   * 更新班级
+   */
+  static async updateClass(params) {
+    const res = await classApi.updateClass(params);
+    if (!res.success) {
+      throw new Error(res.message || '更新班级失败');
+    }
+    return res.data;
+  }
+
+  /**
+   * 删除班级
+   */
+  static async deleteClass(classId) {
+    const res = await classApi.deleteClass(classId);
+    if (!res.success) {
+      throw new Error(res.message || '删除班级失败');
+    }
+    return res.data;
+  }
+
+  /**
    * 获取班级列表
    */
   static async getClasses(params = {}) {
