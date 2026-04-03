@@ -383,7 +383,9 @@ ClassService.createClass(data)
 {
   role: 'teacher', // 默认 teacher
   page: 1,
-  page_size: 20
+  page_size: 20,
+  sort_by: 'create_time', // 可选：create_time、update_time、class_name、member_count
+  sort_order: 'desc' // 可选：asc、desc
 }
 ```
 
@@ -391,6 +393,25 @@ ClassService.createClass(data)
 
 - 当 `role = 'teacher'` 时，返回当前教师创建的班级列表
 - 其他情况下，当前实现会尝试返回当前用户所属班级
+- `sort_by` 默认是 `create_time`，仅在 `role = 'teacher'` 时生效
+- `sort_order` 默认是 `desc`，传入非法值时会自动回退到默认值
+- 为保证查询安全性，仅支持白名单字段排序
+
+#### 排序示例
+
+```js
+classApi.getClasses({
+  role: 'teacher',
+  sort_by: 'update_time',
+  sort_order: 'asc'
+})
+
+ClassService.getClasses({
+  role: 'teacher',
+  sort_by: 'member_count',
+  sort_order: 'desc'
+})
+```
 
 #### 返回示例
 

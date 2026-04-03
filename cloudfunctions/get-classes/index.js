@@ -6,10 +6,29 @@ cloud.init({
 
 const db = cloud.database();
 const _ = db.command;
+const DEFAULT_SORT_FIELD = 'create_time';
+const DEFAULT_SORT_ORDER = 'desc';
+const ALLOWED_SORT_FIELDS = new Set([
+  'create_time',
+  'update_time',
+  'class_name',
+  'member_count'
+]);
 
 async function getCurrentUser(openid) {
   const res = await db.collection('users').where({ _openid: openid }).limit(1).get();
   return res.data[0] || null;
+}
+
+function normalizeSortField(sortField) {
+  const value = String(sortField || DEFAULT_SORT_FIELD).trim();
+  return ALLOWED_SORT_FIELDS.has(value) ? value : DEFAULT_SORT_FIELD;
+}
+
+function normalizeSortOrder(sortOrder) {
+  return String(sortOrder || DEFAULT_SORT_ORDER).trim().toLowerCase() === 'asc'
+    ? 'asc'
+    : 'desc';
 }
 
 exports.main = async (event) => {
@@ -18,6 +37,8 @@ exports.main = async (event) => {
     const page = Math.max(Number(event.page || 1), 1);
     const pageSize = Math.min(Math.max(Number(event.page_size || 20), 1), 50);
     const role = event.role || 'teacher';
+    const sortField = normalizeSortField(event.sort_by);
+    const sortOrder = normalizeSortOrder(event.sort_order);
 
     if (role === 'teacher') {
       const user = await getCurrentUser(OPENID);
@@ -35,7 +56,7 @@ exports.main = async (event) => {
       });
       const totalRes = await query.count();
       const listRes = await query
-        .orderBy('create_time', 'desc')
+        .orderBy(sortField, sortOrder)
         .skip((page - 1) * pageSize)
         .limit(pageSize)
         .get();

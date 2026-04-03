@@ -13,10 +13,13 @@ Page({
         {value: 'all', label: '全部'}
       ]
     },
-    classes: {
-      value: 'all',
+    sorted: {
+      value: 'time_desc',
       options: [
-        {value: 'all', label: '全部'}
+        { value: 'time_desc', label: '时间降序' },
+        { value: 'time_asc', label: '时间升序' },
+        { value: 'member_desc', label: '人数降序' },
+        { value: 'member_asc', label: '人数升序' }
       ]
     }
   },
