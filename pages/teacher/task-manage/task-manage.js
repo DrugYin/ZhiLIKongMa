@@ -26,8 +26,11 @@ Page({
    * 生命周期函数--监听页面显示
    */
   onShow() {
-    this.getTabBar().changeData({ type: 'teacher' })
-    this.getTabBar().init('/pages/teacher/task-manage/task-manage')
+    const tabBar = this.getTabBar && this.getTabBar()
+    if (tabBar) {
+      tabBar.changeData({ type: 'teacher' })
+      tabBar.init('/pages/teacher/task-manage/task-manage')
+    }
   },
 
   /**

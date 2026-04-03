@@ -29,10 +29,20 @@ class AuthService {
    * 获取本地用户信息
    */
   static getLocalUserInfo() {
-    const userInfoStr = getStorageSync(CACHE_KEYS.USER_INFO);
-    if (!userInfoStr) return null;
+    const raw = getStorageSync(CACHE_KEYS.USER_INFO);
+    if (!raw) return null;
+
     try {
-      return typeof userInfoStr === 'string' ? JSON.parse(userInfoStr) : userInfoStr;
+      const parsed = typeof raw === 'string' ? JSON.parse(raw) : raw;
+
+      if (parsed && typeof parsed === 'object' && 'data' in parsed) {
+        if (parsed.expire && Date.now() > parsed.expire) {
+          return null;
+        }
+        return parsed.data || null;
+      }
+
+      return parsed;
     } catch {
       return null;
     }
@@ -155,9 +165,11 @@ class AuthService {
   /**
    * 退出登录
    */
-  static logout() {
-    removeStorage(CACHE_KEYS.USER_INFO);
-    removeStorage(CACHE_KEYS.OPENID);
+  static async logout() {
+    await Promise.all([
+      removeStorage(CACHE_KEYS.USER_INFO),
+      removeStorage(CACHE_KEYS.OPENID)
+    ]);
   }
 
   /**

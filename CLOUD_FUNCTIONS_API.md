@@ -1,12 +1,12 @@
 # 云函数 API 文档
 
-本文档整理了当前项目中已存在的云函数接口，包括用户系统与班级管理系统。
+本文档基于当前仓库代码同步整理，覆盖已经落地的用户系统、班级管理与项目配置云函数，并标注前端已接入情况与仍待实现的调用入口。
 
 ## 通用说明
 
 ### 调用方式
 
-前端统一通过 `wx.cloud.callFunction` 调用，当前项目已经封装在：
+前端统一通过 `wx.cloud.callFunction` 调用，当前封装入口如下：
 
 - `services/api.js`
 - `services/auth.js`
@@ -14,7 +14,7 @@
 
 ### 通用返回格式
 
-大部分云函数统一返回如下结构：
+大部分云函数统一返回以下结构：
 
 ```js
 {
@@ -26,47 +26,43 @@
 }
 ```
 
-说明：
+补充字段：
 
-- `success`: 是否成功
-- `message`: 用户可读提示
-- `data`: 成功时返回的数据
-- `error`: 失败时的技术错误信息
-- `error_code`: 失败时的业务/状态码
+- `is_registered`: `get-user-info` 返回，标记用户是否已注册
+- `total`: `get-projects` 返回列表总数
+- `source`: `get-projects` 返回数据来源，`database` 或 `default`
 
-### 身份获取
+### 身份与权限
 
-云函数内部统一通过：
+云函数内部统一通过以下方式获取调用用户身份：
 
 ```js
 const { OPENID } = cloud.getWXContext();
 ```
 
-获取当前调用用户的微信身份。
+教师权限接口会额外校验：
 
-## 数据集合约定
+- `users.roles` 是否包含 `teacher`
+- 目标班级是否属于当前教师
 
-当前云函数涉及以下集合：
+### 当前涉及集合
 
 - `users`
 - `classes`
 - `class_join_applications`
-- `operation_logs`
+- `projects`
 - `system_config`
+- `operation_logs`
 
 ## 一、用户系统
 
 ### 1. `login`
 
-#### 功能
+功能：获取当前用户 `openid`，用于后续注册和身份识别。
 
-获取当前用户 `openid`，用于后续注册和身份识别。
+入参：无
 
-#### 入参
-
-无
-
-#### 返回示例
+返回示例：
 
 ```js
 {
@@ -78,21 +74,20 @@ const { OPENID } = cloud.getWXContext();
 }
 ```
 
-#### 前端调用
+前端调用：
 
 ```js
 userApi.login()
+AuthService.wxLogin()
 ```
 
 ---
 
 ### 2. `register`
 
-#### 功能
+功能：注册新用户，默认创建学生角色，并按系统配置发放注册积分。
 
-注册新用户，默认注册为学生角色，并发放注册奖励积分。
-
-#### 入参
+入参：
 
 ```js
 {
@@ -107,12 +102,12 @@ userApi.login()
 }
 ```
 
-#### 必填字段
+必填字段：
 
 - `user_name`
 - `phone`
 
-#### 返回示例
+返回示例：
 
 ```js
 {
@@ -124,18 +119,18 @@ userApi.login()
     avatar_url: 'cloud://xxx/avatar.png',
     roles: ['student'],
     current_role: 'student',
-    points: 100
+    points: 50
   }
 }
 ```
 
-#### 失败场景
+失败场景：
 
 - 用户已注册
 - 缺少必填参数
 - 数据库写入失败
 
-#### 前端调用
+前端调用：
 
 ```js
 userApi.register(data)
@@ -146,15 +141,11 @@ AuthService.register(data)
 
 ### 3. `get-user-info`
 
-#### 功能
+功能：获取当前登录用户的详细信息。
 
-获取当前登录用户的详细信息。
+入参：无
 
-#### 入参
-
-无
-
-#### 返回示例
+返回示例：
 
 ```js
 {
@@ -174,15 +165,14 @@ AuthService.register(data)
     points: 100,
     total_points: 300,
     status: 'active',
-    teacher_subject: '',
-    teacher_project: '',
+    teacher_project: '编程',
     create_time: '...',
     update_time: '...'
   }
 }
 ```
 
-#### 未注册返回
+未注册返回：
 
 ```js
 {
@@ -192,7 +182,7 @@ AuthService.register(data)
 }
 ```
 
-#### 前端调用
+前端调用：
 
 ```js
 userApi.getUserInfo()
@@ -203,15 +193,11 @@ AuthService.getUserInfo()
 
 ### 4. `get-user-roles`
 
-#### 功能
+功能：获取当前用户拥有的角色列表及当前角色。
 
-获取当前用户拥有的角色列表及当前角色。
+入参：无
 
-#### 入参
-
-无
-
-#### 预期返回示例
+返回示例：
 
 ```js
 {
@@ -223,19 +209,18 @@ AuthService.getUserInfo()
 }
 ```
 
-#### 前端调用
+前端现状：
 
-当前项目中通常通过用户信息直接获取角色；如果单独需要角色信息，可通过该云函数扩展使用。
+- 当前前端主要通过 `get-user-info` 中的用户信息判断角色
+- 本接口已实现，但暂无独立页面直接调用
 
 ---
 
 ### 5. `switch-role`
 
-#### 功能
+功能：切换当前用户角色视图。
 
-切换当前用户角色，例如学生端切换到教师端，或教师端切换到学生端。
-
-#### 入参
+入参：
 
 ```js
 {
@@ -243,24 +228,26 @@ AuthService.getUserInfo()
 }
 ```
 
-#### 返回示例
+返回示例：
 
 ```js
 {
   success: true,
-  message: '切换成功',
+  message: '角色切换成功',
   data: {
-    current_role: 'teacher'
+    current_role: 'teacher',
+    roles: ['student', 'teacher']
   }
 }
 ```
 
-#### 失败场景
+失败场景：
 
-- 目标角色不存在
-- 当前用户不具备该角色权限
+- 目标角色非法
+- 用户不存在
+- 当前用户不具备目标角色
 
-#### 前端调用
+前端调用：
 
 ```js
 userApi.switchRole(role)
@@ -271,13 +258,9 @@ AuthService.switchRole(role)
 
 ### 6. `update-user`
 
-#### 功能
+功能：更新当前用户资料。
 
-更新当前用户资料。
-
-#### 入参
-
-按页面填写内容传递，通常包括：
+入参：
 
 ```js
 {
@@ -291,17 +274,22 @@ AuthService.switchRole(role)
 }
 ```
 
-#### 返回示例
+说明：
+
+- 所有字段均按“传了才更新”的方式处理
+- `user_name` 长度限制为 2-20
+- `phone` 会校验手机号格式
+
+返回示例：
 
 ```js
 {
   success: true,
-  message: '更新成功',
-  data: {}
+  message: '更新成功'
 }
 ```
 
-#### 前端调用
+前端调用：
 
 ```js
 userApi.updateUser(data)
@@ -312,11 +300,9 @@ AuthService.updateUserInfo(data)
 
 ### 1. `create-class`
 
-#### 功能
+功能：教师创建班级，并生成唯一邀请码。
 
-教师创建班级，并生成唯一邀请码。
-
-#### 入参
+入参：
 
 ```js
 {
@@ -330,11 +316,11 @@ AuthService.updateUserInfo(data)
 }
 ```
 
-#### 必填字段
+必填字段：
 
 - `class_name`
 
-#### 返回示例
+返回示例：
 
 ```js
 {
@@ -360,11 +346,11 @@ AuthService.updateUserInfo(data)
 }
 ```
 
-#### 权限要求
+权限要求：
 
 - 仅教师可调用
 
-#### 前端调用
+前端调用：
 
 ```js
 classApi.createClass(data)
@@ -373,49 +359,124 @@ ClassService.createClass(data)
 
 ---
 
-### 2. `get-classes`
+### 2. `update-class`
 
-#### 功能
+功能：教师更新自己创建的班级信息。
 
-获取班级列表。
+入参：
 
-#### 入参
+```js
+{
+  class_id: 'class_id',
+  class_name: '黑羊编程 3 班',
+  project_code: 'programming',
+  project_name: '编程',
+  class_time: '周六 09:00-11:00',
+  location: 'A301 教室',
+  description: '周六上午班',
+  max_members: 50
+}
+```
+
+校验规则：
+
+- `class_id`、`class_name`、`project_code` 必填
+- `max_members` 必须为正整数
+- `max_members` 不能小于当前班级成员数
+
+返回示例：
+
+```js
+{
+  success: true,
+  message: '更新班级成功',
+  data: {
+    _id: 'class_id',
+    class_name: '黑羊编程 3 班',
+    project_code: 'programming',
+    max_members: 50
+  }
+}
+```
+
+业务效果：
+
+- 更新 `classes` 主记录
+- 同步更新班级成员的 `users.class_name`
+- 同步更新 `class_join_applications.class_name`
+
+前端调用：
+
+```js
+classApi.updateClass(data)
+ClassService.updateClass(data)
+```
+
+---
+
+### 3. `delete-class`
+
+功能：教师删除自己创建的班级。
+
+入参：
+
+```js
+{
+  class_id: 'class_id'
+}
+```
+
+返回示例：
+
+```js
+{
+  success: true,
+  message: '删除班级成功',
+  data: {
+    class_id: 'class_id',
+    member_count: 18
+  }
+}
+```
+
+业务效果：
+
+- 将班级状态改为 `deleted`
+- 清空班级成员在 `users` 中的班级关联字段
+- 将待处理入班申请统一改为 `rejected`
+
+前端调用：
+
+```js
+classApi.deleteClass(classId)
+ClassService.deleteClass(classId)
+```
+
+---
+
+### 4. `get-classes`
+
+功能：获取班级列表。
+
+入参：
 
 ```js
 {
   role: 'teacher', // 默认 teacher
   page: 1,
   page_size: 20,
-  sort_by: 'create_time', // 可选：create_time、update_time、class_name、member_count
-  sort_order: 'desc' // 可选：asc、desc
+  sort_by: 'create_time', // create_time、update_time、class_name、member_count
+  sort_order: 'desc' // asc、desc
 }
 ```
 
-#### 说明
+说明：
 
 - 当 `role = 'teacher'` 时，返回当前教师创建的班级列表
-- 其他情况下，当前实现会尝试返回当前用户所属班级
-- `sort_by` 默认是 `create_time`，仅在 `role = 'teacher'` 时生效
-- `sort_order` 默认是 `desc`，传入非法值时会自动回退到默认值
-- 为保证查询安全性，仅支持白名单字段排序
+- 其他情况下，当前实现返回当前用户所属班级
+- 排序字段受白名单限制，非法值会回退为默认排序
 
-#### 排序示例
-
-```js
-classApi.getClasses({
-  role: 'teacher',
-  sort_by: 'update_time',
-  sort_order: 'asc'
-})
-
-ClassService.getClasses({
-  role: 'teacher',
-  sort_by: 'member_count',
-  sort_order: 'desc'
-})
-```
-
-#### 返回示例
+返回示例：
 
 ```js
 {
@@ -440,7 +501,7 @@ ClassService.getClasses({
 }
 ```
 
-#### 前端调用
+前端调用：
 
 ```js
 classApi.getClasses(params)
@@ -449,13 +510,11 @@ ClassService.getClasses(params)
 
 ---
 
-### 3. `get-class-detail`
+### 5. `get-class-detail`
 
-#### 功能
+功能：获取单个班级详情。
 
-获取单个班级详情。
-
-#### 入参
+入参：
 
 ```js
 {
@@ -463,7 +522,7 @@ ClassService.getClasses(params)
 }
 ```
 
-#### 返回示例
+返回示例：
 
 ```js
 {
@@ -483,12 +542,12 @@ ClassService.getClasses(params)
 }
 ```
 
-#### 权限要求
+权限要求：
 
 - 班级所属教师可查看
 - 已加入该班级的成员可查看
 
-#### 前端调用
+前端调用：
 
 ```js
 classApi.getClassDetail(classId)
@@ -497,13 +556,11 @@ ClassService.getClassDetail(classId)
 
 ---
 
-### 4. `join-class`
+### 6. `join-class`
 
-#### 功能
+功能：学生通过班级邀请码申请加入班级。
 
-学生通过班级邀请码申请加入班级。
-
-#### 入参
+入参：
 
 ```js
 {
@@ -512,7 +569,7 @@ ClassService.getClassDetail(classId)
 }
 ```
 
-#### 返回示例
+返回示例：
 
 ```js
 {
@@ -533,7 +590,7 @@ ClassService.getClassDetail(classId)
 }
 ```
 
-#### 失败场景
+失败场景：
 
 - 未注册
 - 已加入班级
@@ -541,22 +598,18 @@ ClassService.getClassDetail(classId)
 - 班级人数已满
 - 已提交过待处理申请
 
-#### 前端调用
+前端现状：
 
-```js
-classApi.joinClass(classCode, applyReason)
-ClassService.joinClass(classCode, applyReason)
-```
+- 云函数已完成
+- 学生端尚未接入页面入口
 
 ---
 
-### 5. `handle-join-application`
+### 7. `handle-join-application`
 
-#### 功能
+功能：教师审批或拒绝学生的入班申请。
 
-教师审批或拒绝学生的入班申请。
-
-#### 入参
+入参：
 
 ```js
 {
@@ -566,7 +619,7 @@ ClassService.joinClass(classCode, applyReason)
 }
 ```
 
-#### 返回示例
+返回示例：
 
 ```js
 {
@@ -580,7 +633,7 @@ ClassService.joinClass(classCode, applyReason)
 }
 ```
 
-#### 业务效果
+业务效果：
 
 - `approve`：
   - 更新申请状态为 `approved`
@@ -589,31 +642,18 @@ ClassService.joinClass(classCode, applyReason)
 - `reject`：
   - 更新申请状态为 `rejected`
 
-#### 前端调用
+前端现状：
 
-```js
-classApi.handleApplication({
-  application_id,
-  action,
-  review_remark
-})
-
-ClassService.handleApplication({
-  application_id,
-  action,
-  review_remark
-})
-```
+- 云函数已完成
+- 教师端审批列表页尚未接入
 
 ---
 
-### 6. `get-class-members`
+### 8. `get-class-members`
 
-#### 功能
+功能：获取班级成员列表。
 
-获取班级成员列表。
-
-#### 入参
+入参：
 
 ```js
 {
@@ -623,7 +663,7 @@ ClassService.handleApplication({
 }
 ```
 
-#### 返回示例
+返回示例：
 
 ```js
 {
@@ -652,12 +692,12 @@ ClassService.handleApplication({
 }
 ```
 
-#### 权限要求
+权限要求：
 
 - 班级所属教师可查看
 - 已加入该班级的成员可查看
 
-#### 前端调用
+前端调用：
 
 ```js
 classApi.getClassMembers(params)
@@ -666,13 +706,11 @@ ClassService.getClassMembers(params)
 
 ---
 
-### 7. `remove-member`
+### 9. `remove-member`
 
-#### 功能
+功能：教师移除班级成员。
 
-教师移除班级成员。
-
-#### 入参
+入参：
 
 ```js
 {
@@ -681,7 +719,7 @@ ClassService.getClassMembers(params)
 }
 ```
 
-#### 返回示例
+返回示例：
 
 ```js
 {
@@ -694,27 +732,65 @@ ClassService.getClassMembers(params)
 }
 ```
 
-#### 业务效果
+业务效果：
 
-- 清除用户的：
-  - `class_id`
-  - `class_name`
-  - `class_code`
-  - `join_class_time`
+- 清除用户的 `class_id`、`class_name`、`class_code`、`join_class_time`
 - `classes.member_count - 1`
 
-#### 权限要求
+权限要求：
 
 - 仅班级所属教师可调用
 
-#### 前端调用
+前端调用：
 
 ```js
 classApi.removeMember(classId, memberOpenid)
 ClassService.removeMember(classId, memberOpenid)
 ```
 
-## 三、前端封装对照
+## 三、项目配置
+
+### 1. `get-projects`
+
+功能：获取训练项目列表；优先读取数据库 `projects`，为空时回退默认项目配置。
+
+入参：
+
+```js
+{
+  status: 'active' // 可选
+}
+```
+
+返回示例：
+
+```js
+{
+  success: true,
+  message: '获取项目列表成功',
+  data: [
+    {
+      project_name: '编程',
+      project_code: 'programming',
+      task_categories: ['基础语法', '算法练习'],
+      difficulty_levels: [
+        { level: 1, name: '入门', color: '#52c41a' }
+      ],
+      status: 'active'
+    }
+  ],
+  total: 3,
+  source: 'database'
+}
+```
+
+说明：
+
+- 当数据库没有项目数据时，`source` 会返回 `default`
+- `config/project.js`、`pages/teacher/class-manage` 已通过该接口读取项目列表
+- `services/api.js` 中 `configApi.getProjects()` 为统一调用入口
+
+## 四、前端封装对照
 
 ### 用户模块
 
@@ -726,13 +802,21 @@ ClassService.removeMember(classId, memberOpenid)
 - `services/api.js` 中的 `classApi`
 - `services/class.js` 中的 `ClassService`
 
-## 四、建议的后续补充
+### 配置模块
 
-后面如果你继续完善接口，我建议同步补充到这份文档中的内容有：
+- `services/api.js` 中的 `configApi`
+- `config/project.js` 中的 `ProjectService`
 
-- `switch-role` 的完整错误码语义
-- `update-user` 的详细可更新字段
-- `get-user-roles` 的实际返回结构
-- 班级申请列表接口
-- 教师端班级搜索、分页、状态筛选接口
-- 接口错误码统一表
+## 五、当前未落地但已预留的调用入口
+
+以下方法已经在 `services/api.js` 中预留，但仓库中还没有对应云函数实现：
+
+- 任务：`create-task`、`get-tasks`、`get-task-detail`、`submit-task`、`review-submission`、`get-submissions`
+- 抽奖：`get-prizes`、`start-draw`、`get-draw-records`
+- 排行榜：`get-ranking`
+- 配置：`get-config`
+
+同步建议：
+
+- 新增云函数时，优先更新本文件与 `DEVELOPMENT_PLAN.md`
+- 当前若继续推进任务/审核模块，建议先补任务与提交相关接口，再接前端页面

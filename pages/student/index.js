@@ -16,13 +16,19 @@ Page({
   },
 
   onLoad(options) {
-    this.getTabBar().changeData({ type: 'student' })
+    const tabBar = this.getTabBar && this.getTabBar()
+    if (tabBar) {
+      tabBar.changeData({ type: 'student' })
+    }
     this.initPage()
   },
 
   onShow() {
-    this.getTabBar().changeData({ type: 'student' })
-    this.getTabBar().init('/pages/student/index')
+    const tabBar = this.getTabBar && this.getTabBar()
+    if (tabBar) {
+      tabBar.changeData({ type: 'student' })
+      tabBar.init('/pages/student/index')
+    }
     this.loadPageData()
   },
 
