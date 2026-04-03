@@ -1,4 +1,5 @@
-const app = getApp()
+const AuthService = require('../../services/auth')
+
 Component({
   /**
    * 组件的属性列表
@@ -41,25 +42,32 @@ Component({
    * 组件的方法列表
    */
   methods: {
+    getFallbackUrl() {
+      return AuthService.getCurrentRole() === 'teacher'
+        ? '/pages/teacher/index'
+        : '/pages/student/index'
+    },
+
+    navigateToFallback() {
+      const url = this.getFallbackUrl()
+
+      wx.switchTab({
+        url,
+        fail: () => {
+          wx.reLaunch({
+            url
+          })
+        }
+      })
+    },
+
     handleGoBack() {
-      // 触发返回事件
-      this.triggerEvent('go-back');
-      // 默认返回上一页
       const pages = getCurrentPages();
       if (pages.length > 1) {
-        wx.navigateBack({
-          fail: () => {
-            // 如果返回失败，跳转到首页
-            wx.switchTab({
-              url: '/pages/index/index'
-            });
-          }
-        });
-      } else {
-        wx.switchTab({
-          url: '/pages/index/index'
-        });
+        this.triggerEvent('go-back');
+        return
       }
+      this.navigateToFallback()
     }
   }
 })
