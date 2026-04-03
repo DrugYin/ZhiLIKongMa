@@ -91,12 +91,11 @@
           最近加入时间：{{memberStats.latestJoinText}}
         </view>
 
-        <empty-component
-          wx:if="{{!members.length}}"
-          icon="message"
-          title="班级还没有成员"
-          description="可以先复制邀请码分享给学生，待学生申请加入后再回来处理。"
-        />
+        <view wx:if="{{!members.length}}" class="inline-empty">
+          <text class="inline-empty-icon">👥</text>
+          <text class="inline-empty-title">班级还没有成员</text>
+          <text class="inline-empty-desc">可以先复制邀请码分享给学生，待学生申请加入后再回来处理。</text>
+        </view>
 
         <view wx:else class="member-list">
           <view wx:for="{{members}}" wx:key="_openid" class="member-card">

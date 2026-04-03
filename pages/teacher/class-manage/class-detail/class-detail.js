@@ -229,7 +229,7 @@ Page({
     wx.setClipboardData({
       data: classInfo.classCode,
       success: () => {
-        Toast.showSuccess('邀请码已复制')
+        Toast.showSuccess('邀请码已复制', 2000)
       }
     })
   },

@@ -1,7 +1,6 @@
 {
   "enablePullDownRefresh": true,
   "usingComponents": {
-    "custom-navbar": "/components/custom-navbar/index",
-    "empty-component": "/components/empty/empty"
+    "custom-navbar": "/components/custom-navbar/index"
   }
 }

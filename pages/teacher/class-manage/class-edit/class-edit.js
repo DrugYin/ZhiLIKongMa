@@ -137,20 +137,25 @@ Page({
   },
 
   async loadClassDetail() {
-    const classInfo = await ClassService.getClassDetail(this.data.classId)
+    Toast.showLoading('班级详情加载中...')
+    try {
+      const classInfo = await ClassService.getClassDetail(this.data.classId)
 
-    this.setData({
-      classInfo,
-      classForm: {
-        class_name: classInfo.class_name || '',
-        project_code: classInfo.project_code || '',
-        project_name: classInfo.project_name || '',
-        max_members: classInfo.max_members || 30,
-        class_time: classInfo.class_time || '',
-        location: classInfo.location || '',
-        description: classInfo.description || ''
-      }
-    })
+      this.setData({
+        classInfo,
+        classForm: {
+          class_name: classInfo.class_name || '',
+          project_code: classInfo.project_code || '',
+          project_name: classInfo.project_name || '',
+          max_members: classInfo.max_members || 30,
+          class_time: classInfo.class_time || '',
+          location: classInfo.location || '',
+          description: classInfo.description || ''
+        }
+      })
+    } finally {
+      Toast.hideLoading()
+    }
   },
 
   openProjectPicker() {
