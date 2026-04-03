@@ -25,16 +25,16 @@
 
 | 模块 | 功能描述 | 开发状态 |
 |------|----------|----------|
-| 用户系统 | 学生注册/登录、教师账号登录、微信授权登录 | ✅ 已完成 |
-| 项目系统 | 训练项目配置（编程、无人机、机器人） | 🟡 本地配置已完成，后台管理待开发 |
-| 班级系统 | 创建班级、加入班级、班级成员管理 | 🟡 云函数已完成，列表筛选与新建/编辑页已接入，详情待完善 |
-| 任务系统 | 发布任务（task）、任务分类、截止时间、积分设置 | 🟡 页面骨架已完成，云函数待开发 |
+| 用户系统 | 微信登录、注册完善资料、角色切换、资料维护 | 🟡 登录/注册、资料维护、角色切换已完成，首页与部分角色页仍使用缓存或 mock 数据 |
+| 项目系统 | 训练项目配置（编程、无人机、机器人） | 🟡 `get-projects` 云函数、ProjectService 与默认配置已完成，后台管理待开发 |
+| 班级系统 | 创建班级、加入班级、班级成员管理 | 🟡 班级云函数、列表/详情/新建编辑/成员移除已完成，学生加入与审批前端待接入 |
+| 任务系统 | 发布任务（task）、任务分类、截止时间、积分设置 | 🟡 教师端列表/详情/编辑页已建占位，云函数与实际任务流待开发 |
 | 提交系统 | 学生提交作业、图片/文件上传、提交记录 | ⬜ 待开发 |
-| 审核系统 | 教师审核批改、评分、反馈 | 🟡 审核入口页已建，功能待开发 |
+| 审核系统 | 教师审核批改、评分、反馈 | 🟡 审核入口页已建占位，功能待开发 |
 | 积分系统 | 积分累计、积分消费、积分排行 | ⬜ 待开发 |
 | 抽奖系统 | 积分抽奖、奖品管理 | ⬜ 待开发 |
-| 排行榜 | 学生积分排行、任务完成排行 | 🟡 页面已建，数据待接入 |
-| 配置系统 | 后台参数配置、系统设置 | 🟡 本地配置服务与 `get-projects` 云函数已完成，后台配置待开发 |
+| 排行榜 | 学生积分排行、任务完成排行 | 🟡 排行榜页已建标签页骨架，数据待接入 |
+| 配置系统 | 后台参数配置、系统设置 | 🟡 项目配置服务、缓存与 `get-projects` 已完成，`get-config` 与后台配置待开发 |
 
 ### 1.3 用户角色
 
@@ -44,8 +44,8 @@
 ├─────────────────────┬───────────────────────────────────┤
 │      学生 (Student)  │           教师 (Teacher)          │
 ├─────────────────────┼───────────────────────────────────┤
-│ • 微信登录           │ • 账号密码登录                     │
-│ • 注册完善信息       │ • 微信授权登录                     │
+│ • 微信登录           │ • 微信登录                         │
+│ • 注册完善信息       │ • 角色切换进入教师视图             │
 │ • 加入班级           │ • 创建/管理班级                    │
 │ • 查看任务           │ • 发布/编辑任务                    │
 │ • 提交作业           │ • 审核学生提交                     │
@@ -99,6 +99,7 @@ ZhiLiKongMa/
 │
 ├── cloudfunctions/             # 云函数目录
 │   ├── create-class/          # 创建班级
+│   ├── delete-class/          # 删除班级
 │   ├── get-class-detail/      # 获取班级详情
 │   ├── get-class-members/     # 获取班级成员
 │   ├── get-classes/           # 获取班级列表
@@ -111,6 +112,7 @@ ZhiLiKongMa/
 │   ├── register/              # 用户注册
 │   ├── remove-member/         # 移除班级成员
 │   ├── switch-role/           # 切换角色
+│   ├── update-class/          # 更新班级
 │   └── update-user/           # 更新用户信息
 │
 ├── components/                 # 公共组件
@@ -172,6 +174,7 @@ ZhiLiKongMa/
 ├── services/                   # 服务层
 │   ├── api.js                 # API 统一调用
 │   ├── auth.js                # 认证服务
+│   ├── class.js               # 班级服务
 │   └── storage.js             # 存储服务
 │
 ├── utils/                      # 工具函数
@@ -369,9 +372,9 @@ chore(deps): 更新依赖版本
 ├───────────────┼─────────────────────────────────────────────┤
 │    项目相关    │  projects（训练项目配置表）                   │
 ├───────────────┼─────────────────────────────────────────────┤
-│    班级相关    │  classes, class_members, join_applications  │
+│    班级相关    │  classes, class_join_applications           │
 ├───────────────┼─────────────────────────────────────────────┤
-│    任务相关    │  missions, submissions                      │
+│    任务相关    │  tasks, submissions（规划）                 │
 ├───────────────┼─────────────────────────────────────────────┤
 │    奖品相关    │  prizes, draw_records                       │
 ├───────────────┼─────────────────────────────────────────────┤
@@ -409,6 +412,12 @@ chore(deps): 更新依赖版本
   // ========== 教师信息（role 包含 teacher 时填写）==========
   teacher_project: "编程",            // 教授项目
   teacher_project_code: "programming", // 项目编码
+
+  // ========== 班级关联（当前实现直接挂在 users 上）==========
+  class_id: "class_id",                // 当前所在班级 ID（未加入则为空）
+  class_name: "黑羊编程 3 班",          // 当前所在班级名称
+  class_code: "AB12CD",                // 当前所在班级邀请码
+  join_class_time: Date,               // 入班时间
 
   // ========== 积分信息（学生角色使用）==========
   points: 50,                         // 当前积分
@@ -497,79 +506,82 @@ chore(deps): 更新依赖版本
   class_name: "编程基础一班",      // 班级名称
   class_code: "CLS001",           // 班级邀请码
   description: "适合零基础学员",   // 班级描述
-  cover_image: "cloud://xxx",     // 封面图片
-  teacher_id: "xxx",              // 创建教师ID
   teacher_openid: "xxx",          // 教师openid
-  project_id: "xxx",              // 所属项目ID（关联 projects 表）
+  teacher_name: "王老师",          // 教师姓名（冗余）
+  project_code: "programming",    // 所属项目编码
+  project_name: "编程",            // 所属项目名称
   max_members: 50,                // 最大成员数
   member_count: 0,                // 当前成员数
   class_time: "每周六 14:00-16:00", // 上课时间
   location: "3号楼201教室",       // 上课地点
-  status: "active",               // 状态: active/archived
+  status: "active",               // 状态: active/deleted
   create_time: Date,
   update_time: Date,
-  is_deleted: false
+  delete_time: null
 }
 
 // 索引
 - class_code (唯一)
 - teacher_openid
-- teacher_id
+- project_code
 - status
 - create_time
 ```
 
-#### 6.2.4 class_members（班级成员表）
+#### 6.2.4 users 内班级成员字段（当前实现）
 
 ```javascript
 {
-  _id: "auto",
-  class_id: "xxx",                // 班级ID
-  student_openid: "xxx",          // 学生openid
-  student_id: "xxx",              // 学生ID
-  join_time: Date,                // 加入时间
-  role: "member",                 // 角色: member/admin
-  status: "active",               // 状态: active/removed
-  total_points: 0,                // 班级内累计积分
-  completed_tasks: 0,             // 完成任务数
-  create_time: Date,
+  _id: "user_id",
+  _openid: "student_openid",      // 学生 openid
+  class_id: "class_id",           // 当前班级 ID
+  class_name: "黑羊编程 3 班",     // 当前班级名称
+  class_code: "AB12CD",           // 当前班级邀请码
+  join_class_time: Date,          // 入班时间
+  points: 100,                    // 当前积分
+  total_points: 300,              // 累计积分
   update_time: Date
 }
 
-// 索引
-- class_id + student_openid (联合唯一)
+// 说明
+- 当前项目尚未单独拆分 `class_members` 集合
+- 班级成员关系直接维护在 `users` 集合中
+
+// 索引建议
 - class_id
-- student_openid
-- status
+- join_class_time
 ```
 
-#### 6.2.5 join_applications（加入申请表）
+#### 6.2.5 class_join_applications（加入申请表）
 
 ```javascript
 {
   _id: "auto",
   class_id: "xxx",                // 班级ID
+  class_code: "AB12CD",           // 班级邀请码
+  class_name: "黑羊编程 3 班",     // 班级名称
   student_openid: "xxx",          // 学生openid
   student_name: "张三",           // 学生姓名
-  student_avatar: "cloud://xxx",  // 学生头像
   apply_reason: "想学习编程",      // 申请理由
   status: "pending",              // 状态: pending/approved/rejected
-  handle_time: Date,              // 处理时间
-  handle_by: "xxx",               // 处理人
+  review_remark: "",              // 审批备注
+  review_by: "teacher_openid",    // 审批人
+  review_time: Date,              // 审批时间
   create_time: Date,
   update_time: Date
 }
 
 // 索引
 - class_id + student_openid (联合唯一)
+- student_openid
 - class_id
 - status
 - create_time
 ```
 
-#### 6.2.6 missions（任务表）
+#### 6.2.6 tasks（任务表，规划）
 
-> 注：项目中使用 "mission" 代替 "task" 作为任务表名
+> 注：当前代码层统一使用 `task` 命名，数据库表仍处于规划阶段。
 
 ```javascript
 {
@@ -770,6 +782,8 @@ chore(deps): 更新依赖版本
 | switch-role | 切换用户角色 | ✅ 已完成 |
 | update-user | 更新用户信息 | ✅ 已完成 |
 | create-class | 创建班级 | ✅ 已完成 |
+| update-class | 更新班级 | ✅ 已完成 |
+| delete-class | 删除班级 | ✅ 已完成 |
 | get-classes | 获取班级列表 | ✅ 已完成 |
 | get-class-detail | 获取班级详情 | ✅ 已完成 |
 | join-class | 申请加入班级 | ✅ 已完成 |
@@ -797,9 +811,8 @@ chore(deps): 更新依赖版本
 | get-ranking | 获取排行榜 | P0 | ⬜ 待开发 |
 | get-class-ranking | 班级排行榜 | P1 | ⬜ 待开发 |
 | get-statistics | 获取统计数据 | P1 | ⬜ 待开发 |
-| get-config | 获取系统配置 | P0 | ⬜ 待开发 |
+| get-config | 获取系统配置 | P0 | ⬜ 仅前端调用入口已预留 |
 | update-config | 更新配置 | P0 | ⬜ 待开发 |
-| get-projects | 获取项目列表 | P0 | ✅ 已完成 |
 | create-project | 创建项目 | P1 | ⬜ 待开发 |
 | update-project | 更新项目 | P1 | ⬜ 待开发 |
 
@@ -1017,7 +1030,7 @@ const TEACHER_TABBAR = [
 1. **默认项目配置** - 内置编程、无人机、机器人三类默认项目
 2. **默认系统配置** - 内置积分、抽奖、班级、任务相关默认参数
 3. **本地缓存** - 配置数据支持本地缓存，减少重复读取
-4. **服务层与云函数已接入** - `get-projects` 已提供云函数实现，`get-config` 调用入口仍待后端接入
+4. **服务层与云函数已接入** - `get-projects` 已提供云函数实现，`get-config` 仅保留前端调用入口，后端尚未接入
 
 ### 9.2 可配置参数清单
 
@@ -1298,7 +1311,7 @@ const ERROR_CODE = {
 
 ---
 
-**文档版本**: v3.1.0
-**最后更新**: 2026-4-2
+**文档版本**: v3.2.0
+**最后更新**: 2026-04-03
 **编写者**: 开发团队
-**更新说明**: 同步班级管理前端进度与 `get-projects` 云函数状态，补充 `class-edit` 页面路由与结构说明
+**更新说明**: 按当前代码进度同步用户/班级/配置状态，补充 `update-class`、`delete-class` 云函数与班级数据模型现状
