@@ -2,6 +2,7 @@
 const projectService = require('../../../config/project')
 const ClassService = require('../../../services/class')
 const Toast = require('../../../utils/toast')
+const formatUtils = require('../../../utils/format.js')
 
 const DEFAULT_PROJECT_OPTIONS = [
   { value: 'all', label: '全部项目' }
@@ -157,8 +158,8 @@ Page({
   formatClassItem(item = {}) {
     const memberCount = Number(item.member_count || 0)
     const maxMembers = Number(item.max_members || 0)
-    const createTime = this.formatDateTime(item.create_time)
-    const updateTime = this.formatDateTime(item.update_time)
+    const createTime = this.formatClassDateTime(item.create_time)
+    const updateTime = this.formatClassDateTime(item.update_time)
 
     return {
       ...item,
@@ -174,25 +175,12 @@ Page({
     }
   },
 
-  formatDateTime(value) {
+  formatClassDateTime(value) {
     if (!value) {
       return ''
     }
 
-    if (typeof value === 'string') {
-      return value.replace('T', ' ').slice(0, 16)
-    }
-
-    if (value instanceof Date) {
-      const year = value.getFullYear()
-      const month = `${value.getMonth() + 1}`.padStart(2, '0')
-      const day = `${value.getDate()}`.padStart(2, '0')
-      const hour = `${value.getHours()}`.padStart(2, '0')
-      const minute = `${value.getMinutes()}`.padStart(2, '0')
-      return `${year}-${month}-${day} ${hour}:${minute}`
-    }
-
-    return String(value)
+    return formatUtils.formatDate(value, 'YYYY-MM-DD HH:mm')
   },
 
   getStatusText(status) {
