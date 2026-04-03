@@ -5,6 +5,7 @@ cloud.init({
 });
 
 const db = cloud.database();
+const PAGE_SIZE = 100;
 
 async function getCurrentUser(openid) {
   const res = await db.collection('users').where({ _openid: openid }).limit(1).get();
@@ -32,6 +33,31 @@ async function writeOperationLog(openid, userType, action, targetId, detail, now
   } catch (error) {
     console.error('[update-class] writeOperationLog Error:', error);
   }
+}
+
+async function getAllUsersInClass(classId) {
+  const totalRes = await db.collection('users').where({
+    class_id: classId
+  }).count();
+  const total = totalRes.total || 0;
+  const tasks = [];
+
+  for (let skip = 0; skip < total; skip += PAGE_SIZE) {
+    tasks.push(
+      db.collection('users').where({
+        class_id: classId
+      }).skip(skip).limit(PAGE_SIZE).field({
+        _id: true
+      }).get()
+    );
+  }
+
+  if (!tasks.length) {
+    return [];
+  }
+
+  const list = await Promise.all(tasks);
+  return list.reduce((result, item) => result.concat(item.data || []), []);
 }
 
 exports.main = async (event) => {
@@ -129,6 +155,26 @@ exports.main = async (event) => {
 
     await db.collection('classes').doc(classId).update({
       data: updateData
+    });
+
+    const members = await getAllUsersInClass(classId);
+    if (members.length) {
+      await Promise.all(members.map((member) => db.collection('users').doc(member._id).update({
+        data: {
+          class_name: className,
+          update_time: now
+        }
+      })));
+    }
+
+    await db.collection('class_join_applications').where({
+      class_id: classId
+    }).update({
+      data: {
+        class_name: className,
+        class_code: classInfo.class_code,
+        update_time: now
+      }
     });
 
     await writeOperationLog(OPENID, 'teacher', 'update_class', classId, {
