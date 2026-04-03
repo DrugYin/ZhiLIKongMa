@@ -234,6 +234,16 @@ Page({
     })
   },
 
+  getInviteSharePath() {
+    const classCode = this.data.classInfo ? this.data.classInfo.classCode : ''
+
+    if (!classCode || classCode === '--') {
+      return `/pages/teacher/class-manage/class-detail/class-detail?class_id=${this.data.classId}`
+    }
+
+    return `/pages/student/class-manage/join-confirm/join-confirm?class_code=${encodeURIComponent(classCode)}&from=teacher_share`
+  },
+
   goToEditClass() {
     if (!this.data.classId) {
       return
@@ -285,8 +295,8 @@ Page({
   onShareAppMessage() {
     const className = this.data.classInfo ? this.data.classInfo.className : '班级详情'
     return {
-      title: className,
-      path: `/pages/teacher/class-manage/class-detail/class-detail?class_id=${this.data.classId}`
+      title: `邀请加入 ${className}`,
+      path: this.getInviteSharePath()
     }
   }
 })

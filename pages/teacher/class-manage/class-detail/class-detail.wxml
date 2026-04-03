@@ -18,8 +18,10 @@
 
       <view class="hero-actions">
         <button class="ghost-btn" bindtap="onCopyInviteCode">复制邀请码</button>
+        <button class="ghost-btn share-btn" open-type="share">邀请学生</button>
         <button class="primary-btn" bindtap="goToEditClass">编辑班级</button>
       </view>
+      <text class="hero-share-hint">可直接分享班级邀请卡片给学生，学生打开后会进入申请确认页。</text>
     </view>
 
     <view wx:if="{{loading}}" class="state-card">

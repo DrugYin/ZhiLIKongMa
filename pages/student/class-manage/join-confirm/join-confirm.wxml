@@ -1,0 +1,109 @@
+<view class="container">
+  <view class="header">
+    <custom-navbar title="申请加入班级" showBack="{{true}}" placeholder="{{true}}" />
+  </view>
+
+  <scroll-view class="content" scroll-y enhanced>
+    <view wx:if="{{loading}}" class="state-card">
+      <text class="state-title">班级信息加载中</text>
+      <text class="state-desc">正在确认班级资料与当前加入状态。</text>
+    </view>
+
+    <block wx:elif="{{pageError}}">
+      <view class="state-card">
+        <text class="state-title">无法加入该班级</text>
+        <text class="state-desc">{{pageError}}</text>
+        <t-button theme="primary" size="large" block bind:tap="goToClassManage">返回班级管理</t-button>
+      </view>
+    </block>
+
+    <block wx:elif="{{inviteInfo}}">
+      <view class="hero-card">
+        <text class="hero-eyebrow">{{source === 'teacher_share' ? '老师邀请你加入班级' : '确认班级信息后再提交申请'}}</text>
+        <text class="hero-title">{{inviteInfo.class_name}}</text>
+        <text class="hero-desc">{{inviteInfo.project_name || inviteInfo.project_code || '综合训练'}} · {{inviteInfo.teacherText}}</text>
+      </view>
+
+      <view class="section-card">
+        <view class="section-header">
+          <text class="section-title">班级信息</text>
+          <text class="section-tag {{inviteInfo.isFull ? 'section-tag-danger' : ''}}">{{inviteInfo.isFull ? '人数已满' : '可申请加入'}}</text>
+        </view>
+
+        <view class="summary-grid">
+          <view class="summary-item">
+            <text class="summary-label">邀请码</text>
+            <text class="summary-value">{{inviteInfo.class_code}}</text>
+          </view>
+          <view class="summary-item">
+            <text class="summary-label">当前人数</text>
+            <text class="summary-value">{{inviteInfo.memberText}}</text>
+          </view>
+          <view class="summary-item">
+            <text class="summary-label">老师</text>
+            <text class="summary-value">{{inviteInfo.teacherText}}</text>
+          </view>
+          <view class="summary-item">
+            <text class="summary-label">上课时间</text>
+            <text class="summary-value">{{inviteInfo.classTimeText}}</text>
+          </view>
+          <view class="summary-item">
+            <text class="summary-label">上课地点</text>
+            <text class="summary-value">{{inviteInfo.locationText}}</text>
+          </view>
+        </view>
+
+        <view class="detail-panel">
+          <text class="detail-title">班级说明</text>
+          <text class="detail-desc">{{inviteInfo.descriptionText}}</text>
+        </view>
+      </view>
+
+      <view wx:if="{{!isLoggedIn || !isRegistered}}" class="section-card">
+        <text class="section-title">登录后继续申请</text>
+        <text class="section-desc">请先登录并完成注册，系统会在返回本页后继续保留当前邀请码。</text>
+        <t-button theme="primary" size="large" block bind:tap="goLogin">先登录再申请</t-button>
+      </view>
+
+      <view wx:elif="{{userStatus === 'joined'}}" class="section-card">
+        <text class="section-title">你已经加入班级</text>
+        <text class="section-desc">当前账号已经在班级中，无需重复申请。</text>
+        <t-button theme="primary" size="large" block bind:tap="goToClassManage">返回班级管理</t-button>
+      </view>
+
+      <view wx:elif="{{userStatus === 'pending'}}" class="section-card">
+        <text class="section-title">已有待审核申请</text>
+        <text class="section-desc">你当前已有待审核的入班申请，请等待老师处理后再尝试新的申请。</text>
+        <t-button theme="primary" size="large" block bind:tap="goToClassManage">查看当前状态</t-button>
+      </view>
+
+      <view wx:else class="section-card">
+        <text class="section-title">申请理由</text>
+        <text class="section-desc">可选填写，让老师更快确认你的身份。</text>
+
+        <view class="textarea-wrapper">
+          <textarea
+            class="reason-textarea"
+            maxlength="100"
+            placeholder="例如：我是周六上午班的学员"
+            value="{{applyReason}}"
+            bindinput="onReasonChange"
+          ></textarea>
+        </view>
+
+        <t-button
+          theme="primary"
+          size="large"
+          block
+          disabled="{{inviteInfo.isFull}}"
+          loading="{{submitting}}"
+          bind:tap="onApplyJoin"
+        >
+          {{inviteInfo.isFull ? '班级人数已满' : '确认申请加入'}}
+        </t-button>
+      </view>
+    </block>
+
+    <view class="footer-placeholder"></view>
+  </scroll-view>
+</view>
