@@ -86,8 +86,13 @@ Page({
 
     try {
       const taskInfo = await TaskService.getTaskDetail(this.data.taskId)
+      const imageInfo = await this.buildTaskImages(taskInfo)
       this.setData({
-        taskInfo: this.formatTaskInfo(taskInfo)
+        taskInfo: this.formatTaskInfo({
+          ...taskInfo,
+          image_list: imageInfo.imageList,
+          image_preview_urls: imageInfo.previewUrls
+        })
       })
       this._pageReady = true
     } catch (error) {
@@ -134,12 +139,67 @@ Page({
       updateTimeText: item.update_time ? this.formatDateTime(item.update_time) : '待更新',
       createTimeText: item.create_time ? this.formatDateTime(item.create_time) : '待创建',
       imageCountText: `${Array.isArray(item.images) ? item.images.length : 0} 张图片`,
+      imageList: Array.isArray(item.image_list) ? item.image_list : [],
+      imagePreviewUrls: Array.isArray(item.image_preview_urls) ? item.image_preview_urls : [],
       fileCountText: `${Array.isArray(item.files) ? item.files.length : 0} 个附件`,
       attachmentText: Array.isArray(item.files) && item.files.length
         ? item.files.map((file) => file.file_name || '未命名附件').join(' / ')
         : '暂无附件',
       progressInfo
     }
+  },
+
+  async buildTaskImages(taskInfo = {}) {
+    const imageIds = Array.isArray(taskInfo.images) ? taskInfo.images.filter(Boolean) : []
+
+    if (!imageIds.length) {
+      return {
+        imageList: [],
+        previewUrls: []
+      }
+    }
+
+    const tempUrlMap = await this.getTempUrlMap(imageIds)
+    const imageList = imageIds.map((fileId, index) => ({
+      fileId,
+      url: tempUrlMap[fileId] || fileId,
+      name: `任务图片${index + 1}`
+    }))
+
+    return {
+      imageList,
+      previewUrls: imageList.map((item) => item.url).filter(Boolean)
+    }
+  },
+
+  getTempUrlMap(fileIds = []) {
+    const uniqueFileIds = Array.from(new Set(fileIds.filter(Boolean)))
+    if (!uniqueFileIds.length) {
+      return Promise.resolve({})
+    }
+
+    return new Promise((resolve, reject) => {
+      wx.cloud.getTempFileURL({
+        fileList: uniqueFileIds,
+        success: (res) => {
+          const fileList = Array.isArray(res.fileList) ? res.fileList : []
+          const map = fileList.reduce((result, item) => {
+            if (item && item.fileID) {
+              result[item.fileID] = item.tempFileURL || item.fileID
+            }
+            return result
+          }, {})
+          resolve(map)
+        },
+        fail: reject
+      })
+    }).catch((error) => {
+      console.error('[task-detail] getTempUrlMap error:', error)
+      return uniqueFileIds.reduce((result, fileId) => {
+        result[fileId] = fileId
+        return result
+      }, {})
+    })
   },
 
   formatProgressInfo(item = {}) {
@@ -305,6 +365,24 @@ Page({
     const blue = parseInt(value.slice(4, 6), 16)
 
     return `rgba(${red}, ${green}, ${blue}, ${alpha})`
+  },
+
+  onPreviewImage(e) {
+    const { index } = e.currentTarget.dataset
+    const { taskInfo } = this.data
+    const previewUrls = taskInfo && Array.isArray(taskInfo.imagePreviewUrls)
+      ? taskInfo.imagePreviewUrls.filter(Boolean)
+      : []
+
+    if (!previewUrls.length) {
+      return
+    }
+
+    const current = previewUrls[Number(index)] || previewUrls[0]
+    wx.previewImage({
+      urls: previewUrls,
+      current
+    })
   },
 
   goToEditTask() {
