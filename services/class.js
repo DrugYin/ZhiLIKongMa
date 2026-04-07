@@ -104,6 +104,17 @@ class ClassService {
   }
 
   /**
+   * 获取班级入班申请
+   */
+  static async getClassApplications(params) {
+    const res = await classApi.getClassApplications(params);
+    if (!res.success) {
+      throw new Error(res.message || '获取入班申请失败');
+    }
+    return res.data;
+  }
+
+  /**
    * 获取班级成员
    */
   static async getClassMembers(params) {

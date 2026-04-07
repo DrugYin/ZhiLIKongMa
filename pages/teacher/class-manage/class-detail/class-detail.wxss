@@ -97,7 +97,9 @@
 .ghost-btn,
 .primary-btn,
 .remove-btn,
-.task-btn {
+.task-btn,
+.reject-btn,
+.approve-btn {
   height: 72rpx;
   line-height: 72rpx;
   padding: 0 26rpx;
@@ -110,7 +112,9 @@
 .ghost-btn::after,
 .primary-btn::after,
 .remove-btn::after,
-.task-btn::after {
+.task-btn::after,
+.reject-btn::after,
+.approve-btn::after {
   border: none;
 }
 
@@ -227,6 +231,123 @@
 
 .member-list {
   margin-top: 12rpx;
+}
+
+.review-tip {
+  margin-top: 20rpx;
+  padding: 20rpx 24rpx;
+  border-radius: 20rpx;
+  background: rgba(46, 109, 53, 0.08);
+  color: #416455;
+  font-size: 24rpx;
+  line-height: 1.7;
+}
+
+.application-list {
+  margin-top: 18rpx;
+}
+
+.application-card {
+  padding: 24rpx 0;
+  border-bottom: 1rpx solid rgba(223, 229, 237, 0.8);
+}
+
+.application-card:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.application-main,
+.application-name-row,
+.application-actions {
+  display: flex;
+  align-items: center;
+}
+
+.application-main {
+  align-items: flex-start;
+}
+
+.application-avatar {
+  width: 84rpx;
+  height: 84rpx;
+  flex-shrink: 0;
+  border-radius: 50%;
+  background: #eef2f7;
+}
+
+.application-info {
+  flex: 1;
+  min-width: 0;
+  margin-left: 20rpx;
+}
+
+.application-name-row {
+  justify-content: space-between;
+  gap: 16rpx;
+}
+
+.application-name {
+  color: #1d3552;
+  font-size: 28rpx;
+  font-weight: 600;
+}
+
+.application-time {
+  flex-shrink: 0;
+  color: #6d7d8f;
+  font-size: 22rpx;
+}
+
+.application-meta {
+  display: block;
+  margin-top: 8rpx;
+  color: #728091;
+  font-size: 22rpx;
+  line-height: 1.6;
+  word-break: break-all;
+}
+
+.application-reason-box {
+  margin-top: 18rpx;
+  padding: 20rpx 22rpx;
+  border-radius: 20rpx;
+  background: #f7f9fc;
+}
+
+.application-reason-label {
+  display: block;
+  color: #6d7d8f;
+  font-size: 22rpx;
+}
+
+.application-reason-text {
+  display: block;
+  margin-top: 10rpx;
+  color: #28425b;
+  font-size: 24rpx;
+  line-height: 1.8;
+  word-break: break-all;
+}
+
+.application-actions {
+  gap: 16rpx;
+  margin-top: 20rpx;
+}
+
+.reject-btn,
+.approve-btn {
+  flex: 1;
+}
+
+.reject-btn {
+  color: #a34b3a;
+  background: rgba(239, 107, 99, 0.12);
+}
+
+.approve-btn {
+  color: #ffffff;
+  background: linear-gradient(135deg, #2f8f57 0%, #4cb978 100%);
 }
 
 .inline-empty {
