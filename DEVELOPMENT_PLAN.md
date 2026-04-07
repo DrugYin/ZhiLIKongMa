@@ -27,13 +27,13 @@
 |------|----------|----------|
 | 用户系统 | 微信登录、注册完善资料、角色切换、资料维护 | 🟡 登录/注册、资料维护、角色切换已完成，首页与部分角色页仍使用缓存或 mock 数据 |
 | 项目系统 | 训练项目配置（编程、无人机、机器人） | 🟡 `get-projects` 云函数、ProjectService 与默认配置已完成，后台管理待开发 |
-| 班级系统 | 创建班级、加入班级、班级成员管理 | 🟡 班级云函数、列表/详情/新建编辑/成员移除已完成，学生加入与审批前端待接入 |
+| 班级系统 | 创建班级、加入班级、班级成员管理 | 🟡 班级云函数、教师端列表/详情/编辑/审批、学生端班级管理/邀请码申请/分享加入已完成，多班级关系已接入 |
 | 任务系统 | 发布任务（task）、任务分类、截止时间、积分设置 | 🟡 教师端列表/详情/编辑页已建占位，云函数与实际任务流待开发 |
 | 提交系统 | 学生提交作业、图片/文件上传、提交记录 | ⬜ 待开发 |
-| 审核系统 | 教师审核批改、评分、反馈 | 🟡 审核入口页已建占位，功能待开发 |
+| 审核系统 | 教师审核批改、评分、反馈 | 🟡 班级入班审批已合并到班级详情页，任务提交审核流仍待开发 |
 | 积分系统 | 积分累计、积分消费、积分排行 | ⬜ 待开发 |
 | 抽奖系统 | 积分抽奖、奖品管理 | ⬜ 待开发 |
-| 排行榜 | 学生积分排行、任务完成排行 | 🟡 排行榜页已建标签页骨架，数据待接入 |
+| 排行榜 | 学生积分排行、任务完成排行 | 🟡 排行榜页保留标签页骨架，榜单数据与统计未接入 |
 | 配置系统 | 后台参数配置、系统设置 | 🟡 项目配置服务、缓存与 `get-projects` 已完成，`get-config` 与后台配置待开发 |
 
 ### 1.3 用户角色
@@ -100,9 +100,12 @@ ZhiLiKongMa/
 ├── cloudfunctions/             # 云函数目录
 │   ├── create-class/          # 创建班级
 │   ├── delete-class/          # 删除班级
+│   ├── get-class-applications/ # 获取待审批入班申请
 │   ├── get-class-detail/      # 获取班级详情
+│   ├── get-class-invite-info/ # 获取班级邀请页信息
 │   ├── get-class-members/     # 获取班级成员
 │   ├── get-classes/           # 获取班级列表
+│   ├── get-my-class-status/   # 获取学生班级状态
 │   ├── get-projects/          # 获取项目列表
 │   ├── get-user-info/         # 获取用户信息
 │   ├── get-user-roles/        # 获取用户角色
@@ -144,6 +147,9 @@ ZhiLiKongMa/
 │   │   ├── index.json
 │   │   ├── index.wxml
 │   │   ├── index.wxss
+│   │   ├── class-manage/      # 班级管理
+│   │   │   ├── class-manage.js
+│   │   │   └── join-confirm/  # 入班确认页
 │   │   ├── mine/              # 我的页面
 │   │   ├── rank/              # 排行榜
 │   │   ├── setting/           # 设置页面
@@ -372,7 +378,7 @@ chore(deps): 更新依赖版本
 ├───────────────┼─────────────────────────────────────────────┤
 │    项目相关    │  projects（训练项目配置表）                   │
 ├───────────────┼─────────────────────────────────────────────┤
-│    班级相关    │  classes, class_join_applications           │
+│    班级相关    │  classes, class_memberships, class_join_applications │
 ├───────────────┼─────────────────────────────────────────────┤
 │    任务相关    │  tasks, submissions（规划）                 │
 ├───────────────┼─────────────────────────────────────────────┤
@@ -528,31 +534,50 @@ chore(deps): 更新依赖版本
 - create_time
 ```
 
-#### 6.2.4 users 内班级成员字段（当前实现）
+#### 6.2.4 class_memberships（班级成员关系表，当前主实现）
+
+```javascript
+{
+  _id: "auto",
+  class_id: "class_id",              // 班级 ID
+  student_openid: "student_openid",  // 学生 openid
+  source_application_id: "app_id",   // 来源申请记录
+  join_class_time: Date,             // 入班时间
+  create_time: Date,
+  update_time: Date
+}
+
+// 索引
+- class_id + student_openid（联合唯一，建议）
+- student_openid
+- join_class_time
+```
+
+#### 6.2.5 users 内班级兼容字段（兼容旧数据）
 
 ```javascript
 {
   _id: "user_id",
   _openid: "student_openid",      // 学生 openid
-  class_id: "class_id",           // 当前班级 ID
-  class_name: "黑羊编程 3 班",     // 当前班级名称
-  class_code: "AB12CD",           // 当前班级邀请码
-  join_class_time: Date,          // 入班时间
+  class_id: "class_id",           // 旧版单班级字段
+  class_name: "黑羊编程 3 班",     // 旧版班级名称
+  class_code: "AB12CD",           // 旧版班级邀请码
+  join_class_time: Date,          // 旧版入班时间
   points: 100,                    // 当前积分
   total_points: 300,              // 累计积分
   update_time: Date
 }
 
 // 说明
-- 当前项目尚未单独拆分 `class_members` 集合
-- 班级成员关系直接维护在 `users` 集合中
+- 当前项目已新增 `class_memberships` 作为多班级主关系表
+- `users.class_id / class_name / class_code / join_class_time` 仅用于兼容旧数据与部分旧逻辑
 
 // 索引建议
 - class_id
 - join_class_time
 ```
 
-#### 6.2.5 class_join_applications（加入申请表）
+#### 6.2.6 class_join_applications（加入申请表）
 
 ```javascript
 {
@@ -579,7 +604,7 @@ chore(deps): 更新依赖版本
 - create_time
 ```
 
-#### 6.2.6 tasks（任务表，规划）
+#### 6.2.7 tasks（任务表，规划）
 
 > 注：当前代码层统一使用 `task` 命名，数据库表仍处于规划阶段。
 
@@ -786,7 +811,10 @@ chore(deps): 更新依赖版本
 | delete-class | 删除班级 | ✅ 已完成 |
 | get-classes | 获取班级列表 | ✅ 已完成 |
 | get-class-detail | 获取班级详情 | ✅ 已完成 |
+| get-class-invite-info | 获取班级邀请信息 | ✅ 已完成 |
+| get-my-class-status | 获取学生班级状态 | ✅ 已完成 |
 | join-class | 申请加入班级 | ✅ 已完成 |
+| get-class-applications | 获取班级入班申请 | ✅ 已完成 |
 | handle-join-application | 处理入班申请 | ✅ 已完成 |
 | get-class-members | 获取班级成员 | ✅ 已完成 |
 | remove-member | 移除成员 | ✅ 已完成 |
@@ -1311,7 +1339,7 @@ const ERROR_CODE = {
 
 ---
 
-**文档版本**: v3.2.0
-**最后更新**: 2026-04-03
+**文档版本**: v3.3.0
+**最后更新**: 2026-04-07
 **编写者**: 开发团队
-**更新说明**: 按当前代码进度同步用户/班级/配置状态，补充 `update-class`、`delete-class` 云函数与班级数据模型现状
+**更新说明**: 同步学生班级管理、教师审批、多班级数据模型与新增班级云函数状态
