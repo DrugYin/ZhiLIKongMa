@@ -17,6 +17,7 @@
 }
 
 .content {
+  margin-top: 300rpx;
   padding: 20rpx;
 }
 
