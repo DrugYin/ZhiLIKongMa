@@ -141,6 +141,82 @@
   margin-top: 22rpx;
 }
 
+.list-wrap {
+  margin-top: 20rpx;
+}
+
+.list-card {
+  padding: 24rpx;
+  border-radius: 24rpx;
+  background: #f7f9fc;
+}
+
+.list-card + .list-card {
+  margin-top: 20rpx;
+}
+
+.list-card-pending {
+  background: rgba(255, 184, 0, 0.08);
+}
+
+.list-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16rpx;
+}
+
+.list-card-title {
+  color: #17314a;
+  font-size: 28rpx;
+  font-weight: 700;
+}
+
+.list-card-tag {
+  flex-shrink: 0;
+  padding: 8rpx 16rpx;
+  border-radius: 999rpx;
+  color: #0c7f58;
+  background: rgba(12, 127, 88, 0.12);
+  font-size: 22rpx;
+  font-weight: 600;
+}
+
+.list-card-tag-warn {
+  color: #8a5b00;
+  background: rgba(255, 184, 0, 0.18);
+}
+
+.compact-grid {
+  margin-top: 18rpx;
+}
+
+.detail-panel-warn {
+  background: rgba(255, 184, 0, 0.12);
+}
+
+.empty-card {
+  margin-top: 20rpx;
+  padding: 24rpx;
+  border-radius: 22rpx;
+  background: #f7f9fc;
+}
+
+.empty-title {
+  display: block;
+  color: #17314a;
+  font-size: 28rpx;
+  font-weight: 700;
+}
+
+.empty-desc {
+  display: block;
+  margin-top: 10rpx;
+  color: #6a7d90;
+  font-size: 24rpx;
+  line-height: 1.8;
+}
+
 .ghost-btn {
   width: 100%;
   height: 72rpx;

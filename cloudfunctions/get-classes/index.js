@@ -8,6 +8,7 @@ const db = cloud.database();
 const _ = db.command;
 const DEFAULT_SORT_FIELD = 'create_time';
 const DEFAULT_SORT_ORDER = 'desc';
+const PAGE_SIZE = 100;
 const ALLOWED_SORT_FIELDS = new Set([
   'create_time',
   'update_time',
@@ -29,6 +30,33 @@ function normalizeSortOrder(sortOrder) {
   return String(sortOrder || DEFAULT_SORT_ORDER).trim().toLowerCase() === 'asc'
     ? 'asc'
     : 'desc';
+}
+
+async function getAllMembershipsByStudent(openid) {
+  const totalRes = await db.collection('class_memberships').where({
+    student_openid: openid
+  }).count();
+  const total = totalRes.total || 0;
+  const tasks = [];
+
+  for (let skip = 0; skip < total; skip += PAGE_SIZE) {
+    tasks.push(
+      db.collection('class_memberships').where({
+        student_openid: openid
+      }).skip(skip).limit(PAGE_SIZE).field({
+        _id: true,
+        class_id: true,
+        join_class_time: true
+      }).get()
+    );
+  }
+
+  if (!tasks.length) {
+    return [];
+  }
+
+  const list = await Promise.all(tasks);
+  return list.reduce((result, item) => result.concat(item.data || []), []);
 }
 
 exports.main = async (event) => {
@@ -75,8 +103,28 @@ exports.main = async (event) => {
     }
 
     const user = await getCurrentUser(OPENID);
-    const currentClassId = user && user.class_id ? user.class_id : '';
-    if (!currentClassId) {
+    const memberships = user ? await getAllMembershipsByStudent(OPENID) : [];
+    const membershipMap = memberships.reduce((result, item) => {
+      if (!item.class_id || result[item.class_id]) {
+        return result;
+      }
+
+      result[item.class_id] = {
+        class_id: item.class_id,
+        join_class_time: item.join_class_time || null
+      };
+      return result;
+    }, {});
+
+    if (user && user.class_id && !membershipMap[user.class_id]) {
+      membershipMap[user.class_id] = {
+        class_id: user.class_id,
+        join_class_time: user.join_class_time || null
+      };
+    }
+
+    const classIds = Object.keys(membershipMap);
+    if (!classIds.length) {
       return {
         success: true,
         message: '当前未加入班级',
@@ -90,17 +138,35 @@ exports.main = async (event) => {
       };
     }
 
-    const classRes = await db.collection('classes').doc(currentClassId).get();
-    const classInfo = classRes.data || null;
+    const classList = [];
+
+    for (const classId of classIds) {
+      const classRes = await db.collection('classes').doc(classId).get();
+      const classInfo = classRes.data || null;
+      if (!classInfo || classInfo.status === 'deleted') {
+        continue;
+      }
+
+      classList.push({
+        ...classInfo,
+        join_class_time: membershipMap[classId].join_class_time || null
+      });
+    }
+
+    classList.sort((left, right) => {
+      const leftTime = new Date(left.join_class_time || left.create_time || 0).getTime();
+      const rightTime = new Date(right.join_class_time || right.create_time || 0).getTime();
+      return rightTime - leftTime;
+    });
 
     return {
       success: true,
       message: '获取班级列表成功',
       data: {
-        list: classInfo ? [classInfo] : [],
+        list: classList,
         page: 1,
-        page_size: classInfo ? 1 : 0,
-        total: classInfo ? 1 : 0,
+        page_size: classList.length,
+        total: classList.length,
         has_more: false
       }
     };

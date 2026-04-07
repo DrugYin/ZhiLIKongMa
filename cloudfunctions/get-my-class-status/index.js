@@ -5,6 +5,7 @@ cloud.init({
 });
 
 const db = cloud.database();
+const PAGE_SIZE = 100;
 
 async function getCurrentUser(openid) {
   const res = await db.collection('users').where({ _openid: openid }).limit(1).get();
@@ -24,6 +25,156 @@ async function getClassById(classId) {
   }
 }
 
+async function getAllMembershipsByStudent(openid) {
+  const totalRes = await db.collection('class_memberships').where({
+    student_openid: openid
+  }).count();
+  const total = totalRes.total || 0;
+  const tasks = [];
+
+  for (let skip = 0; skip < total; skip += PAGE_SIZE) {
+    tasks.push(
+      db.collection('class_memberships').where({
+        student_openid: openid
+      }).skip(skip).limit(PAGE_SIZE).field({
+        _id: true,
+        class_id: true,
+        join_class_time: true
+      }).get()
+    );
+  }
+
+  if (!tasks.length) {
+    return [];
+  }
+
+  const list = await Promise.all(tasks);
+  return list.reduce((result, item) => result.concat(item.data || []), []);
+}
+
+async function getAllPendingApplications(openid) {
+  const totalRes = await db.collection('class_join_applications').where({
+    student_openid: openid,
+    status: 'pending'
+  }).count();
+  const total = totalRes.total || 0;
+  const tasks = [];
+
+  for (let skip = 0; skip < total; skip += PAGE_SIZE) {
+    tasks.push(
+      db.collection('class_join_applications').where({
+        student_openid: openid,
+        status: 'pending'
+      }).orderBy('update_time', 'desc').skip(skip).limit(PAGE_SIZE).get()
+    );
+  }
+
+  if (!tasks.length) {
+    return [];
+  }
+
+  const list = await Promise.all(tasks);
+  return list.reduce((result, item) => result.concat(item.data || []), []);
+}
+
+async function buildJoinedClasses(user, openid) {
+  const memberships = await getAllMembershipsByStudent(openid);
+  const membershipMap = memberships.reduce((result, item) => {
+    if (!item.class_id || result[item.class_id]) {
+      return result;
+    }
+
+    result[item.class_id] = {
+      class_id: item.class_id,
+      join_class_time: item.join_class_time || null
+    };
+    return result;
+  }, {});
+
+  if (user.class_id && !membershipMap[user.class_id]) {
+    membershipMap[user.class_id] = {
+      class_id: user.class_id,
+      join_class_time: user.join_class_time || null,
+      class_name: user.class_name || '',
+      class_code: user.class_code || ''
+    };
+  }
+
+  const classIds = Object.keys(membershipMap);
+  const joinedClasses = [];
+
+  for (const classId of classIds) {
+    const classInfo = await getClassById(classId);
+    if (!classInfo || classInfo.status === 'deleted') {
+      continue;
+    }
+
+    const memberCount = Number(classInfo.member_count || 0);
+    const maxMembers = Number(classInfo.max_members || 0);
+    const membership = membershipMap[classId];
+
+    joinedClasses.push({
+      _id: classId,
+      class_name: classInfo.class_name || membership.class_name || '',
+      class_code: classInfo.class_code || membership.class_code || '',
+      teacher_name: classInfo.teacher_name || '',
+      project_code: classInfo.project_code || '',
+      project_name: classInfo.project_name || '',
+      class_time: classInfo.class_time || '',
+      location: classInfo.location || '',
+      description: classInfo.description || '',
+      member_count: memberCount,
+      max_members: maxMembers,
+      join_class_time: membership.join_class_time || null
+    });
+  }
+
+  return joinedClasses.sort((left, right) => {
+    const leftTime = new Date(left.join_class_time || 0).getTime();
+    const rightTime = new Date(right.join_class_time || 0).getTime();
+    return rightTime - leftTime;
+  });
+}
+
+async function buildPendingApplications(openid) {
+  const applications = await getAllPendingApplications(openid);
+  const pendingList = [];
+
+  for (const item of applications) {
+    const classInfo = await getClassById(item.class_id);
+    if (!classInfo || classInfo.status === 'deleted') {
+      continue;
+    }
+
+    const memberCount = Number(classInfo.member_count || 0);
+    const maxMembers = Number(classInfo.max_members || 0);
+
+    pendingList.push({
+      _id: item._id,
+      class_id: item.class_id,
+      class_name: item.class_name || classInfo.class_name || '',
+      class_code: item.class_code || classInfo.class_code || '',
+      teacher_name: classInfo.teacher_name || '',
+      project_code: classInfo.project_code || '',
+      project_name: classInfo.project_name || '',
+      class_time: classInfo.class_time || '',
+      location: classInfo.location || '',
+      description: classInfo.description || '',
+      member_count: memberCount,
+      max_members: maxMembers,
+      apply_reason: item.apply_reason || '',
+      create_time: item.create_time || null,
+      update_time: item.update_time || null
+    });
+  }
+
+  return pendingList.sort((left, right) => {
+    const leftTime = new Date(left.update_time || left.create_time || 0).getTime();
+    const rightTime = new Date(right.update_time || right.create_time || 0).getTime();
+    return rightTime - leftTime;
+  });
+}
+
 exports.main = async () => {
   try {
     const { OPENID } = cloud.getWXContext();
@@ -36,85 +187,35 @@ exports.main = async () => {
         data: {
           status: 'guest',
           joined_class: null,
-          pending_application: null
+          joined_classes: [],
+          joined_class_count: 0,
+          pending_application: null,
+          pending_applications: [],
+          pending_application_count: 0
         }
       };
     }
 
-    if (user.class_id) {
-      const classInfo = await getClassById(user.class_id);
-      const memberCount = Number(classInfo && classInfo.member_count ? classInfo.member_count : 0);
-      const maxMembers = Number(classInfo && classInfo.max_members ? classInfo.max_members : 0);
+    const [joinedClasses, pendingApplications] = await Promise.all([
+      buildJoinedClasses(user, OPENID),
+      buildPendingApplications(OPENID)
+    ]);
 
-      return {
-        success: true,
-        is_registered: true,
-        data: {
-          status: 'joined',
-          joined_class: {
-            _id: user.class_id,
-            class_name: classInfo ? classInfo.class_name : (user.class_name || ''),
-            class_code: classInfo ? classInfo.class_code : (user.class_code || ''),
-            teacher_name: classInfo ? (classInfo.teacher_name || '') : '',
-            project_code: classInfo ? (classInfo.project_code || '') : '',
-            project_name: classInfo ? (classInfo.project_name || '') : '',
-            class_time: classInfo ? (classInfo.class_time || '') : '',
-            location: classInfo ? (classInfo.location || '') : '',
-            description: classInfo ? (classInfo.description || '') : '',
-            member_count: memberCount,
-            max_members: maxMembers,
-            join_class_time: user.join_class_time || null
-          },
-          pending_application: null
-        }
-      };
-    }
-
-    const pendingRes = await db.collection('class_join_applications').where({
-      student_openid: OPENID,
-      status: 'pending'
-    }).orderBy('update_time', 'desc').limit(1).get();
-    const pendingApplication = pendingRes.data[0] || null;
-
-    if (pendingApplication) {
-      const classInfo = await getClassById(pendingApplication.class_id);
-      const memberCount = Number(classInfo && classInfo.member_count ? classInfo.member_count : 0);
-      const maxMembers = Number(classInfo && classInfo.max_members ? classInfo.max_members : 0);
-
-      return {
-        success: true,
-        is_registered: true,
-        data: {
-          status: 'pending',
-          joined_class: null,
-          pending_application: {
-            _id: pendingApplication._id,
-            class_id: pendingApplication.class_id,
-            class_name: pendingApplication.class_name || (classInfo ? classInfo.class_name : ''),
-            class_code: pendingApplication.class_code || (classInfo ? classInfo.class_code : ''),
-            teacher_name: classInfo ? (classInfo.teacher_name || '') : '',
-            project_code: classInfo ? (classInfo.project_code || '') : '',
-            project_name: classInfo ? (classInfo.project_name || '') : '',
-            class_time: classInfo ? (classInfo.class_time || '') : '',
-            location: classInfo ? (classInfo.location || '') : '',
-            description: classInfo ? (classInfo.description || '') : '',
-            member_count: memberCount,
-            max_members: maxMembers,
-            apply_reason: pendingApplication.apply_reason || '',
-            create_time: pendingApplication.create_time || null,
-            update_time: pendingApplication.update_time || null
-          }
-        }
-      };
-    }
+    const status = joinedClasses.length
+      ? 'joined'
+      : (pendingApplications.length ? 'pending' : 'none');
 
     return {
       success: true,
       is_registered: true,
       data: {
-        status: 'none',
-        joined_class: null,
-        pending_application: null
+        status,
+        joined_class: joinedClasses[0] || null,
+        joined_classes: joinedClasses,
+        joined_class_count: joinedClasses.length,
+        pending_application: pendingApplications[0] || null,
+        pending_applications: pendingApplications,
+        pending_application_count: pendingApplications.length
       }
     };
   } catch (error) {

@@ -64,6 +64,32 @@ async function getAllUsersInClass(classId) {
   return list.reduce((result, item) => result.concat(item.data || []), []);
 }
 
+async function getAllMembershipsInClass(classId) {
+  const totalRes = await db.collection('class_memberships').where({
+    class_id: classId
+  }).count();
+  const total = totalRes.total || 0;
+  const tasks = [];
+
+  for (let skip = 0; skip < total; skip += PAGE_SIZE) {
+    tasks.push(
+      db.collection('class_memberships').where({
+        class_id: classId
+      }).skip(skip).limit(PAGE_SIZE).field({
+        _id: true,
+        student_openid: true
+      }).get()
+    );
+  }
+
+  if (!tasks.length) {
+    return [];
+  }
+
+  const list = await Promise.all(tasks);
+  return list.reduce((result, item) => result.concat(item.data || []), []);
+}
+
 exports.main = async (event) => {
   try {
     const { OPENID } = cloud.getWXContext();
@@ -106,9 +132,12 @@ exports.main = async (event) => {
     }
 
     const now = new Date();
-    const members = await getAllUsersInClass(classId);
+    const [legacyMembers, memberships] = await Promise.all([
+      getAllUsersInClass(classId),
+      getAllMembershipsInClass(classId)
+    ]);
 
-    await Promise.all(members.map((member) => db.collection('users').doc(member._id).update({
+    await Promise.all(legacyMembers.map((member) => db.collection('users').doc(member._id).update({
       data: {
         class_id: _.remove(),
         class_name: _.remove(),
@@ -117,6 +146,10 @@ exports.main = async (event) => {
         update_time: now
       }
     })));
+
+    await Promise.all(memberships.map((membership) => (
+      db.collection('class_memberships').doc(membership._id).remove()
+    )));
 
     await db.collection('class_join_applications').where({
       class_id: classId,
@@ -143,7 +176,9 @@ exports.main = async (event) => {
     await writeOperationLog(OPENID, 'teacher', 'delete_class', classId, {
       class_name: classInfo.class_name,
       class_code: classInfo.class_code,
-      removed_member_count: members.length
+      removed_member_count: Array.from(new Set(
+        legacyMembers.map((item) => item._openid).concat(memberships.map((item) => item.student_openid))
+      )).length
     }, now);
 
     return {
@@ -151,7 +186,9 @@ exports.main = async (event) => {
       message: '删除班级成功',
       data: {
         class_id: classId,
-        member_count: members.length
+        member_count: Array.from(new Set(
+          legacyMembers.map((item) => item._openid).concat(memberships.map((item) => item.student_openid))
+        )).length
       }
     };
   } catch (error) {

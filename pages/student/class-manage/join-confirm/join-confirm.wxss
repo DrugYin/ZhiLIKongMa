@@ -130,6 +130,28 @@
   background: #f7f9fc;
 }
 
+.status-hint-card {
+  margin-bottom: 22rpx;
+  padding: 22rpx 24rpx;
+  border-radius: 22rpx;
+  background: rgba(31, 122, 224, 0.08);
+}
+
+.status-hint-title {
+  display: block;
+  color: #17314a;
+  font-size: 24rpx;
+  font-weight: 700;
+}
+
+.status-hint-text {
+  display: block;
+  margin-top: 10rpx;
+  color: #5f7387;
+  font-size: 24rpx;
+  line-height: 1.8;
+}
+
 .reason-textarea {
   width: 100%;
   min-height: 180rpx;
