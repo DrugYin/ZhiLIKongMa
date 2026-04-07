@@ -298,6 +298,12 @@ AuthService.updateUserInfo(data)
 
 ## 二、班级管理系统
 
+### 当前实现概览
+
+- 班级成员关系以 `class_memberships` 为主表，`users.class_id / class_name / class_code / join_class_time` 仅保留兼容旧数据。
+- 学生端已接入 `/pages/student/class-manage/class-manage` 与 `/pages/student/class-manage/join-confirm/join-confirm`。
+- 教师端已在 `/pages/teacher/class-manage/class-detail/class-detail` 中接入邀请分享、申请审批、成员移除。
+
 ### 1. `create-class`
 
 功能：教师创建班级，并生成唯一邀请码。
@@ -384,26 +390,11 @@ ClassService.createClass(data)
 - `max_members` 必须为正整数
 - `max_members` 不能小于当前班级成员数
 
-返回示例：
-
-```js
-{
-  success: true,
-  message: '更新班级成功',
-  data: {
-    _id: 'class_id',
-    class_name: '黑羊编程 3 班',
-    project_code: 'programming',
-    max_members: 50
-  }
-}
-```
-
 业务效果：
 
 - 更新 `classes` 主记录
-- 同步更新班级成员的 `users.class_name`
-- 同步更新 `class_join_applications.class_name`
+- 同步更新旧版兼容数据中的 `users.class_name`
+- 同步更新 `class_join_applications.class_name / class_code`
 
 前端调用：
 
@@ -442,7 +433,8 @@ ClassService.updateClass(data)
 业务效果：
 
 - 将班级状态改为 `deleted`
-- 清空班级成员在 `users` 中的班级关联字段
+- 删除 `class_memberships` 中该班级所有成员关系
+- 清空旧版兼容字段 `users.class_id / class_name / class_code / join_class_time`
 - 将待处理入班申请统一改为 `rejected`
 
 前端调用：
@@ -462,7 +454,7 @@ ClassService.deleteClass(classId)
 
 ```js
 {
-  role: 'teacher', // 默认 teacher
+  role: 'teacher', // teacher 或 student
   page: 1,
   page_size: 20,
   sort_by: 'create_time', // create_time、update_time、class_name、member_count
@@ -472,9 +464,9 @@ ClassService.deleteClass(classId)
 
 说明：
 
-- 当 `role = 'teacher'` 时，返回当前教师创建的班级列表
-- 其他情况下，当前实现返回当前用户所属班级
-- 排序字段受白名单限制，非法值会回退为默认排序
+- `role = 'teacher'` 时，返回当前教师创建的班级列表，支持分页与排序。
+- 其他情况下，返回当前用户已加入的全部班级。
+- 学生端班级列表来自 `class_memberships`，同时兼容旧版 `users.class_id`。
 
 返回示例：
 
@@ -547,6 +539,10 @@ ClassService.getClasses(params)
 - 班级所属教师可查看
 - 已加入该班级的成员可查看
 
+说明：
+
+- `pending_application_count` 仅教师查看时会返回真实数量，学生侧默认为 `0`。
+
 前端调用：
 
 ```js
@@ -556,7 +552,111 @@ ClassService.getClassDetail(classId)
 
 ---
 
-### 6. `join-class`
+### 6. `get-class-invite-info`
+
+功能：根据邀请码获取班级邀请页展示信息。
+
+入参：
+
+```js
+{
+  class_code: 'AB12CD'
+}
+```
+
+返回示例：
+
+```js
+{
+  success: true,
+  message: '获取班级邀请信息成功',
+  data: {
+    _id: 'class_id',
+    class_name: '黑羊编程 3 班',
+    class_code: 'AB12CD',
+    teacher_name: '王老师',
+    project_code: 'programming',
+    project_name: '编程',
+    class_time: '周六 09:00-11:00',
+    location: 'A301 教室',
+    description: '周六上午班',
+    member_count: 20,
+    max_members: 50,
+    is_full: false
+  }
+}
+```
+
+使用场景：
+
+- 学生输入邀请码后的确认页
+- 教师从班级详情页分享出去的邀请链接落地页
+
+前端调用：
+
+```js
+classApi.getClassInviteInfo(classCode)
+ClassService.getClassInviteInfo(classCode)
+```
+
+---
+
+### 7. `get-my-class-status`
+
+功能：获取当前学生的班级状态、已加入班级和待审核申请。
+
+入参：
+
+```js
+{}
+```
+
+返回示例：
+
+```js
+{
+  success: true,
+  is_registered: true,
+  data: {
+    status: 'joined', // joined、pending、none、guest
+    joined_class_count: 2,
+    joined_classes: [
+      {
+        _id: 'class_id',
+        class_name: '黑羊编程 3 班',
+        class_code: 'AB12CD',
+        join_class_time: '...'
+      }
+    ],
+    pending_application_count: 1,
+    pending_applications: [
+      {
+        _id: 'application_id',
+        class_id: 'class_id',
+        class_name: '无人机冲刺班',
+        class_code: 'CD34EF',
+        apply_reason: '想继续进阶'
+      }
+    ]
+  }
+}
+```
+
+说明：
+
+- 当前已支持一个学生加入多个班级。
+- 未注册时返回 `success: true`、`is_registered: false`，前端据此跳登录或注册流程。
+
+前端调用：
+
+```js
+classApi.getMyClassStatus()
+ClassService.getMyClassStatus()
+```
+
+---
+
+### 8. `join-class`
 
 功能：学生通过班级邀请码申请加入班级。
 
@@ -593,19 +693,80 @@ ClassService.getClassDetail(classId)
 失败场景：
 
 - 未注册
-- 已加入班级
-- 邀请码不存在
+- 已加入当前班级
+- 邀请码不存在或班级已停用
 - 班级人数已满
-- 已提交过待处理申请
+- 已提交过当前班级的待处理申请
 
 前端现状：
 
-- 云函数已完成
-- 学生端尚未接入页面入口
+- 学生端班级管理页和确认页已接入
+- 教师分享链接会直接落到学生确认页
 
 ---
 
-### 7. `handle-join-application`
+### 9. `get-class-applications`
+
+功能：教师获取某个班级的待审批入班申请列表。
+
+入参：
+
+```js
+{
+  class_id: 'class_id',
+  page: 1,
+  page_size: 20
+}
+```
+
+返回示例：
+
+```js
+{
+  success: true,
+  message: '获取入班申请成功',
+  data: {
+    list: [
+      {
+        _id: 'application_id',
+        class_id: 'class_id',
+        class_code: 'AB12CD',
+        class_name: '黑羊编程 3 班',
+        student_openid: 'student_openid',
+        student_name: '张三',
+        student_user_name: '张三',
+        student_nick_name: '小张',
+        student_avatar: 'cloud://xxx/avatar.png',
+        student_grade: '三年级',
+        student_phone: '13800000000',
+        apply_reason: '我是本班学员',
+        status: 'pending',
+        create_time: '...',
+        update_time: '...'
+      }
+    ],
+    page: 1,
+    page_size: 20,
+    total: 1,
+    has_more: false
+  }
+}
+```
+
+权限要求：
+
+- 仅班级所属教师可调用
+
+前端调用：
+
+```js
+classApi.getClassApplications(params)
+ClassService.getClassApplications(params)
+```
+
+---
+
+### 10. `handle-join-application`
 
 功能：教师审批或拒绝学生的入班申请。
 
@@ -635,21 +796,21 @@ ClassService.getClassDetail(classId)
 
 业务效果：
 
-- `approve`：
+- `approve`
   - 更新申请状态为 `approved`
-  - 更新学生 `users.class_id / class_name / class_code / join_class_time`
+  - 若学生尚未加入该班，则新增一条 `class_memberships`
   - `classes.member_count + 1`
-- `reject`：
+- `reject`
   - 更新申请状态为 `rejected`
 
-前端现状：
+说明：
 
-- 云函数已完成
-- 教师端审批列表页尚未接入
+- 当前审批通过后不会清理学生在其他班级的成员关系，多班级共存是当前实现的一部分。
+- 教师端已在班级详情页接入通过/拒绝按钮，独立审核 Tab 仍为占位页。
 
 ---
 
-### 8. `get-class-members`
+### 11. `get-class-members`
 
 功能：获取班级成员列表。
 
@@ -672,7 +833,6 @@ ClassService.getClassDetail(classId)
   data: {
     list: [
       {
-        _id: 'user_id',
         _openid: 'student_openid',
         user_name: '张三',
         nick_name: '小张',
@@ -692,6 +852,10 @@ ClassService.getClassDetail(classId)
 }
 ```
 
+说明：
+
+- 当前实现会合并 `class_memberships` 与旧版 `users.class_id` 数据，避免历史成员丢失。
+
 权限要求：
 
 - 班级所属教师可查看
@@ -706,7 +870,7 @@ ClassService.getClassMembers(params)
 
 ---
 
-### 9. `remove-member`
+### 12. `remove-member`
 
 功能：教师移除班级成员。
 
@@ -734,7 +898,8 @@ ClassService.getClassMembers(params)
 
 业务效果：
 
-- 清除用户的 `class_id`、`class_name`、`class_code`、`join_class_time`
+- 删除 `class_memberships` 中对应关系
+- 若命中旧版兼容字段，则清除 `users.class_id / class_name / class_code / join_class_time`
 - `classes.member_count - 1`
 
 权限要求：
@@ -801,6 +966,7 @@ ClassService.removeMember(classId, memberOpenid)
 
 - `services/api.js` 中的 `classApi`
 - `services/class.js` 中的 `ClassService`
+- 已落地方法：`createClass`、`updateClass`、`deleteClass`、`getClasses`、`getClassDetail`、`getClassInviteInfo`、`getMyClassStatus`、`joinClass`、`getClassApplications`、`handleApplication`、`getClassMembers`、`removeMember`
 
 ### 配置模块
 
