@@ -370,7 +370,15 @@ Page({
   },
 
   goToAddTask() {
-    Toast.showToast('任务编辑页下一步接入')
+    const query = []
+
+    if (this.data.projects.value && this.data.projects.value !== 'all') {
+      query.push(`project_code=${encodeURIComponent(this.data.projects.value)}`)
+    }
+
+    wx.navigateTo({
+      url: `/pages/teacher/task-manage/task-edit/task-edit${query.length ? `?${query.join('&')}` : ''}`
+    })
   },
 
   async onDeleteTask(e) {

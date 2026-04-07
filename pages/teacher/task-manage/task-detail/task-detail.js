@@ -308,7 +308,13 @@ Page({
   },
 
   goToEditTask() {
-    Toast.showToast('任务编辑页下一步接入')
+    if (!this.data.taskId) {
+      return
+    }
+
+    wx.navigateTo({
+      url: `/pages/teacher/task-manage/task-edit/task-edit?task_id=${this.data.taskId}`
+    })
   },
 
   async onDeleteTask() {

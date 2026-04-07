@@ -1,2 +1,273 @@
-<!--pages/teacher/task-manage/task-edit/task-edit.wxml-->
-<text>pages/teacher/task-manage/task-edit/task-edit.wxml</text>
+<view class="container">
+  <view class="header">
+    <custom-navbar title="{{pageTitle}}" showBack="{{true}}" placeholder="{{true}}" />
+  </view>
+
+  <scroll-view class="content" scroll-y enhanced>
+    <view class="hero-card">
+      <view class="hero-copy">
+        <view class="hero-title-row">
+          <text class="hero-title">{{pageTitle}}</text>
+          <t-tag theme="{{isEdit ? 'warning' : 'primary'}}" variant="light">
+            {{isEdit ? '编辑模式' : '新建模式'}}
+          </t-tag>
+        </view>
+        <text class="hero-desc">{{pageDesc}}</text>
+      </view>
+    </view>
+
+    <view wx:if="{{isEdit && taskInfo}}" class="summary-card">
+      <view class="summary-title">当前任务信息</view>
+      <view class="summary-grid">
+        <view class="summary-item">
+          <text class="summary-label">当前状态</text>
+          <text class="summary-value">{{taskForm.status}}</text>
+        </view>
+        <view class="summary-item">
+          <text class="summary-label">任务类型</text>
+          <text class="summary-value">{{taskForm.task_type === 'class' ? '班级任务' : '公开任务'}}</text>
+        </view>
+        <view class="summary-item">
+          <text class="summary-label">所属班级</text>
+          <text class="summary-value">{{taskForm.class_name || '未绑定班级'}}</text>
+        </view>
+        <view class="summary-item">
+          <text class="summary-label">所属项目</text>
+          <text class="summary-value">{{taskForm.project_name || '未设置项目'}}</text>
+        </view>
+      </view>
+    </view>
+
+    <view class="form-card">
+      <view class="card-title">基础设置</view>
+      <t-cell-group>
+        <t-input
+          label="任务标题"
+          placeholder="例如：第 3 周算法热身训练"
+          value="{{taskForm.title}}"
+          clearable
+          data-field="title"
+          bind:change="onInputChange"
+        />
+      </t-cell-group>
+
+      <view class="option-block">
+        <text class="block-label">任务类型</text>
+        <view class="option-grid">
+          <view
+            wx:for="{{taskTypeOptions}}"
+            wx:key="value"
+            class="option-card {{taskForm.task_type === item.value ? 'option-card-active' : ''}}"
+            data-value="{{item.value}}"
+            bindtap="onTaskTypeSelect"
+          >
+            <text class="option-title">{{item.label}}</text>
+            <text class="option-desc">{{item.desc}}</text>
+          </view>
+        </view>
+      </view>
+
+      <view wx:if="{{taskForm.task_type === 'class'}}" class="option-block">
+        <text class="block-label">可见范围</text>
+        <view class="option-grid">
+          <view
+            wx:for="{{visibilityOptions}}"
+            wx:key="value"
+            class="option-card {{taskForm.visibility === item.value ? 'option-card-active' : ''}}"
+            data-value="{{item.value}}"
+            bindtap="onVisibilitySelect"
+          >
+            <text class="option-title">{{item.label}}</text>
+            <text class="option-desc">{{item.desc}}</text>
+          </view>
+        </view>
+      </view>
+
+      <view class="option-block option-block-last">
+        <text class="block-label">保存状态</text>
+        <view class="option-grid">
+          <view
+            wx:for="{{statusOptions}}"
+            wx:key="value"
+            class="option-card {{taskForm.status === item.value ? 'option-card-active' : ''}}"
+            data-value="{{item.value}}"
+            bindtap="onStatusSelect"
+          >
+            <text class="option-title">{{item.label}}</text>
+            <text class="option-desc">{{item.desc}}</text>
+          </view>
+        </view>
+      </view>
+    </view>
+
+    <view class="form-card">
+      <view class="card-title">项目与班级</view>
+      <t-cell-group>
+        <t-cell
+          title="所属项目"
+          note="{{taskForm.project_name || '请选择项目方向'}}"
+          arrow
+          hover
+          bind:click="openProjectPicker"
+        />
+        <t-cell
+          wx:if="{{taskForm.task_type === 'class'}}"
+          title="所属班级"
+          note="{{taskForm.class_name || (classOptions.length ? '请选择班级' : '当前项目下暂无可选班级')}}"
+          arrow
+          hover
+          bind:click="openClassPicker"
+        />
+        <t-cell
+          title="任务分类"
+          note="{{taskForm.category || (categoryOptions.length ? '请选择任务分类' : '请先选择所属项目')}}"
+          arrow
+          hover
+          bind:click="openCategoryPicker"
+        />
+      </t-cell-group>
+    </view>
+
+    <view class="form-card">
+      <view class="card-title">难度与积分</view>
+      <view class="difficulty-grid">
+        <view
+          wx:for="{{difficultyOptions}}"
+          wx:key="value"
+          class="difficulty-card {{taskForm.difficulty === item.value ? 'difficulty-card-active' : ''}}"
+          data-value="{{item.value}}"
+          bindtap="onDifficultySelect"
+        >
+          <text class="difficulty-dot" style="background: {{item.color}};"></text>
+          <text class="difficulty-label">{{item.label}}</text>
+        </view>
+      </view>
+
+      <t-cell-group>
+        <t-input
+          label="任务积分"
+          type="number"
+          placeholder="建议 5-30 分"
+          value="{{taskForm.points}}"
+          data-field="points"
+          bind:change="onNumberChange"
+        />
+      </t-cell-group>
+    </view>
+
+    <view class="form-card">
+      <view class="section-head">
+        <view>
+          <view class="card-title">截止时间</view>
+          <text class="section-hint">可选配置；若填写日期，则时间也需要一起填写。</text>
+        </view>
+        <text
+          wx:if="{{taskForm.deadline_date || taskForm.deadline_time}}"
+          class="link-text"
+          bindtap="onClearDeadline"
+        >
+          清空
+        </text>
+      </view>
+
+      <view class="picker-grid">
+        <picker mode="date" value="{{taskForm.deadline_date}}" bindchange="onDeadlineDateChange">
+          <view class="picker-card">
+            <text class="picker-label">截止日期</text>
+            <text class="picker-value {{taskForm.deadline_date ? '' : 'picker-placeholder'}}">
+              {{taskForm.deadline_date || '请选择日期'}}
+            </text>
+          </view>
+        </picker>
+        <picker mode="time" value="{{taskForm.deadline_time}}" bindchange="onDeadlineTimeChange">
+          <view class="picker-card">
+            <text class="picker-label">截止时间</text>
+            <text class="picker-value {{taskForm.deadline_time ? '' : 'picker-placeholder'}}">
+              {{taskForm.deadline_time || '请选择时间'}}
+            </text>
+          </view>
+        </picker>
+      </view>
+    </view>
+
+    <view class="form-card">
+      <view class="card-title">任务说明</view>
+      <view class="textarea-wrapper">
+        <t-textarea
+          autosize
+          placeholder="可填写任务目标、要求、提交说明、评判标准等信息"
+          indicator
+          value="{{taskForm.description}}"
+          data-field="description"
+          bind:change="onInputChange"
+        />
+      </view>
+      <t-divider />
+    </view>
+
+    <view class="tips-card">
+      <view class="card-title">接入说明</view>
+      <t-divider align="left">当前先完成基础字段的创建与编辑</t-divider>
+      <view class="tips-list">
+        <text class="tip-item">1. 图片、文件附件字段已在保存 payload 中预留，后续接上传能力即可直接提交。</text>
+        <text class="tip-item">2. 班级任务选择班级后，会自动同步项目，避免任务和班级项目不一致。</text>
+        <text class="tip-item">3. 任务详情页里的完成情况统计会在提交业务接入后自动展示真实数据。</text>
+      </view>
+    </view>
+
+    <view wx:if="{{loading}}" class="loading-panel">
+      <text class="loading-text">正在加载任务配置...</text>
+    </view>
+
+    <view class="footer-placeholder"></view>
+  </scroll-view>
+
+  <view class="footer">
+    <t-button
+      theme="primary"
+      size="large"
+      block
+      loading="{{saving}}"
+      disabled="{{loading}}"
+      bind:tap="onSubmit"
+    >
+      {{submitText}}
+    </t-button>
+  </view>
+</view>
+
+<t-picker
+  visible="{{projectPickerVisible}}"
+  value="{{[taskForm.project_code]}}"
+  title="选择所属项目"
+  cancelBtn="取消"
+  confirmBtn="确定"
+  bindcancel="closeProjectPicker"
+  bindchange="onProjectChange"
+>
+  <t-picker-item options="{{projectOptions}}" />
+</t-picker>
+
+<t-picker
+  visible="{{classPickerVisible}}"
+  value="{{[taskForm.class_id]}}"
+  title="选择所属班级"
+  cancelBtn="取消"
+  confirmBtn="确定"
+  bindcancel="closeClassPicker"
+  bindchange="onClassChange"
+>
+  <t-picker-item options="{{classOptions}}" />
+</t-picker>
+
+<t-picker
+  visible="{{categoryPickerVisible}}"
+  value="{{[taskForm.category]}}"
+  title="选择任务分类"
+  cancelBtn="取消"
+  confirmBtn="确定"
+  bindcancel="closeCategoryPicker"
+  bindchange="onCategoryChange"
+>
+  <t-picker-item options="{{categoryOptions}}" />
+</t-picker>
