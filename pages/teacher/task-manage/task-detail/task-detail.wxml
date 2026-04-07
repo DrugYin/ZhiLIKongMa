@@ -145,9 +145,29 @@
       </view>
 
       <view class="section-card">
-        <text class="section-title">附件情况</text>
-        <view class="detail-panel detail-panel-soft">
-          <text class="detail-desc">{{taskInfo.attachmentText}}</text>
+        <view class="section-head">
+          <text class="section-title">附件情况</text>
+          <text class="section-subtitle">{{taskInfo.fileCountText}}</text>
+        </view>
+
+        <view wx:if="{{taskInfo.attachmentFiles.length}}" class="file-list">
+          <view
+            wx:for="{{taskInfo.attachmentFiles}}"
+            wx:key="file_id"
+            class="file-row"
+            data-index="{{index}}"
+            bindtap="onPreviewFile"
+          >
+            <view class="file-main">
+              <text class="file-name">{{item.file_name || item.name}}</text>
+              <text class="file-meta">点击预览 · {{item.sizeText || '大小待补充'}}</text>
+            </view>
+            <text class="file-preview-text">预览</text>
+          </view>
+        </view>
+
+        <view wx:else class="detail-panel detail-panel-soft">
+          <text class="detail-desc">当前任务还没有配置附件文件。</text>
         </view>
       </view>
     </block>

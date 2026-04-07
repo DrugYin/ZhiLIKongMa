@@ -3,6 +3,7 @@ const ClassService = require('../../../../services/class')
 const TaskService = require('../../../../services/task')
 const { uploadFile } = require('../../../../services/api')
 const Toast = require('../../../../utils/toast')
+const fileResource = require('../../../../utils/file-resource')
 const {
   IMAGE_MAX_COUNT,
   IMAGE_MAX_SIZE,
@@ -278,59 +279,21 @@ Page({
 
   async buildExistingUploadState(taskInfo = {}) {
     const imageIds = Array.isArray(taskInfo.images) ? taskInfo.images.filter(Boolean) : []
-    const fileEntries = Array.isArray(taskInfo.files) ? taskInfo.files.filter((item) => item && item.file_id) : []
-    const tempUrlMap = await this.getTempUrlMap(imageIds.concat(fileEntries.map((item) => item.file_id)))
+    const imagePreviewData = await fileResource.buildImagePreviewData(imageIds)
+    const fileFiles = await fileResource.buildAttachmentPreviewFiles(taskInfo.files)
 
     return {
-      imageFiles: imageIds.map((fileId, index) => ({
-        url: tempUrlMap[fileId] || fileId,
+      imageFiles: imagePreviewData.imageList.map((item) => ({
+        url: item.url,
         type: 'image',
-        name: `任务图片${index + 1}`,
+        name: item.name,
         percent: 100,
         status: 'done',
-        file_id: fileId
-      })),
-      fileFiles: fileEntries.map((item) => ({
-        url: tempUrlMap[item.file_id] || item.file_id,
-        name: item.file_name || this.getFileNameFromPath(item.file_id),
-        percent: 100,
-        status: 'done',
-        file_id: item.file_id,
-        size: Number(item.file_size || 0),
-        sizeText: this.formatFileSize(item.file_size),
-        file_name: item.file_name || this.getFileNameFromPath(item.file_id)
+        file_id: item.fileId
       }))
+      ,
+      fileFiles
     }
-  },
-
-  getTempUrlMap(fileIds = []) {
-    const uniqueFileIds = Array.from(new Set(fileIds.filter(Boolean)))
-    if (!uniqueFileIds.length) {
-      return Promise.resolve({})
-    }
-
-    return new Promise((resolve, reject) => {
-      wx.cloud.getTempFileURL({
-        fileList: uniqueFileIds,
-        success: (res) => {
-          const fileList = Array.isArray(res.fileList) ? res.fileList : []
-          const map = fileList.reduce((result, item) => {
-            if (item && item.fileID) {
-              result[item.fileID] = item.tempFileURL || item.fileID
-            }
-            return result
-          }, {})
-          resolve(map)
-        },
-        fail: reject
-      })
-    }).catch((error) => {
-      console.error('[task-edit] getTempUrlMap error:', error)
-      return uniqueFileIds.reduce((result, fileId) => {
-        result[fileId] = fileId
-        return result
-      }, {})
-    })
   },
 
   applyInitialParams() {
@@ -659,8 +622,8 @@ Page({
   createPendingUploadFile(file, kind, index) {
     return {
       ...file,
-      name: file.name || this.getFileNameFromPath(file.url) || `${kind === 'image' ? '图片' : '附件'}${index + 1}`,
-      sizeText: this.formatFileSize(file.size),
+      name: file.name || fileResource.getFileNameFromPath(file.url) || `${kind === 'image' ? '图片' : '附件'}${index + 1}`,
+      sizeText: fileResource.formatFileSize(file.size),
       percent: 0,
       status: 'loading',
       _uploadId: `${Date.now()}_${Math.random().toString(36).slice(2, 10)}_${index}`,
@@ -684,8 +647,8 @@ Page({
           status: 'done',
           localPath: file.localPath || file.url,
           file_id: result.fileID,
-          sizeText: this.formatFileSize(file.size),
-          file_name: file.name || this.getFileNameFromPath(file.url)
+          sizeText: fileResource.formatFileSize(file.size),
+          file_name: file.name || fileResource.getFileNameFromPath(file.url)
         })
       } catch (error) {
         console.error('[task-edit] uploadSelectedFiles error:', error)
@@ -725,7 +688,7 @@ Page({
   },
 
   buildCloudPath(folder, file, index) {
-    const extension = this.getFileExtension(file.url || file.name)
+    const extension = fileResource.getFileExtension(file.url || file.name)
     const fileName = `${Date.now()}-${index}-${Math.random().toString(36).slice(2, 8)}${extension}`
     const date = new Date()
     const month = `${date.getMonth() + 1}`.padStart(2, '0')
@@ -734,46 +697,9 @@ Page({
     return `tasks/${folder}/${date.getFullYear()}${month}${day}/${fileName}`
   },
 
-  getFileExtension(filePath = '') {
-    const value = String(filePath || '')
-    const index = value.lastIndexOf('.')
-    if (index < 0) {
-      return ''
-    }
-
-    return value.slice(index)
-  },
-
-  getFileNameFromPath(filePath = '') {
-    const value = String(filePath || '')
-    const parts = value.split(/[\\/]/)
-    return parts[parts.length - 1] || ''
-  },
-
-  formatFileSize(size) {
-    const value = Number(size || 0)
-    if (!value) {
-      return '未知大小'
-    }
-
-    if (value < 1024) {
-      return `${value} B`
-    }
-
-    if (value < 1024 * 1024) {
-      return `${(value / 1024).toFixed(1)} KB`
-    }
-
-    if (value < 1024 * 1024 * 1024) {
-      return `${(value / (1024 * 1024)).toFixed(1)} MB`
-    }
-
-    return `${(value / (1024 * 1024 * 1024)).toFixed(1)} GB`
-  },
-
   isAllowedAttachment(file = {}) {
-    const name = file.name || this.getFileNameFromPath(file.url)
-    const extension = this.getFileExtension(name).replace('.', '').toLowerCase()
+    const name = file.name || fileResource.getFileNameFromPath(file.url)
+    const extension = fileResource.getFileExtension(name).replace('.', '').toLowerCase()
 
     if (!extension) {
       return false
@@ -803,67 +729,15 @@ Page({
     Toast.showLoading('正在打开附件...')
 
     try {
-      const filePath = await this.resolvePreviewFilePath(file)
-      await this.openDocument(filePath)
+      const previewResult = await fileResource.resolvePreviewFilePath(file)
+      this.updateFilePreviewPath(file, previewResult.localPath)
+      await fileResource.openDocument(previewResult.filePath)
       Toast.hideLoading()
     } catch (error) {
       console.error('[task-edit] onPreviewFile error:', error)
       Toast.hideLoading()
       Toast.showToast('附件预览失败')
     }
-  },
-
-  async resolvePreviewFilePath(file = {}) {
-    if (file.localPath) {
-      return file.localPath
-    }
-
-    if (file.url && !/^https?:\/\//i.test(file.url) && !/^cloud:\/\//i.test(file.url)) {
-      return file.url
-    }
-
-    if (file.file_id) {
-      const result = await this.downloadCloudFile(file.file_id)
-      this.updateFilePreviewPath(file, result.tempFilePath)
-      return result.tempFilePath
-    }
-
-    if (file.url && /^https?:\/\//i.test(file.url)) {
-      const result = await this.downloadHttpFile(file.url)
-      this.updateFilePreviewPath(file, result.tempFilePath)
-      return result.tempFilePath
-    }
-
-    throw new Error('无可用预览地址')
-  },
-
-  downloadCloudFile(fileId) {
-    return new Promise((resolve, reject) => {
-      wx.cloud.downloadFile({
-        fileID: fileId,
-        success: resolve,
-        fail: reject
-      })
-    })
-  },
-
-  downloadHttpFile(url) {
-    return new Promise((resolve, reject) => {
-      wx.downloadFile({
-        url,
-        success: (res) => {
-          if (res.statusCode >= 200 && res.statusCode < 300) {
-            resolve({
-              tempFilePath: res.tempFilePath
-            })
-            return
-          }
-
-          reject(new Error(`download failed: ${res.statusCode}`))
-        },
-        fail: reject
-      })
-    })
   },
 
   updateFilePreviewPath(file, localPath) {
@@ -882,17 +756,6 @@ Page({
 
     this.setData({
       fileFiles: nextFiles
-    })
-  },
-
-  openDocument(filePath) {
-    return new Promise((resolve, reject) => {
-      wx.openDocument({
-        filePath,
-        showMenu: true,
-        success: resolve,
-        fail: reject
-      })
     })
   },
 
@@ -1052,7 +915,7 @@ Page({
         .filter((item) => item.status === 'done' && item.file_id)
         .map((item) => ({
           file_id: item.file_id,
-          file_name: item.file_name || item.name || this.getFileNameFromPath(item.url),
+          file_name: item.file_name || item.name || fileResource.getFileNameFromPath(item.url),
           file_size: Number(item.size || 0)
         }))
     }

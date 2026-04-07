@@ -1,6 +1,7 @@
 const TaskService = require('../../../../services/task')
 const Toast = require('../../../../utils/toast')
 const formatUtils = require('../../../../utils/format')
+const fileResource = require('../../../../utils/file-resource')
 
 const TASK_STATUS_TEXT = {
   draft: '草稿',
@@ -86,12 +87,16 @@ Page({
 
     try {
       const taskInfo = await TaskService.getTaskDetail(this.data.taskId)
-      const imageInfo = await this.buildTaskImages(taskInfo)
+      const [imageInfo, attachmentFiles] = await Promise.all([
+        fileResource.buildImagePreviewData(taskInfo.images),
+        fileResource.buildAttachmentPreviewFiles(taskInfo.files)
+      ])
       this.setData({
         taskInfo: this.formatTaskInfo({
           ...taskInfo,
           image_list: imageInfo.imageList,
-          image_preview_urls: imageInfo.previewUrls
+          image_preview_urls: imageInfo.previewUrls,
+          attachment_files: attachmentFiles
         })
       })
       this._pageReady = true
@@ -142,64 +147,12 @@ Page({
       imageList: Array.isArray(item.image_list) ? item.image_list : [],
       imagePreviewUrls: Array.isArray(item.image_preview_urls) ? item.image_preview_urls : [],
       fileCountText: `${Array.isArray(item.files) ? item.files.length : 0} 个附件`,
+      attachmentFiles: Array.isArray(item.attachment_files) ? item.attachment_files : [],
       attachmentText: Array.isArray(item.files) && item.files.length
         ? item.files.map((file) => file.file_name || '未命名附件').join(' / ')
         : '暂无附件',
       progressInfo
     }
-  },
-
-  async buildTaskImages(taskInfo = {}) {
-    const imageIds = Array.isArray(taskInfo.images) ? taskInfo.images.filter(Boolean) : []
-
-    if (!imageIds.length) {
-      return {
-        imageList: [],
-        previewUrls: []
-      }
-    }
-
-    const tempUrlMap = await this.getTempUrlMap(imageIds)
-    const imageList = imageIds.map((fileId, index) => ({
-      fileId,
-      url: tempUrlMap[fileId] || fileId,
-      name: `任务图片${index + 1}`
-    }))
-
-    return {
-      imageList,
-      previewUrls: imageList.map((item) => item.url).filter(Boolean)
-    }
-  },
-
-  getTempUrlMap(fileIds = []) {
-    const uniqueFileIds = Array.from(new Set(fileIds.filter(Boolean)))
-    if (!uniqueFileIds.length) {
-      return Promise.resolve({})
-    }
-
-    return new Promise((resolve, reject) => {
-      wx.cloud.getTempFileURL({
-        fileList: uniqueFileIds,
-        success: (res) => {
-          const fileList = Array.isArray(res.fileList) ? res.fileList : []
-          const map = fileList.reduce((result, item) => {
-            if (item && item.fileID) {
-              result[item.fileID] = item.tempFileURL || item.fileID
-            }
-            return result
-          }, {})
-          resolve(map)
-        },
-        fail: reject
-      })
-    }).catch((error) => {
-      console.error('[task-detail] getTempUrlMap error:', error)
-      return uniqueFileIds.reduce((result, fileId) => {
-        result[fileId] = fileId
-        return result
-      }, {})
-    })
   },
 
   formatProgressInfo(item = {}) {
@@ -370,18 +323,43 @@ Page({
   onPreviewImage(e) {
     const { index } = e.currentTarget.dataset
     const { taskInfo } = this.data
-    const previewUrls = taskInfo && Array.isArray(taskInfo.imagePreviewUrls)
-      ? taskInfo.imagePreviewUrls.filter(Boolean)
-      : []
+    fileResource.previewImages(taskInfo && taskInfo.imagePreviewUrls, index)
+  },
 
-    if (!previewUrls.length) {
+  async onPreviewFile(e) {
+    const { index } = e.currentTarget.dataset
+    const { taskInfo } = this.data
+    const attachmentFiles = taskInfo && Array.isArray(taskInfo.attachmentFiles)
+      ? taskInfo.attachmentFiles
+      : []
+    const file = attachmentFiles[Number(index)]
+
+    if (!file) {
       return
     }
 
-    const current = previewUrls[Number(index)] || previewUrls[0]
-    wx.previewImage({
-      urls: previewUrls,
-      current
+    Toast.showLoading('正在打开附件...')
+
+    try {
+      const previewResult = await fileResource.resolvePreviewFilePath(file)
+      this.updateAttachmentLocalPath(file, previewResult.localPath)
+      await fileResource.openDocument(previewResult.filePath)
+      Toast.hideLoading()
+    } catch (error) {
+      console.error('[task-detail] onPreviewFile error:', error)
+      Toast.hideLoading()
+      Toast.showToast('附件预览失败')
+    }
+  },
+
+  updateAttachmentLocalPath(file, localPath) {
+    const { taskInfo } = this.data
+    if (!taskInfo || !Array.isArray(taskInfo.attachmentFiles)) {
+      return
+    }
+
+    this.setData({
+      'taskInfo.attachmentFiles': fileResource.updateFileLocalPath(taskInfo.attachmentFiles, file, localPath)
     })
   },
 
