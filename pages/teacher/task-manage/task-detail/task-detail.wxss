@@ -11,10 +11,7 @@
 
 .content {
   box-sizing: border-box;
-  height: calc(100vh - 96rpx);
   padding: 24rpx 24rpx 220rpx;
-  padding-bottom: calc(220rpx + constant(safe-area-inset-bottom));
-  padding-bottom: calc(220rpx + env(safe-area-inset-bottom));
 }
 
 .hero-card,
@@ -69,6 +66,13 @@
   font-size: 30rpx;
 }
 
+.section-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 20rpx;
+}
+
 .hero-subtitle,
 .state-desc {
   display: block;
@@ -84,6 +88,14 @@
   color: #35536c;
   font-size: 24rpx;
   line-height: 1.8;
+}
+
+.section-subtitle {
+  max-width: 280rpx;
+  color: #7a8797;
+  font-size: 22rpx;
+  line-height: 1.7;
+  text-align: right;
 }
 
 .hero-desc {
@@ -166,6 +178,104 @@
   flex-wrap: wrap;
   justify-content: space-between;
   margin-top: 22rpx;
+}
+
+.progress-overview {
+  margin-top: 20rpx;
+  padding: 24rpx;
+  border-radius: 24rpx;
+  background: linear-gradient(135deg, rgba(31, 122, 224, 0.12) 0%, rgba(31, 122, 224, 0.04) 100%);
+}
+
+.progress-top,
+.progress-grid {
+  display: flex;
+}
+
+.progress-top {
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 20rpx;
+}
+
+.progress-label,
+.progress-side-label,
+.progress-item-label {
+  display: block;
+  color: #6d7f92;
+  font-size: 22rpx;
+}
+
+.progress-value,
+.progress-side-value,
+.progress-item-value {
+  display: block;
+  color: #16324c;
+  font-weight: 700;
+}
+
+.progress-value {
+  margin-top: 10rpx;
+  font-size: 44rpx;
+  line-height: 1.2;
+}
+
+.progress-side {
+  flex-shrink: 0;
+  text-align: right;
+}
+
+.progress-side-value {
+  margin-top: 10rpx;
+  font-size: 30rpx;
+}
+
+.progress-track {
+  margin-top: 22rpx;
+  height: 16rpx;
+  border-radius: 999rpx;
+  overflow: hidden;
+  background: rgba(22, 50, 76, 0.08);
+}
+
+.progress-bar {
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #1f7ae0 0%, #2f8f57 100%);
+}
+
+.progress-note {
+  display: block;
+  margin-top: 18rpx;
+  color: #5e7286;
+  font-size: 22rpx;
+  line-height: 1.7;
+}
+
+.progress-grid {
+  flex-wrap: wrap;
+  justify-content: space-between;
+  margin-top: 20rpx;
+}
+
+.progress-item {
+  width: calc(50% - 10rpx);
+  margin-bottom: 18rpx;
+  box-sizing: border-box;
+  padding: 22rpx;
+  border-radius: 22rpx;
+  background: #f6f9fc;
+}
+
+.progress-item-value {
+  margin-top: 10rpx;
+  font-size: 32rpx;
+  line-height: 1.5;
+  word-break: break-all;
+}
+
+.progress-item-value-small {
+  font-size: 24rpx;
 }
 
 .summary-item {

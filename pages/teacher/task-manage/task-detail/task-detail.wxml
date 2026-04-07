@@ -34,6 +34,57 @@
       </view>
 
       <view class="section-card">
+        <view class="section-head">
+          <text class="section-title">完成情况</text>
+          <text class="section-subtitle">任务提交业务接入后会展示实时数据</text>
+        </view>
+
+        <view class="progress-overview">
+          <view class="progress-top">
+            <view>
+              <text class="progress-label">整体完成度</text>
+              <text class="progress-value">{{taskInfo.progressInfo.completionRateText}}</text>
+            </view>
+            <view class="progress-side">
+              <text class="progress-side-label">通过率</text>
+              <text class="progress-side-value">{{taskInfo.progressInfo.passRateText}}</text>
+            </view>
+          </view>
+          <view class="progress-track">
+            <view class="progress-bar" style="{{taskInfo.progressInfo.completionBarStyle}}"></view>
+          </view>
+          <text class="progress-note">{{taskInfo.progressInfo.noteText}}</text>
+        </view>
+
+        <view class="progress-grid">
+          <view class="progress-item">
+            <text class="progress-item-label">提交数</text>
+            <text class="progress-item-value">{{taskInfo.progressInfo.submissionCountText}}</text>
+          </view>
+          <view class="progress-item">
+            <text class="progress-item-label">通过数</text>
+            <text class="progress-item-value">{{taskInfo.progressInfo.passedCountText}}</text>
+          </view>
+          <view class="progress-item">
+            <text class="progress-item-label">待审核</text>
+            <text class="progress-item-value">{{taskInfo.progressInfo.pendingCountText}}</text>
+          </view>
+          <view class="progress-item">
+            <text class="progress-item-label">未通过</text>
+            <text class="progress-item-value">{{taskInfo.progressInfo.rejectedCountText}}</text>
+          </view>
+          <view class="progress-item">
+            <text class="progress-item-label">预估参与人数</text>
+            <text class="progress-item-value">{{taskInfo.progressInfo.targetCountText}}</text>
+          </view>
+          <view class="progress-item">
+            <text class="progress-item-label">最近提交时间</text>
+            <text class="progress-item-value progress-item-value-small">{{taskInfo.progressInfo.lastSubmitTimeText}}</text>
+          </view>
+        </view>
+      </view>
+
+      <view class="section-card">
         <text class="section-title">基础信息</text>
         <view class="summary-grid">
           <view class="summary-item">

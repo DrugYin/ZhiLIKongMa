@@ -110,6 +110,7 @@ Page({
     const difficulty = Number(item.difficulty || 0)
     const taskType = item.task_type || 'public'
     const visibility = taskType === 'public' ? 'public' : (item.visibility || 'class_only')
+    const progressInfo = this.formatProgressInfo(item)
 
     return {
       ...item,
@@ -136,8 +137,153 @@ Page({
       fileCountText: `${Array.isArray(item.files) ? item.files.length : 0} 个附件`,
       attachmentText: Array.isArray(item.files) && item.files.length
         ? item.files.map((file) => file.file_name || '未命名附件').join(' / ')
-        : '暂无附件'
+        : '暂无附件',
+      progressInfo
     }
+  },
+
+  formatProgressInfo(item = {}) {
+    const source = item.progress_stats || item.progress || item.completion_stats || {}
+    const submissionCount = this.getNumberValue(source, item, [
+      'submission_count',
+      'submit_count',
+      'submitted_count',
+      'total_submissions'
+    ])
+    const passedCount = this.getNumberValue(source, item, [
+      'passed_count',
+      'approved_count',
+      'pass_count',
+      'success_count'
+    ])
+    const pendingCount = this.getNumberValue(source, item, [
+      'pending_count',
+      'reviewing_count',
+      'review_count'
+    ])
+    const rejectedCount = this.getNumberValue(source, item, [
+      'rejected_count',
+      'reject_count',
+      'failed_count'
+    ])
+    const targetCount = this.getNumberValue(source, item, [
+      'target_count',
+      'participant_count',
+      'student_count',
+      'expected_submission_count'
+    ])
+    const completionRate = this.getRateValue(source, item, [
+      'completion_rate',
+      'submit_rate'
+    ], submissionCount, targetCount)
+    const passRate = this.getRateValue(source, item, [
+      'pass_rate',
+      'approved_rate'
+    ], passedCount, submissionCount)
+    const lastSubmitTime = source.last_submit_time || source.last_submission_time || item.last_submit_time || item.last_submission_time
+    const hasRealData = [
+      submissionCount,
+      passedCount,
+      pendingCount,
+      rejectedCount,
+      targetCount
+    ].some((value) => value !== null)
+
+    return {
+      submissionCountText: this.formatCountText(submissionCount),
+      passedCountText: this.formatCountText(passedCount),
+      pendingCountText: this.formatCountText(pendingCount),
+      rejectedCountText: this.formatCountText(rejectedCount),
+      targetCountText: this.formatCountText(targetCount),
+      completionRateText: this.formatRateText(completionRate),
+      passRateText: this.formatRateText(passRate),
+      completionPercent: completionRate,
+      completionBarStyle: `width:${completionRate}%;`,
+      lastSubmitTimeText: lastSubmitTime ? this.formatDateTime(lastSubmitTime) : '待接入',
+      noteText: hasRealData
+        ? '当前统计将随着任务提交与审核结果自动刷新。'
+        : '已预留提交统计字段，后续接入任务提交接口后会自动展示。'
+    }
+  },
+
+  getNumberValue(primarySource, fallbackSource, keys = []) {
+    for (let index = 0; index < keys.length; index += 1) {
+      const key = keys[index]
+      const value = primarySource[key]
+      if (typeof value === 'number' && !Number.isNaN(value)) {
+        return value
+      }
+    }
+
+    for (let index = 0; index < keys.length; index += 1) {
+      const key = keys[index]
+      const value = fallbackSource[key]
+      if (typeof value === 'number' && !Number.isNaN(value)) {
+        return value
+      }
+    }
+
+    return null
+  },
+
+  getRateValue(primarySource, fallbackSource, keys = [], numerator, denominator) {
+    for (let index = 0; index < keys.length; index += 1) {
+      const key = keys[index]
+      const value = this.normalizeRate(primarySource[key])
+      if (value !== null) {
+        return value
+      }
+    }
+
+    for (let index = 0; index < keys.length; index += 1) {
+      const key = keys[index]
+      const value = this.normalizeRate(fallbackSource[key])
+      if (value !== null) {
+        return value
+      }
+    }
+
+    if (typeof numerator === 'number' && typeof denominator === 'number' && denominator > 0) {
+      return this.clampPercent(Math.round((numerator / denominator) * 100))
+    }
+
+    return 0
+  },
+
+  normalizeRate(value) {
+    if (typeof value !== 'number' || Number.isNaN(value)) {
+      return null
+    }
+
+    if (value > 0 && value <= 1) {
+      return this.clampPercent(Math.round(value * 100))
+    }
+
+    return this.clampPercent(Math.round(value))
+  },
+
+  clampPercent(value) {
+    if (typeof value !== 'number' || Number.isNaN(value)) {
+      return 0
+    }
+
+    if (value < 0) {
+      return 0
+    }
+
+    if (value > 100) {
+      return 100
+    }
+
+    return value
+  },
+
+  formatCountText(value) {
+    return typeof value === 'number' ? `${value}` : '待接入'
+  },
+
+  formatRateText(value) {
+    return typeof value === 'number' ? `${value}%` : '待接入'
   },
 
   formatDateTime(value) {
