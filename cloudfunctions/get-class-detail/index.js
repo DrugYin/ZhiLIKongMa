@@ -11,6 +11,19 @@ async function getCurrentUser(openid) {
   return res.data[0] || null;
 }
 
+async function isUserMemberOfClass(user, openid, classId) {
+  if (user && user.class_id === classId) {
+    return true;
+  }
+
+  const membershipRes = await db.collection('class_memberships').where({
+    class_id: classId,
+    student_openid: openid
+  }).count();
+
+  return membershipRes.total > 0;
+}
+
 exports.main = async (event) => {
   try {
     const { OPENID } = cloud.getWXContext();
@@ -37,7 +50,7 @@ exports.main = async (event) => {
     }
 
     const isTeacherOwner = classInfo.teacher_openid === OPENID;
-    const isMember = user && user.class_id === classId;
+    const isMember = user ? await isUserMemberOfClass(user, OPENID, classId) : false;
     if (!isTeacherOwner && !isMember) {
       return {
         success: false,

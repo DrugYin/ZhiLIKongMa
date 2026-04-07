@@ -2,6 +2,8 @@
   "pages": [
     "pages/student/index",
     "pages/student/mine/mine",
+    "pages/student/class-manage/class-manage",
+    "pages/student/class-manage/join-confirm/join-confirm",
     "pages/login/login",
     "pages/teacher/index",
     "pages/student/setting/setting",

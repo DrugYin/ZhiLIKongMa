@@ -274,29 +274,34 @@ ZhiLiKongMa/
 | 3.1.7 | remove-member - 移除成员 | P1 | ✅ |
 | 3.1.8 | update-class - 更新班级 | P0 | ✅ |
 | 3.1.9 | delete-class - 删除班级 | P1 | ✅ |
+| 3.1.10 | get-class-applications - 获取班级申请列表 | P0 | ✅ |
+| 3.1.11 | get-class-invite-info - 获取班级邀请信息 | P0 | ✅ |
+| 3.1.12 | get-my-class-status - 获取学生班级状态 | P0 | ✅ |
 
 #### 3.2 前端页面开发
 | 序号 | 任务 | 优先级 | 状态 |
 |------|------|--------|------|
 | 3.2.1 | 教师 - 班级列表页面 | P0 | ✅ 已接入筛选、排序、跳转与删除 |
 | 3.2.2 | 教师 - 创建班级功能 | P0 | ✅ 已完成独立新建/编辑页与提交流程 |
-| 3.2.3 | 教师 - 班级详情页面 | P0 | ✅ 已接入详情、成员列表、统计与邀请码复制 |
+| 3.2.3 | 教师 - 班级详情页面 | P0 | ✅ 已接入详情、成员列表、统计、邀请码复制与分享 |
 | 3.2.4 | 教师 - 成员管理页面 | P1 | ✅ 已合并到班级详情页，支持移除成员 |
-| 3.2.5 | 学生 - 加入班级功能 | P0 | ⬜ |
+| 3.2.5 | 学生 - 加入班级功能 | P0 | ✅ 已完成班级管理页、邀请码确认页与分享落地页 |
+| 3.2.6 | 教师 - 入班申请审批 | P0 | ✅ 已合并到班级详情页，支持通过/拒绝申请 |
 
 ### 验收标准
 - [x] 教师可成功创建班级并获得邀请码
-- [ ] 学生可通过邀请码搜索班级
-- [ ] 学生可申请加入班级（云函数已完成，前端待接入）
-- [ ] 教师可审批/拒绝学生的加入申请（云函数已完成，前端待接入）
+- [x] 学生可通过邀请码查看班级邀请信息
+- [x] 学生可申请加入班级，并在“我的班级”查看已加入/待审核状态
+- [x] 教师可审批/拒绝学生的加入申请
 - [x] 班级成员列表正确显示
 - [x] 教师可移除班级成员
 - [x] 班级人数达到上限时阻止加入
 - [x] 班级邀请码唯一且可复制
+- [x] 学生支持加入多个班级，成员关系以 `class_memberships` 为主表
 
 ### 交付物
-1. 班级相关云函数（9个）
-2. 班级管理页面（3个已实现，2个待补）
+1. 班级相关云函数（12个）
+2. 班级管理页面（学生 2 个、教师 3 个已接入，审批合并到详情页）
 3. 班级模块单元测试
 
 ---
@@ -699,9 +704,9 @@ npm run lint
 |------|----------|----------|----------|
 | 阶段一 | 1 周 | - | 🟡 基础完成，云数据库与存储待补 |
 | 阶段二 | 1.5 周 | - | 🟡 认证完成，首页数据仍有 mock |
-| 阶段三 | 1.5 周 | - | 🟡 云函数完成，教师端列表/详情/编辑已接入 |
+| 阶段三 | 1.5 周 | - | 🟡 班级闭环已接通，含学生加入、教师审批与多班级支持 |
 | 阶段四 | 1.5 周 | - | 🟡 教师端页面占位已建，业务未接入 |
-| 阶段五 | 1.5 周 | - | 🟡 审核入口占位已建，流程未接入 |
+| 阶段五 | 1.5 周 | - | 🟡 任务提交流程未接入，独立审核页仍为占位 |
 | 阶段六 | 1 周 | - | ⬜ 待开发 |
 | 阶段七 | 1 周 | - | 🟡 排行榜与教师统计骨架已建 |
 | 阶段八 | 1 周 | - | 🟡 本地配置服务与 get-projects 云函数已完成 |
@@ -724,7 +729,10 @@ npm run lint
 | delete-class | cloudfunctions/delete-class/index.js | 删除班级 |
 | get-classes | cloudfunctions/get-classes/index.js | 获取班级列表 |
 | get-class-detail | cloudfunctions/get-class-detail/index.js | 获取班级详情 |
+| get-class-invite-info | cloudfunctions/get-class-invite-info/index.js | 获取班级邀请展示信息 |
+| get-my-class-status | cloudfunctions/get-my-class-status/index.js | 获取学生班级状态 |
 | join-class | cloudfunctions/join-class/index.js | 提交入班申请 |
+| get-class-applications | cloudfunctions/get-class-applications/index.js | 获取班级待审批申请 |
 | handle-join-application | cloudfunctions/handle-join-application/index.js | 审批入班申请 |
 | get-class-members | cloudfunctions/get-class-members/index.js | 获取班级成员 |
 | remove-member | cloudfunctions/remove-member/index.js | 移除班级成员 |
@@ -732,7 +740,7 @@ npm run lint
 
 ---
 
-**文档版本**: v3.2.0
-**最后更新**: 2026-04-03
+**文档版本**: v3.3.0
+**最后更新**: 2026-04-07
 **编写者**: 开发团队
-**更新说明**: 同步班级/任务/排行榜真实进度，补充 `update-class`、`delete-class` 云函数与阶段状态说明
+**更新说明**: 同步学生入班、教师审批、多班级支持与班级阶段进度

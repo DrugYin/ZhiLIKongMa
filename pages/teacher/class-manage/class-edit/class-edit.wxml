@@ -111,7 +111,6 @@
       <view class="tips-list">
         <text class="tip-item">1. 班级名称尽量带上时间段或难度层级，便于快速区分。</text>
         <text class="tip-item">2. 适用年级建议写成范围，后续筛选和展示会更直观。</text>
-        <text class="tip-item">3. 若暂未接入编辑接口，编辑模式下可以先完成信息核对。</text>
       </view>
     </view>
 

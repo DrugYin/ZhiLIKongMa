@@ -1,0 +1,169 @@
+<view class="container">
+  <view class="header">
+    <custom-navbar title="班级管理" showBack="{{true}}" placeholder="{{true}}" />
+  </view>
+
+  <scroll-view class="content" scroll-y enhanced>
+    <view class="hero-card">
+      <text class="hero-title">加入你的班级</text>
+      <text class="hero-desc">支持输入老师提供的邀请码，也支持老师直接分享班级邀请卡片给你。</text>
+    </view>
+
+    <view wx:if="{{loading}}" class="state-card">
+      <text class="state-title">正在加载班级状态</text>
+      <text class="state-desc">请稍候，我们正在同步你的班级与申请记录。</text>
+    </view>
+
+    <block wx:elif="{{!isLoggedIn || !isRegistered}}">
+      <view class="state-card">
+        <text class="state-title">还没有登录</text>
+        <text class="state-desc">登录并完成注册后，你就可以通过邀请码申请加入班级。</text>
+        <t-button theme="primary" size="large" block bind:tap="goLogin">去登录</t-button>
+      </view>
+    </block>
+
+    <block wx:else>
+      <view class="section-card">
+        <view class="section-header">
+          <text class="section-title">班级概览</text>
+          <text class="section-tag">已登录</text>
+        </view>
+        <view class="summary-grid">
+          <view class="summary-item">
+            <text class="summary-label">已加入班级</text>
+            <text class="summary-value">{{stats.joinedCount}} 个</text>
+          </view>
+          <view class="summary-item">
+            <text class="summary-label">待审核申请</text>
+            <text class="summary-value">{{stats.pendingCount}} 条</text>
+          </view>
+        </view>
+      </view>
+
+      <view class="section-card">
+        <view class="section-header">
+          <text class="section-title">输入邀请码</text>
+          <text class="section-tag section-tag-free">可继续加入</text>
+        </view>
+        <text class="section-desc">一个账号可以加入多个班级，输入老师提供的邀请码后继续申请。</text>
+
+        <view class="form-panel">
+          <t-input
+            label="邀请码"
+            placeholder="例如：AB12CD"
+            maxlength="12"
+            value="{{inviteCode}}"
+            clearable
+            bind:change="onInviteCodeChange"
+          />
+        </view>
+
+        <t-button theme="primary" size="large" block bind:tap="goToJoinConfirm">查看班级并申请加入</t-button>
+      </view>
+
+      <view class="section-card">
+        <view class="section-header">
+          <text class="section-title">已加入班级</text>
+          <text class="section-tag">{{stats.joinedCount}} 个</text>
+        </view>
+
+        <view wx:if="{{joinedClasses.length}}" class="list-wrap">
+          <view wx:for="{{joinedClasses}}" wx:key="_id" class="list-card">
+            <view class="list-card-header">
+              <text class="list-card-title">{{item.class_name}}</text>
+              <text class="list-card-tag">已加入</text>
+            </view>
+
+            <view class="summary-grid compact-grid">
+              <view class="summary-item">
+                <text class="summary-label">邀请码</text>
+                <text class="summary-value">{{item.class_code}}</text>
+              </view>
+              <view class="summary-item">
+                <text class="summary-label">老师</text>
+                <text class="summary-value">{{item.teacherText}}</text>
+              </view>
+              <view class="summary-item">
+                <text class="summary-label">人数</text>
+                <text class="summary-value">{{item.memberText}}</text>
+              </view>
+              <view class="summary-item">
+                <text class="summary-label">上课时间</text>
+                <text class="summary-value">{{item.classTimeText}}</text>
+              </view>
+            </view>
+
+            <view class="detail-panel">
+              <text class="detail-title">班级说明</text>
+              <text class="detail-desc">{{item.descriptionText}}</text>
+              <text class="detail-meta">加入时间：{{item.joinTimeText}}</text>
+            </view>
+
+            <view class="action-row">
+              <button class="ghost-btn" data-class-code="{{item.class_code}}" bindtap="onCopyClassCode">复制邀请码</button>
+            </view>
+          </view>
+        </view>
+
+        <view wx:else class="empty-card">
+          <text class="empty-title">还没有加入任何班级</text>
+          <text class="empty-desc">可以先输入邀请码申请加入，审核通过后会展示在这里。</text>
+        </view>
+      </view>
+
+      <view class="section-card">
+        <view class="section-header">
+          <text class="section-title">待审核申请</text>
+          <text class="section-tag section-tag-warn">{{stats.pendingCount}} 条</text>
+        </view>
+
+        <view wx:if="{{pendingApplications.length}}" class="list-wrap">
+          <view wx:for="{{pendingApplications}}" wx:key="_id" class="list-card list-card-pending">
+            <view class="list-card-header">
+              <text class="list-card-title">{{item.class_name}}</text>
+              <text class="list-card-tag list-card-tag-warn">审核中</text>
+            </view>
+
+            <view class="summary-grid compact-grid">
+              <view class="summary-item">
+                <text class="summary-label">邀请码</text>
+                <text class="summary-value">{{item.class_code}}</text>
+              </view>
+              <view class="summary-item">
+                <text class="summary-label">老师</text>
+                <text class="summary-value">{{item.teacherText}}</text>
+              </view>
+              <view class="summary-item">
+                <text class="summary-label">人数</text>
+                <text class="summary-value">{{item.memberText}}</text>
+              </view>
+              <view class="summary-item">
+                <text class="summary-label">提交时间</text>
+                <text class="summary-value">{{item.createTimeText}}</text>
+              </view>
+            </view>
+
+            <view class="detail-panel detail-panel-warn">
+              <text class="detail-title">申请理由</text>
+              <text class="detail-desc">{{item.applyReasonText}}</text>
+            </view>
+          </view>
+        </view>
+
+        <view wx:else class="empty-card">
+          <text class="empty-title">当前没有待审核申请</text>
+          <text class="empty-desc">提交入班申请后，老师审核前会先在这里显示。</text>
+        </view>
+      </view>
+
+      <view class="tips-card">
+        <text class="tips-title">加入方式说明</text>
+        <text class="tips-item">1. 可向老师索取邀请码，在本页输入后继续申请。</text>
+        <text class="tips-item">2. 老师直接分享班级邀请卡片时，你也可以从卡片直接进入申请页。</text>
+        <text class="tips-item">3. 你可以加入多个班级，提交申请后分别等待对应老师审核。</text>
+      </view>
+    </block>
+
+    <view class="footer-placeholder"></view>
+  </scroll-view>
+</view>

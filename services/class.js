@@ -57,6 +57,31 @@ class ClassService {
   }
 
   /**
+   * 获取班级邀请信息
+   */
+  static async getClassInviteInfo(classCode) {
+    const res = await classApi.getClassInviteInfo(classCode);
+    if (!res.success) {
+      throw new Error(res.message || '获取班级邀请信息失败');
+    }
+    return res.data;
+  }
+
+  /**
+   * 获取当前学生班级状态
+   */
+  static async getMyClassStatus() {
+    const res = await classApi.getMyClassStatus();
+    if (!res.success) {
+      throw new Error(res.message || '获取班级状态失败');
+    }
+    return {
+      is_registered: res.is_registered !== false,
+      ...(res.data || {})
+    };
+  }
+
+  /**
    * 申请加入班级
    */
   static async joinClass(classCode, applyReason = '') {
@@ -74,6 +99,17 @@ class ClassService {
     const res = await classApi.handleApplication(params);
     if (!res.success) {
       throw new Error(res.message || '处理入班申请失败');
+    }
+    return res.data;
+  }
+
+  /**
+   * 获取班级入班申请
+   */
+  static async getClassApplications(params) {
+    const res = await classApi.getClassApplications(params);
+    if (!res.success) {
+      throw new Error(res.message || '获取入班申请失败');
     }
     return res.data;
   }

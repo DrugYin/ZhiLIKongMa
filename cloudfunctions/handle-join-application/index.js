@@ -12,6 +12,14 @@ async function getCurrentUser(openid) {
   return res.data[0] || null;
 }
 
+async function getMembership(classId, openid) {
+  const res = await db.collection('class_memberships').where({
+    class_id: classId,
+    student_openid: openid
+  }).limit(1).get();
+  return res.data[0] || null;
+}
+
 async function writeOperationLog(openid, userType, action, targetId, detail, now) {
   try {
     await db.collection('operation_logs').add({
@@ -102,16 +110,12 @@ exports.main = async (event) => {
       };
     }
 
-    if (action === 'approve') {
-      if (student.class_id) {
-        return {
-          success: false,
-          message: '该学生已加入其他班级',
-          error_code: 409
-        };
-      }
+    const membership = await getMembership(classInfo._id, application.student_openid);
+    const hasLegacyMembership = student.class_id === classInfo._id;
+    const alreadyJoinedCurrentClass = Boolean(membership || hasLegacyMembership);
 
-      if (classInfo.member_count >= classInfo.max_members) {
+    if (action === 'approve') {
+      if (!alreadyJoinedCurrentClass && classInfo.member_count >= classInfo.max_members) {
         return {
           success: false,
           message: '班级人数已满，无法通过申请',
@@ -133,22 +137,37 @@ exports.main = async (event) => {
     });
 
     if (action === 'approve') {
-      await db.collection('users').doc(student._id).update({
-        data: {
-          class_id: classInfo._id,
-          class_name: classInfo.class_name,
-          class_code: classInfo.class_code,
-          join_class_time: now,
-          update_time: now
-        }
-      });
+      if (!alreadyJoinedCurrentClass) {
+        await db.collection('class_memberships').add({
+          data: {
+            class_id: classInfo._id,
+            student_openid: application.student_openid,
+            source_application_id: applicationId,
+            join_class_time: now,
+            create_time: now,
+            update_time: now
+          }
+        });
 
-      await db.collection('classes').doc(classInfo._id).update({
-        data: {
-          member_count: _.inc(1),
-          update_time: now
-        }
-      });
+        await db.collection('classes').doc(classInfo._id).update({
+          data: {
+            member_count: _.inc(1),
+            update_time: now
+          }
+        });
+
+        await db.collection('users').doc(student._id).update({
+          data: {
+            update_time: now
+          }
+        });
+      } else if (student._id) {
+        await db.collection('users').doc(student._id).update({
+          data: {
+            update_time: now
+          }
+        });
+      }
     }
 
     await writeOperationLog(
@@ -159,7 +178,8 @@ exports.main = async (event) => {
       {
         application_id: applicationId,
         student_openid: application.student_openid,
-        review_remark: reviewRemark
+        review_remark: reviewRemark,
+        already_joined_current_class: alreadyJoinedCurrentClass
       },
       now
     );

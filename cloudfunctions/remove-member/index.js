@@ -12,6 +12,14 @@ async function getCurrentUser(openid) {
   return res.data[0] || null;
 }
 
+async function getMembership(classId, openid) {
+  const res = await db.collection('class_memberships').where({
+    class_id: classId,
+    student_openid: openid
+  }).limit(1).get();
+  return res.data[0] || null;
+}
+
 async function writeOperationLog(openid, userType, action, targetId, detail, now) {
   try {
     await db.collection('operation_logs').add({
@@ -72,11 +80,13 @@ exports.main = async (event) => {
     }
 
     const memberRes = await db.collection('users').where({
-      _openid: memberOpenid,
-      class_id: classId
+      _openid: memberOpenid
     }).limit(1).get();
     const member = memberRes.data[0];
-    if (!member) {
+    const membership = await getMembership(classId, memberOpenid);
+    const isLegacyMember = Boolean(member && member.class_id === classId);
+
+    if (!membership && !isLegacyMember) {
       return {
         success: false,
         message: '成员不存在或不在该班级中',
@@ -85,15 +95,35 @@ exports.main = async (event) => {
     }
 
     const now = new Date();
-    await db.collection('users').doc(member._id).update({
-      data: {
-        class_id: _.remove(),
-        class_name: _.remove(),
-        class_code: _.remove(),
-        join_class_time: _.remove(),
-        update_time: now
-      }
-    });
+    const tasks = [];
+
+    if (membership) {
+      tasks.push(db.collection('class_memberships').doc(membership._id).remove());
+    }
+
+    if (isLegacyMember) {
+      tasks.push(
+        db.collection('users').doc(member._id).update({
+          data: {
+            class_id: _.remove(),
+            class_name: _.remove(),
+            class_code: _.remove(),
+            join_class_time: _.remove(),
+            update_time: now
+          }
+        })
+      );
+    } else if (member && member._id) {
+      tasks.push(
+        db.collection('users').doc(member._id).update({
+          data: {
+            update_time: now
+          }
+        })
+      );
+    }
+
+    await Promise.all(tasks);
 
     await db.collection('classes').doc(classId).update({
       data: {
@@ -104,7 +134,7 @@ exports.main = async (event) => {
 
     await writeOperationLog(OPENID, 'teacher', 'remove_class_member', classId, {
       member_openid: memberOpenid,
-      member_name: member.user_name || member.nick_name || ''
+      member_name: member ? (member.user_name || member.nick_name || '') : ''
     }, now);
 
     return {

@@ -5,10 +5,125 @@ cloud.init({
 });
 
 const db = cloud.database();
+const _ = db.command;
 
 async function getCurrentUser(openid) {
   const res = await db.collection('users').where({ _openid: openid }).limit(1).get();
   return res.data[0] || null;
+}
+
+async function isUserMemberOfClass(user, openid, classId) {
+  if (user && user.class_id === classId) {
+    return true;
+  }
+
+  const membershipRes = await db.collection('class_memberships').where({
+    class_id: classId,
+    student_openid: openid
+  }).count();
+
+  return membershipRes.total > 0;
+}
+
+async function getAllMembershipDocs(classId) {
+  const query = db.collection('class_memberships').where({
+    class_id: classId
+  });
+  const totalRes = await query.count();
+  const total = totalRes.total || 0;
+  const pageSize = 100;
+  const tasks = [];
+
+  for (let skip = 0; skip < total; skip += pageSize) {
+    tasks.push(
+      query
+        .skip(skip)
+        .limit(pageSize)
+        .field({
+          _id: true,
+          class_id: true,
+          student_openid: true,
+          join_class_time: true
+        })
+        .get()
+    );
+  }
+
+  if (!tasks.length) {
+    return [];
+  }
+
+  const list = await Promise.all(tasks);
+  return list.reduce((result, item) => result.concat(item.data || []), []);
+}
+
+async function getAllLegacyMembers(classId) {
+  const query = db.collection('users').where({
+    class_id: classId
+  });
+  const totalRes = await query.count();
+  const total = totalRes.total || 0;
+  const pageSize = 100;
+  const tasks = [];
+
+  for (let skip = 0; skip < total; skip += pageSize) {
+    tasks.push(
+      query
+        .skip(skip)
+        .limit(pageSize)
+        .field({
+          _id: true,
+          _openid: true,
+          user_name: true,
+          nick_name: true,
+          avatar_url: true,
+          grade: true,
+          phone: true,
+          join_class_time: true,
+          points: true,
+          total_points: true
+        })
+        .get()
+    );
+  }
+
+  if (!tasks.length) {
+    return [];
+  }
+
+  const list = await Promise.all(tasks);
+  return list.reduce((result, item) => result.concat(item.data || []), []);
+}
+
+async function getUsersByOpenids(openids = []) {
+  if (!openids.length) {
+    return [];
+  }
+
+  const pageSize = 100;
+  const tasks = [];
+
+  for (let index = 0; index < openids.length; index += pageSize) {
+    const chunk = openids.slice(index, index + pageSize);
+    tasks.push(
+      db.collection('users').where({
+        _openid: _.in(chunk)
+      }).field({
+        _id: true,
+        _openid: true,
+        user_name: true,
+        nick_name: true,
+        avatar_url: true,
+        grade: true,
+        phone: true,
+        points: true,
+        total_points: true
+      }).get()
+    );
+  }
+
+  const list = await Promise.all(tasks);
+  return list.reduce((result, item) => result.concat(item.data || []), []);
 }
 
 exports.main = async (event) => {
@@ -38,7 +153,7 @@ exports.main = async (event) => {
     }
 
     const isTeacherOwner = classInfo.teacher_openid === OPENID;
-    const isMember = currentUser && currentUser.class_id === classId;
+    const isMember = currentUser ? await isUserMemberOfClass(currentUser, OPENID, classId) : false;
     if (!isTeacherOwner && !isMember) {
       return {
         success: false,
@@ -47,37 +162,70 @@ exports.main = async (event) => {
       };
     }
 
-    const query = db.collection('users').where({
-      class_id: classId
+    const [membershipDocs, legacyMembers] = await Promise.all([
+      getAllMembershipDocs(classId),
+      getAllLegacyMembers(classId)
+    ]);
+
+    const memberMap = legacyMembers.reduce((result, item) => {
+      result[item._openid] = {
+        ...item,
+        join_class_time: item.join_class_time || null
+      };
+      return result;
+    }, {});
+
+    const membershipOpenids = membershipDocs
+      .map((item) => item.student_openid)
+      .filter((item) => item && !memberMap[item]);
+
+    if (membershipOpenids.length) {
+      const userList = await getUsersByOpenids(membershipOpenids);
+
+      userList.forEach((item) => {
+        memberMap[item._openid] = {
+          ...item,
+          join_class_time: null
+        };
+      });
+    }
+
+    membershipDocs.forEach((item) => {
+      if (!item.student_openid) {
+        return;
+      }
+
+      const current = memberMap[item.student_openid] || {
+        _openid: item.student_openid
+      };
+
+      memberMap[item.student_openid] = {
+        ...current,
+        join_class_time: item.join_class_time || current.join_class_time || null
+      };
     });
-    const totalRes = await query.count();
-    const listRes = await query
-      .orderBy('join_class_time', 'asc')
-      .skip((page - 1) * pageSize)
-      .limit(pageSize)
-      .field({
-        _id: true,
-        _openid: true,
-        user_name: true,
-        nick_name: true,
-        avatar_url: true,
-        grade: true,
-        phone: true,
-        join_class_time: true,
-        points: true,
-        total_points: true
-      })
-      .get();
+
+    const mergedMembers = Object.values(memberMap)
+      .sort((left, right) => {
+        const leftTime = new Date(left.join_class_time || 0).getTime();
+        const rightTime = new Date(right.join_class_time || 0).getTime();
+        return leftTime - rightTime;
+      });
+
+    const total = mergedMembers.length;
+    const startIndex = (page - 1) * pageSize;
+    const endIndex = startIndex + pageSize;
+    const pagedList = mergedMembers.slice(startIndex, endIndex);
 
     return {
       success: true,
       message: '获取班级成员成功',
       data: {
-        list: listRes.data,
+        list: pagedList,
         page,
         page_size: pageSize,
-        total: totalRes.total,
-        has_more: page * pageSize < totalRes.total
+        total,
+        has_more: endIndex < total
       }
     };
   } catch (error) {

@@ -18,13 +18,15 @@
 
       <view class="hero-actions">
         <button class="ghost-btn" bindtap="onCopyInviteCode">复制邀请码</button>
+        <button class="ghost-btn share-btn" open-type="share">邀请学生</button>
         <button class="primary-btn" bindtap="goToEditClass">编辑班级</button>
       </view>
+      <text class="hero-share-hint">可直接分享班级邀请卡片给学生，学生打开后会进入申请确认页。</text>
     </view>
 
     <view wx:if="{{loading}}" class="state-card">
       <text class="state-title">班级详情加载中</text>
-      <text class="state-desc">正在同步班级信息、成员列表和任务概览。</text>
+      <text class="state-desc">正在同步班级信息、待审核申请、成员列表和任务概览。</text>
     </view>
 
     <block wx:elif="{{classInfo}}">
@@ -62,6 +64,69 @@
           <view class="summary-item">
             <text class="summary-label">更新时间</text>
             <text class="summary-value">{{classInfo.updateTimeText}}</text>
+          </view>
+        </view>
+      </view>
+
+      <view class="section-card">
+        <view class="section-header">
+          <text class="section-title">加入申请</text>
+          <text class="section-extra">待处理 {{classInfo.pendingCount}} 条</text>
+        </view>
+
+        <view class="review-tip">
+          审核通过后，学生会立即加入班级并出现在成员列表中。
+        </view>
+
+        <view wx:if="{{!applications.length}}" class="inline-empty">
+          <text class="inline-empty-title">当前没有待审核申请</text>
+          <text class="inline-empty-desc">学生提交入班申请后，会在这里集中展示，方便老师逐条处理。</text>
+        </view>
+
+        <view wx:else class="application-list">
+          <view wx:for="{{applications}}" wx:key="_id" class="application-card">
+            <view class="application-main">
+              <image class="application-avatar" src="{{item.avatar}}" mode="aspectFill" />
+              <view class="application-info">
+                <view class="application-name-row">
+                  <text class="application-name">{{item.displayName}}</text>
+                  <text class="application-time">{{item.relativeTimeText}}</text>
+                </view>
+                <text class="application-meta">{{item.gradeText}}</text>
+                <text class="application-meta">{{item.phoneText}}</text>
+                <text class="application-meta">提交时间：{{item.createTimeText}}</text>
+              </view>
+            </view>
+
+            <view class="application-reason-box">
+              <text class="application-reason-label">申请理由</text>
+              <text class="application-reason-text">{{item.applyReasonText}}</text>
+            </view>
+
+            <view class="application-actions">
+              <button
+                class="reject-btn"
+                data-application-id="{{item._id}}"
+                data-action="reject"
+                data-student-name="{{item.displayName}}"
+                bindtap="onReviewApplication"
+                disabled="{{reviewingApplicationId}}"
+                loading="{{reviewingApplicationId === item._id && reviewAction === 'reject'}}"
+              >
+                拒绝
+              </button>
+              <button
+                class="approve-btn"
+                data-application-id="{{item._id}}"
+                data-action="approve"
+                data-student-name="{{item.displayName}}"
+                bindtap="onReviewApplication"
+                disabled="{{reviewingApplicationId}}"
+                loading="{{reviewingApplicationId === item._id && reviewAction === 'approve'}}"
+              >
+                通过
+              </button>
+            </view>
           </view>
         </view>
       </view>

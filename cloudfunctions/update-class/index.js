@@ -157,9 +157,9 @@ exports.main = async (event) => {
       data: updateData
     });
 
-    const members = await getAllUsersInClass(classId);
-    if (members.length) {
-      await Promise.all(members.map((member) => db.collection('users').doc(member._id).update({
+    const legacyMembers = await getAllUsersInClass(classId);
+    if (legacyMembers.length) {
+      await Promise.all(legacyMembers.map((member) => db.collection('users').doc(member._id).update({
         data: {
           class_name: className,
           update_time: now
