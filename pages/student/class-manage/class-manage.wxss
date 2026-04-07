@@ -141,6 +141,11 @@
   margin-top: 22rpx;
 }
 
+.action-row-split {
+  display: flex;
+  gap: 16rpx;
+}
+
 .list-wrap {
   margin-top: 20rpx;
 }
@@ -229,6 +234,10 @@
   background: #e7f1fb;
   font-size: 26rpx;
   font-weight: 600;
+}
+
+.ghost-btn-light {
+  background: rgba(31, 122, 224, 0.08);
 }
 
 .ghost-btn::after {

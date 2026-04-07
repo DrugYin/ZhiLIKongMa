@@ -1,0 +1,163 @@
+<view class="container">
+  <view class="header">
+    <custom-navbar title="班级详情" showBack="{{true}}" placeholder="{{true}}" />
+  </view>
+
+  <scroll-view class="content" scroll-y enhanced>
+    <view wx:if="{{classInfo}}" class="hero-card">
+      <view class="hero-title-row">
+        <view class="hero-title-group">
+          <text class="hero-title">{{classInfo.className}}</text>
+          <text class="hero-subtitle">{{classInfo.projectText}} · {{classInfo.teacherName}}</text>
+        </view>
+        <text class="status-tag {{classInfo.statusClass}}">{{classInfo.statusText}}</text>
+      </view>
+
+      <text class="hero-desc">{{classInfo.descriptionText}}</text>
+
+      <view class="hero-actions">
+        <button class="ghost-btn" bindtap="onCopyInviteCode">复制邀请码</button>
+        <button class="primary-btn" bindtap="goBackToClassManage">返回班级列表</button>
+      </view>
+    </view>
+
+    <view wx:if="{{loading}}" class="state-card">
+      <text class="state-title">班级详情加载中</text>
+      <text class="state-desc">正在同步班级信息、成员列表和任务概览。</text>
+    </view>
+
+    <block wx:elif="{{!isLoggedIn}}">
+      <view class="state-card">
+        <text class="state-title">还没有登录</text>
+        <text class="state-desc">登录并完成注册后，才可以查看自己加入的班级详情。</text>
+        <button class="primary-btn state-btn" bindtap="goLogin">去登录</button>
+      </view>
+    </block>
+
+    <block wx:elif="{{errorText}}">
+      <view class="state-card">
+        <text class="state-title">暂时无法查看班级详情</text>
+        <text class="state-desc">{{errorText}}</text>
+        <button class="ghost-btn state-btn" bindtap="goBackToClassManage">返回班级列表</button>
+      </view>
+    </block>
+
+    <block wx:elif="{{classInfo}}">
+      <view class="section-card">
+        <view class="section-header">
+          <text class="section-title">班级信息</text>
+          <text class="section-extra">{{classInfo.memberText}}</text>
+        </view>
+
+        <view class="summary-grid">
+          <view class="summary-item">
+            <text class="summary-label">邀请码</text>
+            <text class="summary-value">{{classInfo.classCode}}</text>
+          </view>
+          <view class="summary-item">
+            <text class="summary-label">老师</text>
+            <text class="summary-value">{{classInfo.teacherName}}</text>
+          </view>
+          <view class="summary-item">
+            <text class="summary-label">班级容量</text>
+            <text class="summary-value">{{classInfo.usageRateText}}</text>
+          </view>
+          <view class="summary-item">
+            <text class="summary-label">上课时间</text>
+            <text class="summary-value">{{classInfo.classTimeText}}</text>
+          </view>
+          <view class="summary-item">
+            <text class="summary-label">上课地点</text>
+            <text class="summary-value">{{classInfo.locationText}}</text>
+          </view>
+          <view class="summary-item">
+            <text class="summary-label">更新时间</text>
+            <text class="summary-value">{{classInfo.updateTimeText}}</text>
+          </view>
+        </view>
+      </view>
+
+      <view class="section-card">
+        <view class="section-header">
+          <text class="section-title">班级成员</text>
+          <text class="section-extra">共 {{memberStats.total}} 人</text>
+        </view>
+
+        <view class="member-stats">
+          <view class="member-stat-item">
+            <text class="member-stat-value">{{memberStats.total}}</text>
+            <text class="member-stat-label">成员数</text>
+          </view>
+          <view class="member-stat-item">
+            <text class="member-stat-value">{{memberStats.totalPoints}}</text>
+            <text class="member-stat-label">累计积分</text>
+          </view>
+          <view class="member-stat-item">
+            <text class="member-stat-value">{{memberStats.averagePoints}}</text>
+            <text class="member-stat-label">人均积分</text>
+          </view>
+        </view>
+
+        <view class="member-latest">
+          最近加入时间：{{memberStats.latestJoinText}}
+        </view>
+
+        <view wx:if="{{!members.length}}" class="inline-empty">
+          <text class="inline-empty-title">班级还没有成员</text>
+          <text class="inline-empty-desc">老师审核新的入班申请后，这里会展示完整成员列表。</text>
+        </view>
+
+        <view wx:else class="member-list">
+          <view wx:for="{{members}}" wx:key="_openid" class="member-card">
+            <image class="member-avatar" src="{{item.avatar}}" mode="aspectFill" />
+            <view class="member-info">
+              <view class="member-name-row">
+                <text class="member-name">{{item.displayName}}</text>
+                <text class="identity-tag {{item.identityClass}}">{{item.identityText}}</text>
+              </view>
+              <text class="member-meta">{{item.gradeText}}</text>
+              <text class="member-meta">加入时间：{{item.joinTimeText}}</text>
+            </view>
+            <text class="member-score">{{item.pointsText}}</text>
+          </view>
+        </view>
+      </view>
+
+      <view class="section-card">
+        <view class="section-header">
+          <text class="section-title">班级任务</text>
+          <text class="section-extra">业务待完善</text>
+        </view>
+
+        <view class="task-stats">
+          <view class="task-stat-item">
+            <text class="task-stat-value">{{taskSummary.total}}</text>
+            <text class="task-stat-label">任务总数</text>
+          </view>
+          <view class="task-stat-item">
+            <text class="task-stat-value">{{taskSummary.published}}</text>
+            <text class="task-stat-label">已发布</text>
+          </view>
+          <view class="task-stat-item">
+            <text class="task-stat-value">{{taskSummary.pending}}</text>
+            <text class="task-stat-label">待完善</text>
+          </view>
+        </view>
+
+        <view class="task-placeholder">
+          <text class="task-placeholder-title">任务列表入口已预留</text>
+          <text class="task-placeholder-desc">
+            当前任务与班级联动的学生侧业务还在建设中，后续会在这里展示任务清单、截止时间和完成进度。
+          </text>
+          <view class="tip-list">
+            <text class="tip-item">1. 将支持按发布时间查看班级任务。</text>
+            <text class="tip-item">2. 将支持查看每个任务的状态、要求和截止时间。</text>
+            <text class="tip-item">3. 将支持从这里直接进入任务详情和提交页面。</text>
+          </view>
+        </view>
+      </view>
+    </block>
+
+    <view class="footer-placeholder"></view>
+  </scroll-view>
+</view>
