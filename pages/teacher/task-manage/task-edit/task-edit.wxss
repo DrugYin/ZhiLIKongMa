@@ -61,7 +61,9 @@
 .section-hint,
 .tip-item,
 .loading-text,
-.option-desc {
+.option-desc,
+.upload-tip,
+.section-side-text {
   color: #4b5563;
   font-size: 24rpx;
   line-height: 1.7;
@@ -191,6 +193,11 @@
   line-height: 1.6;
 }
 
+.section-side-text {
+  flex-shrink: 0;
+  color: #6b7280;
+}
+
 .picker-card {
   padding: 24rpx;
   background: #f8fafc;
@@ -212,6 +219,100 @@
 .textarea-wrapper {
   overflow: hidden;
   border-radius: 20rpx;
+}
+
+.upload-wrapper {
+  margin-top: 8rpx;
+}
+
+.upload-wrapper-file {
+  margin-top: 12rpx;
+}
+
+.file-toolbar {
+  margin-top: 12rpx;
+}
+
+.file-add-btn {
+  width: 100%;
+  height: 84rpx;
+  line-height: 84rpx;
+  margin: 0;
+  border-radius: 20rpx;
+  border: 2rpx dashed #b7c6d8;
+  color: #1f4f78;
+  background: #f7fbff;
+  font-size: 26rpx;
+  font-weight: 600;
+}
+
+.file-add-btn::after {
+  border: none;
+}
+
+.file-list {
+  margin-top: 18rpx;
+}
+
+.file-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20rpx;
+  margin-bottom: 16rpx;
+  padding: 22rpx 24rpx;
+  border-radius: 20rpx;
+  background: #f8fafc;
+  border: 2rpx solid #e5e7eb;
+}
+
+.file-main {
+  flex: 1;
+  min-width: 0;
+}
+
+.file-name {
+  display: block;
+  color: #111827;
+  font-size: 26rpx;
+  font-weight: 600;
+  line-height: 1.6;
+  word-break: break-all;
+}
+
+.file-meta,
+.file-empty-text {
+  display: block;
+  margin-top: 8rpx;
+  color: #6b7280;
+  font-size: 22rpx;
+  line-height: 1.7;
+}
+
+.file-delete {
+  width: 56rpx;
+  height: 56rpx;
+  border-radius: 50%;
+  background: #eef3f8;
+  color: #7a8897;
+  font-size: 34rpx;
+  font-weight: 600;
+  line-height: 56rpx;
+  text-align: center;
+  flex-shrink: 0;
+}
+
+.file-empty {
+  margin-top: 18rpx;
+  padding: 28rpx 24rpx;
+  border-radius: 20rpx;
+  background: #f8fafc;
+}
+
+.upload-tip {
+  display: block;
+  margin-top: 18rpx;
+  color: #6b7280;
 }
 
 .tips-list {

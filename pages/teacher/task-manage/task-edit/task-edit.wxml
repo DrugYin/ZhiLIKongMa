@@ -191,6 +191,80 @@
     </view>
 
     <view class="form-card">
+      <view class="section-head">
+        <view>
+          <view class="card-title">任务图片</view>
+          <text class="section-hint">支持相册或拍照上传，最多 {{imageMax}} 张，用于任务封面或素材展示。</text>
+        </view>
+        <text class="section-side-text">{{imageFiles.length}} / {{imageMax}}</text>
+      </view>
+
+      <view class="upload-wrapper">
+        <t-upload
+          files="{{imageFiles}}"
+          max="{{imageMax}}"
+          media-type="{{imageMediaType}}"
+          config="{{imageUploadConfig}}"
+          size-limit="{{imageSizeLimit}}"
+          grid-config="{{imageGridConfig}}"
+          draggable
+          bind:add="onImageAdd"
+          bind:remove="onImageRemove"
+        />
+      </view>
+    </view>
+
+    <view class="form-card">
+      <view class="section-head">
+        <view>
+          <view class="card-title">附件文件</view>
+          <text class="section-hint">支持课件、文档、压缩包等附件，最多 {{fileMax}} 个。</text>
+        </view>
+        <text class="section-side-text">{{fileFiles.length}} / {{fileMax}}</text>
+      </view>
+
+      <view class="file-toolbar">
+        <button
+          class="file-add-btn"
+          bindtap="onSelectFiles"
+          disabled="{{fileFiles.length >= fileMax}}"
+        >
+          添加附件
+        </button>
+      </view>
+
+      <view wx:if="{{fileFiles.length}}" class="file-list">
+        <view
+          wx:for="{{fileFiles}}"
+          wx:key="_uploadId"
+          class="file-row"
+          data-index="{{index}}"
+          bindtap="onPreviewFile"
+        >
+          <view class="file-main">
+            <text class="file-name">{{item.file_name || item.name}}</text>
+            <text class="file-meta">
+              {{item.status === 'loading' ? '上传中' : item.status === 'failed' ? '上传失败' : '点击预览'}} · {{item.sizeText || '大小待补充'}}
+            </text>
+          </view>
+          <view
+            class="file-delete"
+            data-index="{{index}}"
+            catchtap="onDeleteFile"
+          >
+            ×
+          </view>
+        </view>
+      </view>
+
+      <view wx:else class="file-empty">
+        <text class="file-empty-text">还没有添加附件，点击上方按钮即可上传。</text>
+      </view>
+
+      <text class="upload-tip">支持格式：{{fileAcceptText}}</text>
+    </view>
+
+    <view class="form-card">
       <view class="card-title">任务说明</view>
       <view class="textarea-wrapper">
         <t-textarea
@@ -209,9 +283,9 @@
       <view class="card-title">接入说明</view>
       <t-divider align="left">当前先完成基础字段的创建与编辑</t-divider>
       <view class="tips-list">
-        <text class="tip-item">1. 图片、文件附件字段已在保存 payload 中预留，后续接上传能力即可直接提交。</text>
+        <text class="tip-item">1. 上传成功后的图片会写入 `images` 字段，文件会写入 `files` 字段并保留文件名与大小。</text>
         <text class="tip-item">2. 班级任务选择班级后，会自动同步项目，避免任务和班级项目不一致。</text>
-        <text class="tip-item">3. 任务详情页里的完成情况统计会在提交业务接入后自动展示真实数据。</text>
+        <text class="tip-item">3. 若附件上传失败，可以先移除失败项，再重新添加上传。</text>
       </view>
     </view>
 

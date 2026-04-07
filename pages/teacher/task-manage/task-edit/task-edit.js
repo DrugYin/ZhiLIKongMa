@@ -1,7 +1,15 @@
 const projectService = require('../../../../config/project')
 const ClassService = require('../../../../services/class')
 const TaskService = require('../../../../services/task')
+const { uploadFile } = require('../../../../services/api')
 const Toast = require('../../../../utils/toast')
+const {
+  IMAGE_MAX_COUNT,
+  IMAGE_MAX_SIZE,
+  FILE_MAX_COUNT,
+  FILE_MAX_SIZE,
+  FILE_ALLOWED_TYPES
+} = require('../../../../utils/constant')
 
 const TASK_TYPE_OPTIONS = [
   {
@@ -55,6 +63,30 @@ const DEFAULT_DIFFICULTY_OPTIONS = [
   { value: 5, label: '专家', color: '#8c55ff' }
 ]
 
+const IMAGE_UPLOAD_CONFIG = {
+  count: IMAGE_MAX_COUNT.TASK,
+  sizeType: ['compressed', 'original'],
+  sourceType: ['album', 'camera']
+}
+
+const IMAGE_SIZE_LIMIT = {
+  size: Math.round(IMAGE_MAX_SIZE / (1024 * 1024)),
+  unit: 'MB',
+  message: '图片大小不超过 {sizeLimit} MB'
+}
+
+const FILE_SIZE_LIMIT = {
+  size: Math.round(FILE_MAX_SIZE / (1024 * 1024)),
+  unit: 'MB',
+  message: '文件大小不超过 {sizeLimit} MB'
+}
+
+const IMAGE_GRID_CONFIG = {
+  column: 3,
+  width: 196,
+  height: 196
+}
+
 Page({
   data: {
     taskId: '',
@@ -68,6 +100,8 @@ Page({
     classPickerVisible: false,
     categoryPickerVisible: false,
     taskInfo: null,
+    imageFiles: [],
+    fileFiles: [],
     projectOptions: [],
     projectMap: {},
     classList: [],
@@ -78,6 +112,14 @@ Page({
     taskTypeOptions: TASK_TYPE_OPTIONS,
     visibilityOptions: VISIBILITY_OPTIONS,
     statusOptions: STATUS_OPTIONS,
+    imageUploadConfig: IMAGE_UPLOAD_CONFIG,
+    imageSizeLimit: IMAGE_SIZE_LIMIT,
+    fileSizeLimit: FILE_SIZE_LIMIT,
+    imageGridConfig: IMAGE_GRID_CONFIG,
+    imageMediaType: ['image'],
+    imageMax: IMAGE_MAX_COUNT.TASK,
+    fileMax: FILE_MAX_COUNT,
+    fileAcceptText: FILE_ALLOWED_TYPES.join(' / '),
     taskForm: {
       title: '',
       description: '',
@@ -204,9 +246,12 @@ Page({
 
     try {
       const taskInfo = await TaskService.getTaskDetail(this.data.taskId)
+      const { imageFiles, fileFiles } = await this.buildExistingUploadState(taskInfo)
 
       this.setData({
         taskInfo,
+        imageFiles,
+        fileFiles,
         taskForm: {
           title: taskInfo.title || '',
           description: taskInfo.description || '',
@@ -229,6 +274,63 @@ Page({
     } finally {
       Toast.hideLoading()
     }
+  },
+
+  async buildExistingUploadState(taskInfo = {}) {
+    const imageIds = Array.isArray(taskInfo.images) ? taskInfo.images.filter(Boolean) : []
+    const fileEntries = Array.isArray(taskInfo.files) ? taskInfo.files.filter((item) => item && item.file_id) : []
+    const tempUrlMap = await this.getTempUrlMap(imageIds.concat(fileEntries.map((item) => item.file_id)))
+
+    return {
+      imageFiles: imageIds.map((fileId, index) => ({
+        url: tempUrlMap[fileId] || fileId,
+        type: 'image',
+        name: `任务图片${index + 1}`,
+        percent: 100,
+        status: 'done',
+        file_id: fileId
+      })),
+      fileFiles: fileEntries.map((item) => ({
+        url: tempUrlMap[item.file_id] || item.file_id,
+        name: item.file_name || this.getFileNameFromPath(item.file_id),
+        percent: 100,
+        status: 'done',
+        file_id: item.file_id,
+        size: Number(item.file_size || 0),
+        sizeText: this.formatFileSize(item.file_size),
+        file_name: item.file_name || this.getFileNameFromPath(item.file_id)
+      }))
+    }
+  },
+
+  getTempUrlMap(fileIds = []) {
+    const uniqueFileIds = Array.from(new Set(fileIds.filter(Boolean)))
+    if (!uniqueFileIds.length) {
+      return Promise.resolve({})
+    }
+
+    return new Promise((resolve, reject) => {
+      wx.cloud.getTempFileURL({
+        fileList: uniqueFileIds,
+        success: (res) => {
+          const fileList = Array.isArray(res.fileList) ? res.fileList : []
+          const map = fileList.reduce((result, item) => {
+            if (item && item.fileID) {
+              result[item.fileID] = item.tempFileURL || item.fileID
+            }
+            return result
+          }, {})
+          resolve(map)
+        },
+        fail: reject
+      })
+    }).catch((error) => {
+      console.error('[task-edit] getTempUrlMap error:', error)
+      return uniqueFileIds.reduce((result, fileId) => {
+        result[fileId] = fileId
+        return result
+      }, {})
+    })
   },
 
   applyInitialParams() {
@@ -448,6 +550,352 @@ Page({
     })
   },
 
+  onImageAdd(e) {
+    const files = this.normalizeUploadEventFiles(e)
+    if (!files.length) {
+      return
+    }
+
+    const pendingFiles = files.map((item, index) => this.createPendingUploadFile(item, 'image', index))
+    this.setData({
+      imageFiles: this.data.imageFiles.concat(pendingFiles)
+    }, () => {
+      this.uploadSelectedFiles('imageFiles', 'images', pendingFiles)
+    })
+  },
+
+  async onSelectFiles() {
+    const remainCount = this.data.fileMax - this.data.fileFiles.length
+
+    if (remainCount <= 0) {
+      Toast.showToast(`最多上传 ${this.data.fileMax} 个附件`)
+      return
+    }
+
+    try {
+      const chooseResult = await this.chooseMessageFiles(remainCount)
+      const files = Array.isArray(chooseResult.tempFiles) ? chooseResult.tempFiles : []
+      if (!files.length) {
+        return
+      }
+
+      const invalidFile = files.find((item) => !this.isAllowedAttachment(item))
+      if (invalidFile) {
+        Toast.showToast(`附件格式暂不支持，仅支持：${FILE_ALLOWED_TYPES.join('、')}`)
+        return
+      }
+
+      const oversizeFile = files.find((item) => Number(item.size || 0) > FILE_MAX_SIZE)
+      if (oversizeFile) {
+        Toast.showToast(`单个附件大小不能超过 ${FILE_SIZE_LIMIT.size} MB`)
+        return
+      }
+
+      const pendingFiles = files.map((item, index) => this.createPendingUploadFile({
+        ...item,
+        url: item.path
+      }, 'file', index))
+
+      this.setData({
+        fileFiles: this.data.fileFiles.concat(pendingFiles)
+      }, () => {
+        this.uploadSelectedFiles('fileFiles', 'files', pendingFiles)
+      })
+    } catch (error) {
+      if (error && /cancel/i.test(String(error.errMsg || error.message || ''))) {
+        return
+      }
+      console.error('[task-edit] onSelectFiles error:', error)
+      Toast.showToast('选择附件失败')
+    }
+  },
+
+  chooseMessageFiles(count) {
+    return new Promise((resolve, reject) => {
+      wx.chooseMessageFile({
+        count: Math.min(count, FILE_MAX_COUNT),
+        type: 'file',
+        success: resolve,
+        fail: reject
+      })
+    })
+  },
+
+  onImageRemove(e) {
+    const { index } = e.detail || {}
+    this.removeUploadFileAt('imageFiles', index)
+  },
+
+  onDeleteFile(e) {
+    const { index } = e.currentTarget.dataset
+    this.removeUploadFileAt('fileFiles', Number(index))
+  },
+
+  removeUploadFileAt(field, index) {
+    if (!Number.isInteger(index) || index < 0) {
+      return
+    }
+
+    const nextFiles = (this.data[field] || []).slice()
+    nextFiles.splice(index, 1)
+    this.setData({
+      [field]: nextFiles
+    })
+  },
+
+  normalizeUploadEventFiles(event) {
+    const detail = event && event.detail
+    if (detail && Array.isArray(detail.files)) {
+      return detail.files
+    }
+
+    if (Array.isArray(detail)) {
+      return detail
+    }
+
+    return []
+  },
+
+  createPendingUploadFile(file, kind, index) {
+    return {
+      ...file,
+      name: file.name || this.getFileNameFromPath(file.url) || `${kind === 'image' ? '图片' : '附件'}${index + 1}`,
+      sizeText: this.formatFileSize(file.size),
+      percent: 0,
+      status: 'loading',
+      _uploadId: `${Date.now()}_${Math.random().toString(36).slice(2, 10)}_${index}`,
+      _uploadKind: kind
+    }
+  },
+
+  async uploadSelectedFiles(field, folder, files) {
+    const uploaded = []
+    const failed = []
+
+    for (let index = 0; index < files.length; index += 1) {
+      const file = files[index]
+
+      try {
+        const cloudPath = this.buildCloudPath(folder, file, index)
+        const result = await uploadFile(file.url, cloudPath)
+        uploaded.push({
+          ...file,
+          percent: 100,
+          status: 'done',
+          localPath: file.localPath || file.url,
+          file_id: result.fileID,
+          sizeText: this.formatFileSize(file.size),
+          file_name: file.name || this.getFileNameFromPath(file.url)
+        })
+      } catch (error) {
+        console.error('[task-edit] uploadSelectedFiles error:', error)
+        failed.push({
+          ...file,
+          percent: 0,
+          status: 'failed'
+        })
+      }
+    }
+
+    this.replaceUploadFiles(field, uploaded.concat(failed))
+
+    if (failed.length) {
+      Toast.showToast(`${failed.length} 个${field === 'imageFiles' ? '图片' : '附件'}上传失败，可移除后重试`)
+      return
+    }
+
+    if (uploaded.length) {
+      Toast.showSuccess(`${uploaded.length} 个${field === 'imageFiles' ? '图片' : '附件'}上传成功`, 1500)
+    }
+  },
+
+  replaceUploadFiles(field, changedFiles) {
+    const changedMap = changedFiles.reduce((result, item) => {
+      if (item && item._uploadId) {
+        result[item._uploadId] = item
+      }
+      return result
+    }, {})
+
+    const nextFiles = (this.data[field] || []).map((item) => changedMap[item._uploadId] || item)
+
+    this.setData({
+      [field]: nextFiles
+    })
+  },
+
+  buildCloudPath(folder, file, index) {
+    const extension = this.getFileExtension(file.url || file.name)
+    const fileName = `${Date.now()}-${index}-${Math.random().toString(36).slice(2, 8)}${extension}`
+    const date = new Date()
+    const month = `${date.getMonth() + 1}`.padStart(2, '0')
+    const day = `${date.getDate()}`.padStart(2, '0')
+
+    return `tasks/${folder}/${date.getFullYear()}${month}${day}/${fileName}`
+  },
+
+  getFileExtension(filePath = '') {
+    const value = String(filePath || '')
+    const index = value.lastIndexOf('.')
+    if (index < 0) {
+      return ''
+    }
+
+    return value.slice(index)
+  },
+
+  getFileNameFromPath(filePath = '') {
+    const value = String(filePath || '')
+    const parts = value.split(/[\\/]/)
+    return parts[parts.length - 1] || ''
+  },
+
+  formatFileSize(size) {
+    const value = Number(size || 0)
+    if (!value) {
+      return '未知大小'
+    }
+
+    if (value < 1024) {
+      return `${value} B`
+    }
+
+    if (value < 1024 * 1024) {
+      return `${(value / 1024).toFixed(1)} KB`
+    }
+
+    if (value < 1024 * 1024 * 1024) {
+      return `${(value / (1024 * 1024)).toFixed(1)} MB`
+    }
+
+    return `${(value / (1024 * 1024 * 1024)).toFixed(1)} GB`
+  },
+
+  isAllowedAttachment(file = {}) {
+    const name = file.name || this.getFileNameFromPath(file.url)
+    const extension = this.getFileExtension(name).replace('.', '').toLowerCase()
+
+    if (!extension) {
+      return false
+    }
+
+    return FILE_ALLOWED_TYPES.includes(extension)
+  },
+
+  async onPreviewFile(e) {
+    const { index } = e.currentTarget.dataset
+    const file = this.data.fileFiles[Number(index)]
+
+    if (!file) {
+      return
+    }
+
+    if (file.status === 'loading') {
+      Toast.showToast('附件上传中，请稍后预览')
+      return
+    }
+
+    if (file.status === 'failed') {
+      Toast.showToast('该附件上传失败，请移除后重新上传')
+      return
+    }
+
+    Toast.showLoading('正在打开附件...')
+
+    try {
+      const filePath = await this.resolvePreviewFilePath(file)
+      await this.openDocument(filePath)
+      Toast.hideLoading()
+    } catch (error) {
+      console.error('[task-edit] onPreviewFile error:', error)
+      Toast.hideLoading()
+      Toast.showToast('附件预览失败')
+    }
+  },
+
+  async resolvePreviewFilePath(file = {}) {
+    if (file.localPath) {
+      return file.localPath
+    }
+
+    if (file.url && !/^https?:\/\//i.test(file.url) && !/^cloud:\/\//i.test(file.url)) {
+      return file.url
+    }
+
+    if (file.file_id) {
+      const result = await this.downloadCloudFile(file.file_id)
+      this.updateFilePreviewPath(file, result.tempFilePath)
+      return result.tempFilePath
+    }
+
+    if (file.url && /^https?:\/\//i.test(file.url)) {
+      const result = await this.downloadHttpFile(file.url)
+      this.updateFilePreviewPath(file, result.tempFilePath)
+      return result.tempFilePath
+    }
+
+    throw new Error('无可用预览地址')
+  },
+
+  downloadCloudFile(fileId) {
+    return new Promise((resolve, reject) => {
+      wx.cloud.downloadFile({
+        fileID: fileId,
+        success: resolve,
+        fail: reject
+      })
+    })
+  },
+
+  downloadHttpFile(url) {
+    return new Promise((resolve, reject) => {
+      wx.downloadFile({
+        url,
+        success: (res) => {
+          if (res.statusCode >= 200 && res.statusCode < 300) {
+            resolve({
+              tempFilePath: res.tempFilePath
+            })
+            return
+          }
+
+          reject(new Error(`download failed: ${res.statusCode}`))
+        },
+        fail: reject
+      })
+    })
+  },
+
+  updateFilePreviewPath(file, localPath) {
+    const targetUploadId = file._uploadId
+    const targetFileId = file.file_id
+    const nextFiles = this.data.fileFiles.map((item) => {
+      if ((targetUploadId && item._uploadId === targetUploadId) || (targetFileId && item.file_id === targetFileId)) {
+        return {
+          ...item,
+          localPath
+        }
+      }
+
+      return item
+    })
+
+    this.setData({
+      fileFiles: nextFiles
+    })
+  },
+
+  openDocument(filePath) {
+    return new Promise((resolve, reject) => {
+      wx.openDocument({
+        filePath,
+        showMenu: true,
+        success: resolve,
+        fail: reject
+      })
+    })
+  },
+
   onTaskTypeSelect(e) {
     const { value } = e.currentTarget.dataset
     if (!value || value === this.data.taskForm.task_type) {
@@ -535,6 +983,7 @@ Page({
 
   validateForm() {
     const { taskForm } = this.data
+    const allUploadFiles = this.data.imageFiles.concat(this.data.fileFiles)
 
     if (!taskForm.title.trim()) {
       Toast.showToast('请填写任务标题')
@@ -566,6 +1015,16 @@ Page({
       return false
     }
 
+    if (allUploadFiles.some((item) => item.status === 'loading')) {
+      Toast.showToast('附件上传中，请稍后再保存')
+      return false
+    }
+
+    if (allUploadFiles.some((item) => item.status === 'failed')) {
+      Toast.showToast('存在上传失败的附件，请移除后重试')
+      return false
+    }
+
     return true
   },
 
@@ -586,8 +1045,16 @@ Page({
       status: taskForm.status,
       deadline_date: taskForm.deadline_date,
       deadline_time: taskForm.deadline_time,
-      images: [],
-      files: []
+      images: this.data.imageFiles
+        .filter((item) => item.status === 'done' && item.file_id)
+        .map((item) => item.file_id),
+      files: this.data.fileFiles
+        .filter((item) => item.status === 'done' && item.file_id)
+        .map((item) => ({
+          file_id: item.file_id,
+          file_name: item.file_name || item.name || this.getFileNameFromPath(item.url),
+          file_size: Number(item.size || 0)
+        }))
     }
   },
 
