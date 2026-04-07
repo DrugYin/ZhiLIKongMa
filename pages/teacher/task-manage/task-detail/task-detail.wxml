@@ -1,2 +1,88 @@
-<!--pages/teacher/task-manage/task-detail/task-detail.wxml-->
-<text>pages/teacher/task-manage/task-detail/task-detail.wxml</text>
+<view class="container">
+  <view class="header">
+    <custom-navbar title="任务详情" showBack="{{true}}" placeholder="{{true}}" />
+  </view>
+
+  <scroll-view class="content" scroll-y enhanced>
+    <view wx:if="{{loading}}" class="state-card">
+      <text class="state-title">任务详情加载中</text>
+      <text class="state-desc">正在同步任务内容、范围和发布时间。</text>
+    </view>
+
+    <block wx:elif="{{taskInfo}}">
+      <view class="hero-card">
+        <view class="hero-title-row">
+          <view class="hero-title-group">
+            <text class="hero-title">{{taskInfo.titleText}}</text>
+            <text class="hero-subtitle">{{taskInfo.projectText}} · {{taskInfo.taskTypeText}}</text>
+          </view>
+          <text class="status-tag {{taskInfo.statusClass}}">{{taskInfo.statusText}}</text>
+        </view>
+
+        <view class="tag-row">
+          <text class="plain-tag">{{taskInfo.visibilityText}}</text>
+          <text class="plain-tag" style="{{taskInfo.difficultyStyle}}">{{taskInfo.difficultyText}}</text>
+          <text class="plain-tag plain-tag-light">{{taskInfo.pointsText}}</text>
+        </view>
+
+        <text class="hero-desc">{{taskInfo.descriptionText}}</text>
+
+        <view class="hero-actions">
+          <button class="ghost-btn" bindtap="goToEditTask">编辑任务</button>
+          <button class="danger-btn" bindtap="onDeleteTask">删除任务</button>
+        </view>
+      </view>
+
+      <view class="section-card">
+        <text class="section-title">基础信息</text>
+        <view class="summary-grid">
+          <view class="summary-item">
+            <text class="summary-label">所属对象</text>
+            <text class="summary-value">{{taskInfo.classText}}</text>
+          </view>
+          <view class="summary-item">
+            <text class="summary-label">截止时间</text>
+            <text class="summary-value">{{taskInfo.deadlineText}}</text>
+          </view>
+          <view class="summary-item">
+            <text class="summary-label">发布时间</text>
+            <text class="summary-value">{{taskInfo.publishTimeText}}</text>
+          </view>
+          <view class="summary-item">
+            <text class="summary-label">更新时间</text>
+            <text class="summary-value">{{taskInfo.updateTimeText}}</text>
+          </view>
+          <view class="summary-item">
+            <text class="summary-label">创建时间</text>
+            <text class="summary-value">{{taskInfo.createTimeText}}</text>
+          </view>
+          <view class="summary-item">
+            <text class="summary-label">素材数量</text>
+            <text class="summary-value">{{taskInfo.imageCountText}} / {{taskInfo.fileCountText}}</text>
+          </view>
+        </view>
+      </view>
+
+      <view class="section-card">
+        <text class="section-title">任务说明</text>
+        <view class="detail-panel">
+          <text class="detail-desc">{{taskInfo.descriptionText}}</text>
+        </view>
+      </view>
+
+      <view class="section-card">
+        <text class="section-title">附件情况</text>
+        <view class="detail-panel detail-panel-soft">
+          <text class="detail-desc">{{taskInfo.attachmentText}}</text>
+        </view>
+      </view>
+    </block>
+
+    <view wx:else class="state-card">
+      <text class="state-title">任务内容暂不可用</text>
+      <text class="state-desc">可能是任务已删除，或者当前账号暂时没有查看权限。</text>
+    </view>
+
+    <view class="footer-placeholder"></view>
+  </scroll-view>
+</view>
