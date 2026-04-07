@@ -12,7 +12,10 @@ Page({
     classId: '',
     loading: true,
     classInfo: null,
+    applications: [],
     members: [],
+    reviewingApplicationId: '',
+    reviewAction: '',
     memberStats: {
       total: 0,
       totalPoints: 0,
@@ -79,15 +82,18 @@ Page({
     })
 
     try {
-      const [classInfo, members] = await Promise.all([
+      const [classInfo, applications, members] = await Promise.all([
         this.loadClassDetail(),
+        this.loadApplications(),
         this.loadMembers()
       ])
 
+      const formattedApplications = applications.map((item, index) => this.formatApplicationItem(item, index))
       const formattedMembers = members.map((item, index) => this.formatMemberItem(item, index))
 
       this.setData({
-        classInfo: this.formatClassInfo(classInfo, formattedMembers.length),
+        classInfo: this.formatClassInfo(classInfo, formattedMembers.length, formattedApplications.length),
+        applications: formattedApplications,
         members: formattedMembers,
         memberStats: this.buildMemberStats(formattedMembers),
         taskSummary: this.buildTaskSummary(classInfo)
@@ -114,6 +120,27 @@ Page({
     return ClassService.getClassDetail(this.data.classId)
   },
 
+  async loadApplications() {
+    let page = 1
+    let hasMore = true
+    const result = []
+
+    while (hasMore) {
+      const response = await ClassService.getClassApplications({
+        class_id: this.data.classId,
+        page,
+        page_size: 50
+      })
+      const list = Array.isArray(response.list) ? response.list : []
+
+      result.push(...list)
+      hasMore = Boolean(response.has_more)
+      page += 1
+    }
+
+    return result
+  },
+
   async loadMembers() {
     let page = 1
     let hasMore = true
@@ -135,9 +162,10 @@ Page({
     return result
   },
 
-  formatClassInfo(item = {}, memberTotal = 0) {
+  formatClassInfo(item = {}, memberTotal = 0, applicationTotal = 0) {
     const memberCount = Number(item.member_count || memberTotal || 0)
     const maxMembers = Number(item.max_members || 0)
+    const pendingCount = Number(item.pending_application_count || applicationTotal || 0)
     const usageRate = maxMembers > 0
       ? Math.min(100, Math.round((memberCount / maxMembers) * 100))
       : 0
@@ -149,7 +177,8 @@ Page({
       teacherName: item.teacher_name || '待补充',
       classCode: item.class_code || '--',
       memberText: maxMembers > 0 ? `${memberCount}/${maxMembers} 人` : `${memberCount} 人`,
-      pendingText: `${Number(item.pending_application_count || 0)} 条`,
+      pendingCount,
+      pendingText: `${pendingCount} 条`,
       classTimeText: item.class_time || '未设置上课时间',
       locationText: item.location || '未设置上课地点',
       descriptionText: item.description || '暂无班级说明',
@@ -158,6 +187,19 @@ Page({
       usageRateText: `${usageRate}%`,
       statusText: item.status === 'active' ? '进行中' : '已停用',
       statusClass: item.status === 'active' ? 'status-active' : 'status-inactive'
+    }
+  },
+
+  formatApplicationItem(item = {}, index = 0) {
+    return {
+      ...item,
+      displayName: item.student_name || item.student_user_name || item.student_nick_name || `申请学生${index + 1}`,
+      avatar: item.student_avatar || '/assets/default-avatar.png',
+      gradeText: item.student_grade || '未填写年级',
+      phoneText: formatUtils.formatPhone(item.student_phone) || '未填写电话',
+      applyReasonText: item.apply_reason || '未填写申请理由',
+      createTimeText: this.formatDateTime(item.create_time),
+      relativeTimeText: item.create_time ? formatUtils.formatRelativeTime(item.create_time) : '刚刚'
     }
   },
 
@@ -286,6 +328,46 @@ Page({
       Toast.showToast(error.message || '移除成员失败')
     } finally {
       this._removing = false
+    }
+  },
+
+  async onReviewApplication(e) {
+    const { applicationId, action, studentName } = e.currentTarget.dataset
+
+    if (!applicationId || !['approve', 'reject'].includes(action) || this.data.reviewingApplicationId) {
+      return
+    }
+
+    const actionText = action === 'approve' ? '通过' : '拒绝'
+    const confirmed = await Toast.confirm(`确认${actionText}“${studentName || '该学生'}”的入班申请吗？`)
+
+    if (!confirmed) {
+      return
+    }
+
+    this.setData({
+      reviewingApplicationId: applicationId,
+      reviewAction: action
+    })
+    Toast.showLoading(`正在${actionText}申请...`)
+
+    try {
+      await ClassService.handleApplication({
+        application_id: applicationId,
+        action
+      })
+      Toast.hideLoading()
+      await Toast.showSuccess(`${actionText}成功`)
+      await this.initPage({ silent: true })
+    } catch (error) {
+      console.error('[class-detail] onReviewApplication error:', error)
+      Toast.hideLoading()
+      Toast.showToast(error.message || `${actionText}申请失败`)
+    } finally {
+      this.setData({
+        reviewingApplicationId: '',
+        reviewAction: ''
+      })
     }
   },
 

@@ -109,6 +109,10 @@ const classApi = {
     return callFunction({ name: 'handle-join-application', data });
   },
 
+  getClassApplications(data) {
+    return callFunction({ name: 'get-class-applications', data });
+  },
+
   getClassMembers(data) {
     return callFunction({ name: 'get-class-members', data });
   },
