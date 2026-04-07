@@ -86,6 +86,11 @@
     </view>
   </view>
 </view>
+<t-back-top
+  theme="round"
+  text="返回顶部"
+  visibility-height="0"
+/>
 <t-fab
   y-bounds="{{[50, 100]}}"
   using-custom-navbar

@@ -20,8 +20,6 @@
       <view class="user-info">
         <text class="user-name">{{userInfo.userName || '学员'}}</text>
         <view class="user-rank">
-          <text class="rank-badge">{{userInfo.rank || '游隼'}}</text>
-          <text class="rank-separator">｜</text>
           <text class="rank-points">总积分：{{userInfo.points || 0}}</text>
         </view>
         <view class="weekly-rank">

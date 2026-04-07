@@ -1,6 +1,8 @@
 /* pages/teacher/class-manage/class-manage.wxss */
 .header {
+  position: fixed;
   width: 100%;
+  z-index: 100;
 }
 
 .navbar-wrapper {

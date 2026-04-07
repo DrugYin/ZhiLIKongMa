@@ -3,6 +3,7 @@
   "usingComponents": {
     "custom-navbar": "/components/custom-navbar/index",
     "t-input": "tdesign-miniprogram/input/input",
-    "t-button": "tdesign-miniprogram/button/button"
+    "t-button": "tdesign-miniprogram/button/button",
+    "t-back-top": "tdesign-miniprogram/back-top/back-top"
   }
 }
