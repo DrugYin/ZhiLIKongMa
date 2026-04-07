@@ -11,6 +11,14 @@ async function getCurrentUser(openid) {
   return res.data[0] || null;
 }
 
+async function getMembership(classId, openid) {
+  const res = await db.collection('class_memberships').where({
+    class_id: classId,
+    student_openid: openid
+  }).limit(1).get();
+  return res.data[0] || null;
+}
+
 async function writeOperationLog(openid, userType, action, targetId, detail, now) {
   try {
     await db.collection('operation_logs').add({
@@ -52,14 +60,6 @@ exports.main = async (event) => {
       };
     }
 
-    if (user.class_id) {
-      return {
-        success: false,
-        message: '你已加入班级，不能重复申请',
-        error_code: 409
-      };
-    }
-
     const classRes = await db.collection('classes').where({
       class_code: classCode,
       status: 'active'
@@ -74,6 +74,15 @@ exports.main = async (event) => {
       };
     }
 
+    const currentMembership = await getMembership(classInfo._id, OPENID);
+    if ((user && user.class_id === classInfo._id) || currentMembership) {
+      return {
+        success: false,
+        message: '你已加入当前班级，请勿重复申请',
+        error_code: 409
+      };
+    }
+
     if (classInfo.member_count >= classInfo.max_members) {
       return {
         success: false,
@@ -84,6 +93,7 @@ exports.main = async (event) => {
 
     const pendingRes = await db.collection('class_join_applications').where({
       student_openid: OPENID,
+      class_id: classInfo._id,
       status: 'pending'
     }).count();
 

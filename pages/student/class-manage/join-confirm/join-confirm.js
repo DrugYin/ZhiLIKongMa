@@ -12,8 +12,10 @@ Page({
     isRegistered: false,
     userStatus: 'guest',
     inviteInfo: null,
-    pendingApplication: null,
-    joinedClass: null,
+    pendingApplications: [],
+    joinedClasses: [],
+    hasJoinedCurrentClass: false,
+    hasPendingCurrentApplication: false,
     applyReason: '',
     pageError: ''
   },
@@ -94,21 +96,35 @@ Page({
         isLoggedIn: false,
         isRegistered: false,
         userStatus: 'guest',
-        pendingApplication: null,
-        joinedClass: null
+        pendingApplications: [],
+        joinedClasses: [],
+        hasJoinedCurrentClass: false,
+        hasPendingCurrentApplication: false
       });
       return;
     }
 
     const statusInfo = await ClassService.getMyClassStatus();
     const isRegistered = statusInfo.is_registered !== false;
+    const pendingApplications = (statusInfo.pending_applications || []).map((item) => this.formatPendingApplication(item));
+    const joinedClasses = (statusInfo.joined_classes || []).map((item) => this.formatJoinedClass(item));
+    const targetClassId = this.data.inviteInfo ? this.data.inviteInfo._id : '';
+    const targetClassCode = this.data.classCode;
+    const hasJoinedCurrentClass = joinedClasses.some((item) => (
+      (targetClassId && item._id === targetClassId) || item.class_code === targetClassCode
+    ));
+    const hasPendingCurrentApplication = pendingApplications.some((item) => (
+      (targetClassId && item.class_id === targetClassId) || item.class_code === targetClassCode
+    ));
 
     this.setData({
       isLoggedIn: true,
       isRegistered,
       userStatus: isRegistered ? (statusInfo.status || 'none') : 'guest',
-      pendingApplication: this.formatPendingApplication(statusInfo.pending_application),
-      joinedClass: this.formatJoinedClass(statusInfo.joined_class)
+      pendingApplications,
+      joinedClasses,
+      hasJoinedCurrentClass,
+      hasPendingCurrentApplication
     });
   },
 
@@ -181,13 +197,13 @@ Page({
       return;
     }
 
-    if (this.data.userStatus === 'joined') {
-      Toast.showToast('你已经加入班级');
+    if (this.data.hasJoinedCurrentClass) {
+      Toast.showToast('你已经加入当前班级');
       return;
     }
 
-    if (this.data.userStatus === 'pending') {
-      Toast.showToast('你已有待审核申请');
+    if (this.data.hasPendingCurrentApplication) {
+      Toast.showToast('你已提交过当前班级的申请');
       return;
     }
 

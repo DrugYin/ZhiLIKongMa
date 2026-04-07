@@ -65,19 +65,25 @@
         <t-button theme="primary" size="large" block bind:tap="goLogin">先登录再申请</t-button>
       </view>
 
-      <view wx:elif="{{userStatus === 'joined'}}" class="section-card">
-        <text class="section-title">你已经加入班级</text>
-        <text class="section-desc">当前账号已经在班级中，无需重复申请。</text>
+      <view wx:elif="{{hasJoinedCurrentClass}}" class="section-card">
+        <text class="section-title">你已经加入当前班级</text>
+        <text class="section-desc">当前账号已经是这个班级的成员，无需重复申请。</text>
         <t-button theme="primary" size="large" block bind:tap="goToClassManage">返回班级管理</t-button>
       </view>
 
-      <view wx:elif="{{userStatus === 'pending'}}" class="section-card">
-        <text class="section-title">已有待审核申请</text>
-        <text class="section-desc">你当前已有待审核的入班申请，请等待老师处理后再尝试新的申请。</text>
+      <view wx:elif="{{hasPendingCurrentApplication}}" class="section-card">
+        <text class="section-title">当前班级已申请</text>
+        <text class="section-desc">你已经提交过当前班级的入班申请，请等待老师审核。</text>
         <t-button theme="primary" size="large" block bind:tap="goToClassManage">查看当前状态</t-button>
       </view>
 
       <view wx:else class="section-card">
+        <view wx:if="{{joinedClasses.length || pendingApplications.length}}" class="status-hint-card">
+          <text class="status-hint-title">当前账号状态</text>
+          <text class="status-hint-text">已加入班级 {{joinedClasses.length}} 个，待审核申请 {{pendingApplications.length}} 条。</text>
+          <text class="status-hint-text">这些记录不会影响你继续申请当前班级。</text>
+        </view>
+
         <text class="section-title">申请理由</text>
         <text class="section-desc">可选填写，让老师更快确认你的身份。</text>
 

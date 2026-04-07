@@ -9,9 +9,12 @@ Page({
     isLoggedIn: false,
     isRegistered: false,
     inviteCode: '',
-    status: 'guest',
-    joinedClass: null,
-    pendingApplication: null
+    joinedClasses: [],
+    pendingApplications: [],
+    stats: {
+      joinedCount: 0,
+      pendingCount: 0
+    }
   },
 
   onLoad() {
@@ -40,9 +43,12 @@ Page({
     if (!isLoggedIn) {
       this.setData({
         loading: false,
-        status: 'guest',
-        joinedClass: null,
-        pendingApplication: null
+        joinedClasses: [],
+        pendingApplications: [],
+        stats: {
+          joinedCount: 0,
+          pendingCount: 0
+        }
       });
       wx.stopPullDownRefresh();
       return;
@@ -55,12 +61,21 @@ Page({
     try {
       const statusInfo = await ClassService.getMyClassStatus();
       const isRegistered = statusInfo.is_registered !== false;
+      const joinedClasses = isRegistered
+        ? (statusInfo.joined_classes || []).map((item) => this.formatJoinedClass(item))
+        : [];
+      const pendingApplications = isRegistered
+        ? (statusInfo.pending_applications || []).map((item) => this.formatPendingApplication(item))
+        : [];
 
       this.setData({
         isRegistered,
-        status: isRegistered ? (statusInfo.status || 'none') : 'guest',
-        joinedClass: isRegistered ? this.formatJoinedClass(statusInfo.joined_class) : null,
-        pendingApplication: isRegistered ? this.formatPendingApplication(statusInfo.pending_application) : null
+        joinedClasses,
+        pendingApplications,
+        stats: {
+          joinedCount: joinedClasses.length,
+          pendingCount: pendingApplications.length
+        }
       });
 
       this._pageReady = true;
@@ -143,16 +158,6 @@ Page({
       return;
     }
 
-    if (this.data.status === 'joined') {
-      Toast.showToast('你已加入班级');
-      return;
-    }
-
-    if (this.data.status === 'pending') {
-      Toast.showToast('你已有待审核申请');
-      return;
-    }
-
     if (!this.data.inviteCode) {
       Toast.showToast('请输入老师提供的邀请码');
       return;
@@ -163,8 +168,8 @@ Page({
     });
   },
 
-  onCopyClassCode() {
-    const classCode = this.data.joinedClass ? this.data.joinedClass.class_code : '';
+  onCopyClassCode(e) {
+    const classCode = String(e.currentTarget.dataset.classCode || '');
 
     if (!classCode) {
       Toast.showToast('暂无邀请码');
