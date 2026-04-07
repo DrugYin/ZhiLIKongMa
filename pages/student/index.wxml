@@ -84,7 +84,7 @@
         <view class="action-icon">📋</view>
         <text class="action-name">任务中心</text>
       </view>
-      <view class="action-item" bind:tap="goToBadgeWall">
+      <view class="action-item" bind:tap="goToClass">
         <view class="action-icon">🎓</view>
         <text class="action-name">我的班级</text>
       </view>

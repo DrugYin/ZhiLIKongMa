@@ -212,13 +212,11 @@ Page({
   },
 
   /**
-   * 跳转到徽章墙
+   * 跳转到班级
    */
-  goToBadgeWall() {
-    // TODO: 跳转到徽章墙页面
-    wx.showToast({
-      title: '功能开发中',
-      icon: 'none'
+  goToClass() {
+    wx.navigateTo({
+      url: '/pages/student/class-manage/class-manage'
     })
   }
 })
