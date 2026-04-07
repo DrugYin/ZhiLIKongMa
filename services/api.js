@@ -138,6 +138,14 @@ const taskApi = {
     return callFunction({ name: 'get-task-detail', data: { task_id } });
   },
 
+  updateTask(data) {
+    return callFunction({ name: 'update-task', data });
+  },
+
+  deleteTask(task_id) {
+    return callFunction({ name: 'delete-task', data: { task_id } });
+  },
+
   submitTask(data) {
     return callFunction({ name: 'submit-task', data });
   },
