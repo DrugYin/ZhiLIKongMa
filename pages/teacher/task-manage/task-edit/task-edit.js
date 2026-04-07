@@ -1081,9 +1081,13 @@ Page({
       const taskId = result && result._id
       if (taskId) {
         setTimeout(() => {
-          wx.redirectTo({
-            url: `/pages/teacher/task-manage/task-detail/task-detail?task_id=${taskId}`
-          })
+          if (this.data.isEdit) {
+            wx.navigateBack()
+          } else {
+            wx.redirectTo({
+              url: `/pages/teacher/task-manage/task-detail/task-detail?task_id=${taskId}`
+            })
+          }
         }, 800)
       }
     } catch (error) {
