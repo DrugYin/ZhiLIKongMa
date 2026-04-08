@@ -145,15 +145,16 @@
         </view>
 
         <view class="task-placeholder">
-          <text class="task-placeholder-title">任务列表入口已预留</text>
+          <text class="task-placeholder-title">班级任务入口已开放</text>
           <text class="task-placeholder-desc">
-            当前任务与班级联动的学生侧业务还在建设中，后续会在这里展示任务清单、截止时间和完成进度。
+            现在可以从这里进入学生端任务列表，查看当前班级相关任务的要求、图片和附件内容。
           </text>
           <view class="tip-list">
-            <text class="tip-item">1. 将支持按发布时间查看班级任务。</text>
-            <text class="tip-item">2. 将支持查看每个任务的状态、要求和截止时间。</text>
-            <text class="tip-item">3. 将支持从这里直接进入任务详情和提交页面。</text>
+            <text class="tip-item">1. 支持查看当前班级的任务清单与截止时间。</text>
+            <text class="tip-item">2. 支持进入任务详情查看图片、附件和基础说明。</text>
+            <text class="tip-item">3. 后续会继续接入任务提交与完成进度。</text>
           </view>
+          <button class="primary-btn state-btn" bindtap="goToTaskList">查看本班任务</button>
         </view>
       </view>
     </block>

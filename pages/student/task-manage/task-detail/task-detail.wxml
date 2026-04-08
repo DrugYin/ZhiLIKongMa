@@ -1,0 +1,128 @@
+<view class="container">
+  <view class="header">
+    <custom-navbar title="任务详情" showBack="{{true}}" placeholder="{{true}}" />
+  </view>
+
+  <scroll-view class="content" scroll-y enhanced>
+    <view wx:if="{{loading}}" class="state-card">
+      <text class="state-title">任务详情加载中</text>
+      <text class="state-desc">正在同步任务说明、图片和附件内容。</text>
+    </view>
+
+    <block wx:elif="{{taskInfo}}">
+      <view class="hero-card">
+        <view class="hero-title-row">
+          <view class="hero-title-group">
+            <text class="hero-title">{{taskInfo.titleText}}</text>
+            <text class="hero-subtitle">{{taskInfo.projectText}} · {{taskInfo.taskTypeText}}</text>
+          </view>
+        </view>
+
+        <view class="tag-row">
+          <text class="plain-tag">{{taskInfo.visibilityText}}</text>
+          <text class="plain-tag" style="{{taskInfo.difficultyStyle}}">{{taskInfo.difficultyText}}</text>
+          <text class="plain-tag plain-tag-light">{{taskInfo.pointsText}}</text>
+        </view>
+
+        <text class="hero-desc">{{taskInfo.descriptionText}}</text>
+      </view>
+
+      <view class="section-card">
+        <text class="section-title">基础信息</text>
+        <view class="summary-grid">
+          <view class="summary-item">
+            <text class="summary-label">所属对象</text>
+            <text class="summary-value">{{taskInfo.classText}}</text>
+          </view>
+          <view class="summary-item">
+            <text class="summary-label">发布老师</text>
+            <text class="summary-value">{{taskInfo.teacherText}}</text>
+          </view>
+          <view class="summary-item">
+            <text class="summary-label">截止时间</text>
+            <text class="summary-value">{{taskInfo.deadlineText}}</text>
+          </view>
+          <view class="summary-item">
+            <text class="summary-label">发布时间</text>
+            <text class="summary-value">{{taskInfo.publishTimeText}}</text>
+          </view>
+          <view class="summary-item">
+            <text class="summary-label">更新时间</text>
+            <text class="summary-value">{{taskInfo.updateTimeText}}</text>
+          </view>
+          <view class="summary-item">
+            <text class="summary-label">素材数量</text>
+            <text class="summary-value">{{taskInfo.imageCountText}} / {{taskInfo.fileCountText}}</text>
+          </view>
+        </view>
+      </view>
+
+      <view class="section-card">
+        <view class="section-head">
+          <text class="section-title">任务说明</text>
+          <text class="section-subtitle">提交业务接入后会继续在这里展示完成状态</text>
+        </view>
+        <view class="detail-panel">
+          <text class="detail-desc">{{taskInfo.descriptionText}}</text>
+        </view>
+      </view>
+
+      <view class="section-card">
+        <view class="section-head">
+          <text class="section-title">任务图片</text>
+          <text class="section-subtitle">{{taskInfo.imageCountText}}</text>
+        </view>
+
+        <view wx:if="{{taskInfo.imageList.length}}" class="image-grid">
+          <image
+            wx:for="{{taskInfo.imageList}}"
+            wx:key="fileId"
+            class="task-image"
+            src="{{item.url}}"
+            mode="aspectFill"
+            data-index="{{index}}"
+            bindtap="onPreviewImage"
+          />
+        </view>
+
+        <view wx:else class="detail-panel detail-panel-soft">
+          <text class="detail-desc">当前任务还没有配置图片素材。</text>
+        </view>
+      </view>
+
+      <view class="section-card">
+        <view class="section-head">
+          <text class="section-title">附件情况</text>
+          <text class="section-subtitle">{{taskInfo.fileCountText}}</text>
+        </view>
+
+        <view wx:if="{{taskInfo.attachmentFiles.length}}" class="file-list">
+          <view
+            wx:for="{{taskInfo.attachmentFiles}}"
+            wx:key="file_id"
+            class="file-row"
+            data-index="{{index}}"
+            bindtap="onPreviewFile"
+          >
+            <view class="file-main">
+              <text class="file-name">{{item.file_name || item.name}}</text>
+              <text class="file-meta">点击预览 · {{item.sizeText || '大小待补充'}}</text>
+            </view>
+            <text class="file-preview-text">预览</text>
+          </view>
+        </view>
+
+        <view wx:else class="detail-panel detail-panel-soft">
+          <text class="detail-desc">当前任务还没有配置附件文件。</text>
+        </view>
+      </view>
+    </block>
+
+    <view wx:else class="state-card">
+      <text class="state-title">任务内容暂不可用</text>
+      <text class="state-desc">可能是任务已下线，或者当前账号暂时没有查看权限。</text>
+    </view>
+
+    <view class="footer-placeholder"></view>
+  </scroll-view>
+</view>

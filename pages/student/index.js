@@ -183,11 +183,8 @@ Page({
    * 查看任务详情
    */
   viewTaskDetail() {
-    // TODO: 跳转到任务详情页面
-    // 1. 传递任务ID
-    // 2. 显示任务详细介绍、规则说明等
     wx.navigateTo({
-      url: '/pages/student/training/training'
+      url: '/pages/student/task-manage/task-manage'
     })
   },
 
@@ -204,10 +201,8 @@ Page({
    * 跳转到任务中心
    */
   goToTaskCenter() {
-    // TODO: 跳转到任务中心页面
-    wx.showToast({
-      title: '功能开发中',
-      icon: 'none'
+    wx.navigateTo({
+      url: '/pages/student/task-manage/task-manage'
     })
   },
 

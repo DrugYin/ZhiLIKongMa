@@ -257,6 +257,19 @@ Page({
     });
   },
 
+  goToTaskList() {
+    const query = [`class_id=${encodeURIComponent(this.data.classId)}`];
+    const className = this.data.classInfo && this.data.classInfo.className;
+
+    if (className) {
+      query.push(`class_name=${encodeURIComponent(className)}`);
+    }
+
+    wx.navigateTo({
+      url: `/pages/student/task-manage/task-manage?${query.join('&')}`
+    });
+  },
+
   goBackToClassManage() {
     if (getCurrentPages().length > 1) {
       wx.navigateBack();
