@@ -202,6 +202,25 @@ Page({
     })
   },
 
+  onCopyDescription() {
+    const descriptionText = String(this.data.taskInfo && this.data.taskInfo.descriptionText || '').trim()
+
+    if (!descriptionText || descriptionText === '暂无任务说明') {
+      Toast.showToast('暂无可复制的任务说明')
+      return
+    }
+
+    wx.setClipboardData({
+      data: descriptionText,
+      success: () => {
+        Toast.showSuccess('任务说明已复制', 2000)
+      },
+      fail: () => {
+        Toast.showToast('复制失败，请稍后重试')
+      }
+    })
+  },
+
   onShareAppMessage() {
     const title = this.data.taskInfo ? this.data.taskInfo.titleText : '任务详情'
     return {

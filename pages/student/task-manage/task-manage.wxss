@@ -1,5 +1,4 @@
 .container {
-  min-height: 100vh;
   background: linear-gradient(180deg, #f7f8fa 0%, #eef2f7 100%);
 }
 
@@ -10,9 +9,9 @@
 }
 
 .content {
+  /* height: 90%; */
   box-sizing: border-box;
-  height: calc(100vh - 96rpx);
-  padding: 24rpx;
+  padding: 24rpx 24rpx;
 }
 
 .hero-card,
@@ -216,6 +215,11 @@
   font-weight: 600;
 }
 
+.bottom-tab-bar .tab-card {
+  margin-bottom: 0;
+  box-shadow: 0 16rpx 40rpx rgba(24, 62, 107, 0.12);
+}
+
 .primary-btn,
 .ghost-btn {
   width: 100%;
@@ -250,6 +254,3 @@
   margin-top: 24rpx;
 }
 
-.footer-placeholder {
-  height: 32rpx;
-}

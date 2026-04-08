@@ -60,11 +60,12 @@
       <view class="section-card">
         <view class="section-head">
           <text class="section-title">任务说明</text>
-          <text class="section-subtitle">提交业务接入后会继续在这里展示完成状态</text>
+          <button class="ghost-copy-btn" bindtap="onCopyDescription">复制内容</button>
         </view>
         <view class="detail-panel">
           <text class="detail-desc">{{taskInfo.descriptionText}}</text>
         </view>
+        <text class="section-tip">提交业务接入后会继续在这里展示完成状态</text>
       </view>
 
       <view class="section-card">

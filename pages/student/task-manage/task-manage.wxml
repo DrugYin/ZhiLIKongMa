@@ -49,18 +49,6 @@
         </view>
       </view>
 
-      <view class="tab-card">
-        <view class="tab-header">
-          <text class="tab-title">任务分类</text>
-          <text class="tab-desc">{{isRegistered ? '根据你已加入的班级自动筛选' : '未加入班级时仅显示公开任务'}}</text>
-        </view>
-        <t-tab-bar value="{{currentTab}}" bindchange="onTabChange" theme="tag" fixed="{{false}}" split="{{false}}">
-          <t-tab-bar-item wx:for="{{tabs}}" wx:key="value" value="{{item.value}}">
-            {{item.label}}
-          </t-tab-bar-item>
-        </t-tab-bar>
-      </view>
-
       <view wx:if="{{displayTasks.length}}" class="task-list">
         <view
           wx:for="{{displayTasks}}"
@@ -117,7 +105,19 @@
         <button class="ghost-btn state-btn" bindtap="goBack">返回上一页</button>
       </view>
     </block>
-
-    <view class="footer-placeholder"></view>
   </scroll-view>
+
+  <view wx:if="{{isLoggedIn && !loading}}">
+    <t-tab-bar
+      value="{{currentTab}}"
+      bindchange="onTabChange"
+      theme="tag"
+      split="{{false}}"
+      placeholder
+    >
+      <t-tab-bar-item wx:for="{{tabs}}" wx:key="value" value="{{item.value}}">
+        {{item.label}}
+      </t-tab-bar-item>
+    </t-tab-bar>
+  </view>
 </view>
