@@ -5,6 +5,10 @@
   z-index: 100;
 }
 
+.header-spacer {
+  height: 188rpx;
+}
+
 .navbar-wrapper {
   background-color: rgba(255, 255, 255, 0.96);
   backdrop-filter: blur(18rpx);
@@ -17,7 +21,6 @@
 }
 
 .content {
-  margin-top: 38%;
   padding: 20rpx;
 }
 
