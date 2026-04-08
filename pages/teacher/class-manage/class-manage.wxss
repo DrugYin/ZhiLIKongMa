@@ -1,12 +1,14 @@
 /* pages/teacher/class-manage/class-manage.wxss */
-.header {
-  position: fixed;
-  width: 100%;
-  z-index: 100;
+.container {
+  height: 100vh;
+  min-height: 100vh;
+  overflow: hidden;
 }
 
-.header-spacer {
-  height: 188rpx;
+.header {
+  position: relative;
+  width: 100%;
+  z-index: 100;
 }
 
 .navbar-wrapper {
@@ -21,7 +23,9 @@
 }
 
 .content {
-  padding: 20rpx;
+  flex: 1; 
+  min-height: 0;
+  padding: 0rpx 24rpx 20rpx ;
 }
 
 .class-card,
@@ -33,9 +37,12 @@
 }
 
 .class-card {
-  padding: 28rpx;
+  padding: 30rpx;
+  margin-top: 24rpx;
   margin-bottom: 24rpx;
 }
+
+
 
 .card-top {
   display: flex;

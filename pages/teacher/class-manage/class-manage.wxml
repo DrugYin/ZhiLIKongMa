@@ -5,7 +5,7 @@
       <custom-navbar title="班级管理" showBack="{{true}}" placeholder="{{true}}" />
     </view>
     <view class="dropdown-wrapper">
-      <t-dropdown-menu class="dropdown-menu">
+      <t-dropdown-menu placeholder class="dropdown-menu">
         <t-dropdown-item options="{{projects.options}}" placement="right" value="{{projects.value}}" data-field="projects" bindchange="onDropdownChange" />
         <t-dropdown-item options="{{sorted.options}}" placement="right" value="{{sorted.value}}" data-field="sorted" bindchange="onDropdownChange" />
       </t-dropdown-menu>
@@ -14,7 +14,7 @@
 
   <view class="header-spacer"></view>
 
-  <view class="content">
+  <scroll-view class="content" scroll-y enhanced>
     <view wx:if="{{loading}}" class="state-card">
       <text class="state-title">班级列表加载中</text>
       <text class="state-desc">正在同步最新班级信息，请稍候。</text>
@@ -91,7 +91,7 @@
       theme="round"
       text="返回顶部"
     />
-  </view>
+  </scroll-view>
 </view>
 <t-fab
   y-bounds="{{[50, 100]}}"

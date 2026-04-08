@@ -12,14 +12,14 @@
 .content {
   box-sizing: border-box;
   height: calc(100vh - 96rpx);
-  padding: 24rpx;
+  padding: 0rpx 24rpx calc(24rpx + env(safe-area-inset-bottom));
 }
 
 .hero-card,
 .section-card,
 .state-card,
 .tips-card {
-  margin-bottom: 24rpx;
+  margin-top: 24rpx;
   padding: 28rpx;
   border-radius: 28rpx;
   background: rgba(255, 255, 255, 0.96);
