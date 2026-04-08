@@ -161,15 +161,8 @@
   </scroll-view>
 
   <view class="footer">
-    <t-button
-      theme="primary"
-      size="large"
-      block
-      loading="{{saving}}"
-      disabled="{{loading}}"
-      bind:tap="onSubmit"
-    >
+    <button class="submit-btn" loading="{{saving}}" disabled="{{loading}}" bindtap="onSubmit">
       提交任务
-    </t-button>
+    </button>
   </view>
 </view>
