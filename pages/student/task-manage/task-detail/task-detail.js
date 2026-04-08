@@ -2,6 +2,10 @@ const TaskService = require('../../../../services/task')
 const Toast = require('../../../../utils/toast')
 const formatUtils = require('../../../../utils/format')
 const fileResource = require('../../../../utils/file-resource')
+const {
+  SUBMISSION_STATUS_TEXT,
+  SUBMISSION_STATUS_COLOR
+} = require('../../../../utils/constant')
 
 const TASK_TYPE_TEXT = {
   public: '公开任务',
@@ -33,7 +37,12 @@ Page({
   data: {
     taskId: '',
     loading: true,
-    taskInfo: null
+    taskInfo: null,
+    submissionSummary: {
+      list: [],
+      total: 0,
+      hasMore: false
+    }
   },
 
   onLoad(options) {
@@ -74,7 +83,10 @@ Page({
     })
 
     try {
-      const taskInfo = await TaskService.getTaskDetail(this.data.taskId)
+      const [taskInfo, submissionSummary] = await Promise.all([
+        TaskService.getTaskDetail(this.data.taskId),
+        this.getSubmissionSummary(this.data.taskId)
+      ])
       const [imageInfo, attachmentFiles] = await Promise.all([
         fileResource.buildImagePreviewData(taskInfo.images),
         fileResource.buildAttachmentPreviewFiles(taskInfo.files)
@@ -86,7 +98,8 @@ Page({
           image_list: imageInfo.imageList,
           image_preview_urls: imageInfo.previewUrls,
           attachment_files: attachmentFiles
-        })
+        }),
+        submissionSummary
       })
       this._pageReady = true
     } catch (error) {
@@ -102,6 +115,29 @@ Page({
       }
 
       wx.stopPullDownRefresh()
+    }
+  },
+
+  async getSubmissionSummary(taskId) {
+    try {
+      const response = await TaskService.getSubmissions({
+        task_id: taskId,
+        page: 1,
+        page_size: 2
+      })
+
+      return {
+        list: this.formatSubmissionList(response.list),
+        total: Number(response.total || 0),
+        hasMore: Boolean(response.has_more)
+      }
+    } catch (error) {
+      console.error('[student-task-detail] getSubmissionSummary error:', error)
+      return {
+        list: [],
+        total: 0,
+        hasMore: false
+      }
     }
   },
 
@@ -135,6 +171,30 @@ Page({
       imagePreviewUrls: Array.isArray(item.image_preview_urls) ? item.image_preview_urls : [],
       fileCountText: `${Array.isArray(item.files) ? item.files.length : 0} 个附件`,
       attachmentFiles: Array.isArray(item.attachment_files) ? item.attachment_files : []
+    }
+  },
+
+  formatSubmissionList(list = []) {
+    return (Array.isArray(list) ? list : []).map((item) => this.formatSubmissionItem(item))
+  },
+
+  formatSubmissionItem(item = {}) {
+    const status = item.status || 'pending'
+    const statusColor = SUBMISSION_STATUS_COLOR[status] || '#faad14'
+    const submitNo = Number(item.submit_no || 0)
+    const imageCount = Array.isArray(item.images) ? item.images.length : 0
+    const fileCount = Array.isArray(item.files) ? item.files.length : 0
+
+    return {
+      ...item,
+      submitNoText: submitNo || '--',
+      statusText: SUBMISSION_STATUS_TEXT[status] || '待处理',
+      statusStyle: `color:${statusColor};background:${this.toRgba(statusColor, 0.12)};`,
+      submitTimeText: item.submit_time ? this.formatDateTime(item.submit_time) : '刚刚提交',
+      descriptionText: String(item.description || '').trim() || '本次提交未填写说明',
+      materialText: `${imageCount} 张图片 / ${fileCount} 个附件`,
+      feedbackText: String(item.feedback || '').trim(),
+      scoreText: item.score === null || item.score === undefined ? '待评分' : `${Number(item.score)} 分`
     }
   },
 
@@ -218,6 +278,18 @@ Page({
       fail: () => {
         Toast.showToast('复制失败，请稍后重试')
       }
+    })
+  },
+
+  goSubmitTask() {
+    wx.navigateTo({
+      url: `/pages/student/task-manage/submission-edit/submission-edit?task_id=${this.data.taskId}`
+    })
+  },
+
+  goSubmissionRecords() {
+    wx.navigateTo({
+      url: `/pages/student/task-manage/submission-records/submission-records?task_id=${this.data.taskId}`
     })
   },
 

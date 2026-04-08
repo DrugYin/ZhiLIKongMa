@@ -1,0 +1,175 @@
+<view class="container">
+  <view class="header">
+    <custom-navbar title="提交任务" showBack="{{true}}" placeholder="{{true}}" />
+  </view>
+
+  <scroll-view class="content" scroll-y enhanced bounces="{{false}}" show-scrollbar="{{false}}">
+    <view wx:if="{{loading}}" class="state-card">
+      <text class="state-title">提交页加载中</text>
+      <text class="state-desc">正在同步任务信息和你最近的提交状态。</text>
+    </view>
+
+    <block wx:elif="{{taskInfo}}">
+      <view class="hero-card">
+        <view class="hero-top">
+          <view class="hero-copy">
+            <text class="hero-title">{{taskInfo.titleText}}</text>
+            <text class="hero-desc">{{taskInfo.projectText}} · {{taskInfo.classText}}</text>
+          </view>
+          <text class="hero-tag">{{taskInfo.pointsText}}</text>
+        </view>
+
+        <view class="meta-grid">
+          <view class="meta-item">
+            <text class="meta-label">截止时间</text>
+            <text class="meta-value">{{taskInfo.deadlineText}}</text>
+          </view>
+          <view class="meta-item">
+            <text class="meta-label">发布老师</text>
+            <text class="meta-value">{{taskInfo.teacherText}}</text>
+          </view>
+        </view>
+
+        <text class="hero-tip">
+          {{submissionCount ? '你已提交过 ' + submissionCount + ' 次，本次会作为新的提交记录。' : '这是你的首次提交，建议补充解题思路或完成说明。'}}
+        </text>
+      </view>
+
+      <view wx:if="{{latestSubmission}}" class="summary-card">
+        <view class="section-head">
+          <text class="section-title">最近一次提交</text>
+          <text class="status-tag" style="{{latestSubmission.statusStyle}}">{{latestSubmission.statusText}}</text>
+        </view>
+        <text class="summary-time">第 {{latestSubmission.submitNoText}} 次 · {{latestSubmission.submitTimeText}}</text>
+        <text class="summary-desc">{{latestSubmission.descriptionText}}</text>
+        <view class="summary-meta">
+          <text class="summary-meta-text">{{latestSubmission.materialText}}</text>
+          <text class="summary-meta-text">评分：{{latestSubmission.scoreText}}</text>
+        </view>
+        <view wx:if="{{latestSubmission.feedbackText}}" class="feedback-panel">
+          <text class="feedback-label">教师反馈</text>
+          <text class="feedback-text">{{latestSubmission.feedbackText}}</text>
+        </view>
+        <text class="link-text" bindtap="goToRecords">查看全部提交记录</text>
+      </view>
+
+      <view class="form-card">
+        <view class="section-head">
+          <view>
+            <text class="section-title">提交说明</text>
+            <text class="section-hint">建议写清楚完成结果、思路摘要、遇到的问题或补充说明。</text>
+          </view>
+        </view>
+
+        <view class="textarea-wrapper">
+          <t-textarea
+            autosize
+            indicator
+            maxlength="{{1000}}"
+            placeholder="例如：已完成第 3 周算法热身训练，附上代码截图和思路说明。"
+            value="{{submitForm.description}}"
+            bind:change="onInputChange"
+          />
+        </view>
+      </view>
+
+      <view class="form-card">
+        <view class="section-head">
+          <view>
+            <text class="section-title">提交图片</text>
+            <text class="section-hint">最多 {{imageMax}} 张，可上传截图、手写过程或成品照片。</text>
+          </view>
+          <text class="section-side-text">{{imageFiles.length}} / {{imageMax}}</text>
+        </view>
+
+        <view class="upload-wrapper">
+          <t-upload
+            files="{{imageFiles}}"
+            max="{{imageMax}}"
+            media-type="{{imageMediaType}}"
+            config="{{imageUploadConfig}}"
+            size-limit="{{imageSizeLimit}}"
+            grid-config="{{imageGridConfig}}"
+            draggable
+            bind:add="onImageAdd"
+            bind:remove="onImageRemove"
+          />
+        </view>
+      </view>
+
+      <view class="form-card">
+        <view class="section-head">
+          <view>
+            <text class="section-title">附件文件</text>
+            <text class="section-hint">支持文档、表格、课件和压缩包，最多 {{fileMax}} 个。</text>
+          </view>
+          <text class="section-side-text">{{fileFiles.length}} / {{fileMax}}</text>
+        </view>
+
+        <view class="file-toolbar">
+          <button
+            class="file-add-btn"
+            bindtap="onSelectFiles"
+            disabled="{{fileFiles.length >= fileMax}}"
+          >
+            添加附件
+          </button>
+        </view>
+
+        <view wx:if="{{fileFiles.length}}" class="file-list">
+          <view
+            wx:for="{{fileFiles}}"
+            wx:key="_uploadId"
+            class="file-row"
+            data-index="{{index}}"
+            bindtap="onPreviewFile"
+          >
+            <view class="file-main">
+              <text class="file-name">{{item.file_name || item.name}}</text>
+              <text class="file-meta">
+                {{item.status === 'loading' ? '上传中' : item.status === 'failed' ? '上传失败' : '点击预览'}} · {{item.sizeText || '大小待补充'}}
+              </text>
+            </view>
+            <view class="file-delete" data-index="{{index}}" catchtap="onDeleteFile">×</view>
+          </view>
+        </view>
+
+        <view wx:else class="file-empty">
+          <text class="file-empty-text">还没有添加附件，点击上方按钮即可上传。</text>
+        </view>
+
+        <text class="upload-tip">支持格式：{{fileAcceptText}}</text>
+      </view>
+
+      <view class="tips-card">
+        <text class="section-title">提交提醒</text>
+        <t-divider align="left">提交后会进入教师审核流程</t-divider>
+        <view class="tips-list">
+          <text class="tip-item">1. 若同一任务支持多次提交，系统会保留你的历史记录，最近两次会回显在任务详情页。</text>
+          <text class="tip-item">2. 素材上传完成后再点击提交，避免生成不完整的提交记录。</text>
+          <text class="tip-item">3. 若需要查看更早的提交历史，请进入“提交记录”页面查看。</text>
+        </view>
+      </view>
+    </block>
+
+    <view wx:else class="state-card">
+      <text class="state-title">当前任务暂不可提交</text>
+      <text class="state-desc">任务可能已关闭，或者当前账号暂时没有提交权限。</text>
+    </view>
+
+    <view class="footer-placeholder"></view>
+  </scroll-view>
+
+  <view class="footer">
+    <t-button
+      theme="primary"
+      size="large"
+      block
+      loading="{{saving}}"
+      disabled="{{loading}}"
+      bind:tap="onSubmit"
+    >
+      提交任务
+    </t-button>
+  </view>
+</view>

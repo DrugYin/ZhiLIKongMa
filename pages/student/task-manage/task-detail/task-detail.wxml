@@ -3,7 +3,7 @@
     <custom-navbar title="任务详情" showBack="{{true}}" placeholder="{{true}}" />
   </view>
 
-  <scroll-view class="content" scroll-y enhanced>
+  <scroll-view class="content" scroll-y enhanced bounces="{{false}}" show-scrollbar="{{false}}">
     <view wx:if="{{loading}}" class="state-card">
       <text class="state-title">任务详情加载中</text>
       <text class="state-desc">正在同步任务说明、图片和附件内容。</text>
@@ -65,7 +65,53 @@
         <view class="detail-panel">
           <text class="detail-desc">{{taskInfo.descriptionText}}</text>
         </view>
-        <text class="section-tip">提交业务接入后会继续在这里展示完成状态</text>
+      </view>
+
+      <view class="section-card">
+        <view class="section-head">
+          <view class="section-title-group">
+            <text class="section-title">我的提交</text>
+            <text class="section-tip">这里仅展示最近两次提交，更多记录请前往提交记录页查看。</text>
+          </view>
+          <text class="section-subtitle">{{submissionSummary.total}} 次</text>
+        </view>
+
+        <view class="action-row">
+          <button class="primary-action-btn" bindtap="goSubmitTask">
+            {{submissionSummary.total ? '再次提交' : '去提交'}}
+          </button>
+          <button class="ghost-action-btn" bindtap="goSubmissionRecords">提交记录</button>
+        </view>
+
+        <view wx:if="{{submissionSummary.list.length}}" class="submission-list">
+          <view wx:for="{{submissionSummary.list}}" wx:key="_id" class="submission-card">
+            <view class="submission-head">
+              <view class="submission-copy">
+                <text class="submission-title">第 {{item.submitNoText}} 次提交</text>
+                <text class="submission-time">{{item.submitTimeText}}</text>
+              </view>
+              <text class="submission-status" style="{{item.statusStyle}}">{{item.statusText}}</text>
+            </view>
+
+            <text class="submission-desc">{{item.descriptionText}}</text>
+
+            <view class="submission-meta-row">
+              <text class="submission-meta">{{item.materialText}}</text>
+              <text class="submission-meta">评分：{{item.scoreText}}</text>
+            </view>
+
+            <view wx:if="{{item.feedbackText}}" class="feedback-panel">
+              <text class="feedback-label">教师反馈</text>
+              <text class="feedback-text">{{item.feedbackText}}</text>
+            </view>
+          </view>
+
+          <text wx:if="{{submissionSummary.hasMore}}" class="link-text" bindtap="goSubmissionRecords">查看更多提交记录</text>
+        </view>
+
+        <view wx:else class="detail-panel detail-panel-soft">
+          <text class="detail-desc">你还没有提交这项任务，可以先准备说明、图片或附件后再提交。</text>
+        </view>
       </view>
 
       <view class="section-card">
