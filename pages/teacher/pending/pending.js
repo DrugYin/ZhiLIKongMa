@@ -318,7 +318,9 @@ Page({
 
   onReviewFieldChange(e) {
     const { field } = e.currentTarget.dataset
-    const value = e.detail && e.detail.value !== undefined ? e.detail.value : ''
+    const value = e.detail && e.detail.value !== undefined
+      ? e.detail.value
+      : (e.detail !== undefined ? e.detail : '')
 
     this.setData({
       [`reviewForm.${field}`]: typeof value === 'string' ? value : String(value)

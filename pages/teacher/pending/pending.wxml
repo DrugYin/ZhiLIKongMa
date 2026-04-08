@@ -255,39 +255,47 @@
 
             <view class="review-field">
               <text class="review-field-label">评分</text>
-              <input
-                class="review-input"
-                type="digit"
-                placeholder="可选，填写评分"
-                value="{{reviewForm.score}}"
-                data-field="score"
-                bindinput="onReviewFieldChange"
-              />
+              <view class="review-input-wrap">
+                <t-input
+                  type="digit"
+                  placeholder="可选，填写评分"
+                  value="{{reviewForm.score}}"
+                  clearable
+                  data-field="score"
+                  bind:change="onReviewFieldChange"
+                />
+              </view>
             </view>
 
             <view class="review-field">
               <text class="review-field-label">发放积分</text>
-              <input
-                class="review-input"
-                type="number"
-                placeholder="默认使用任务积分"
-                value="{{reviewForm.points}}"
-                data-field="points"
-                bindinput="onReviewFieldChange"
-              />
-              <text class="review-field-tip">默认按任务积分发放：{{popupRecord.taskPoints}} 分。若驳回，本次不会发放积分。</text>
+              <view class="review-input-wrap">
+                <t-input
+                  type="number"
+                  placeholder="默认使用任务积分"
+                  value="{{reviewForm.points}}"
+                  tips="默认按任务积分发放：{{popupRecord.taskPoints}} 分。若驳回，本次不会发放积分。"
+                  data-field="points"
+                  bind:change="onReviewFieldChange"
+                />
+              </view>
             </view>
 
             <view class="review-field">
               <text class="review-field-label">处理意见</text>
-              <textarea
-                class="review-textarea"
-                maxlength="{{300}}"
-                placeholder="可填写审核意见；驳回时建议说明需要补充的内容"
-                value="{{reviewForm.feedback}}"
-                data-field="feedback"
-                bindinput="onReviewFieldChange"
-              />
+              <view class="review-textarea-wrap">
+                <t-textarea
+                  value="{{reviewForm.feedback}}"
+                  maxlength="{{300}}"
+                  placeholder="可填写审核意见；驳回时建议说明需要补充的内容"
+                  indicator
+                  autosize
+                  bordered
+                  fixed
+                  data-field="feedback"
+                  bind:change="onReviewFieldChange"
+                />
+              </view>
             </view>
 
             <view class="action-row popup-action-row">
