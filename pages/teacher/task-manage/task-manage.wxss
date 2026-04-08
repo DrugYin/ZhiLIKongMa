@@ -1,15 +1,19 @@
 .container {
+  height: 100vh;
   min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: flex-start;
+  overflow: hidden;
+  background: linear-gradient(180deg, #f7f8fa 0%, #eef2f7 100%);
 }
 
 .header {
   position: relative;
+  flex-shrink: 0;
   width: 100%;
   z-index: 100;
-}
-
-.header-spacer {
-  /* height: 280rpx; */
 }
 
 .navbar-wrapper {
@@ -24,9 +28,10 @@
 }
 
 .content {
-  padding: 20rpx 20rpx 220rpx;
-  padding-bottom: calc(220rpx + constant(safe-area-inset-bottom));
-  padding-bottom: calc(220rpx + env(safe-area-inset-bottom));
+  flex: 1;
+  min-height: 0;
+  box-sizing: border-box;
+  padding: 24rpx 24rpx calc(110rpx + env(safe-area-inset-bottom));
 }
 
 .summary-card,

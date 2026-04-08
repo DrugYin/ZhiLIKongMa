@@ -75,7 +75,6 @@ const DIFFICULTY_COLOR = {
 Page({
   data: {
     loading: true,
-    refreshing: false,
     tasks: [],
     displayTasks: [],
     stats: {
@@ -123,20 +122,15 @@ Page({
     }
   },
 
-  onPullDownRefresh() {
-    this.initPage({ refreshing: true })
-  },
-
-  async initPage({ refreshing = false } = {}) {
+  async initPage() {
     this.setData({
-      loading: !refreshing,
-      refreshing
+      loading: true
     })
 
     try {
       await Promise.all([
         this.loadProjects(),
-        this.loadTasks({ silent: refreshing })
+        this.loadTasks()
       ])
       this._pageReady = true
     } catch (error) {
@@ -144,10 +138,8 @@ Page({
       Toast.showToast(error.message || '任务列表加载失败')
     } finally {
       this.setData({
-        loading: false,
-        refreshing: false
+        loading: false
       })
-      wx.stopPullDownRefresh()
     }
   },
 

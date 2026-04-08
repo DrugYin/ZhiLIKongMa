@@ -14,9 +14,7 @@
     </view>
   </view>
 
-  <view class="header-spacer"></view>
-
-  <view class="content">
+  <scroll-view class="content" scroll-y enhanced bounces="{{false}}" show-scrollbar="{{false}}">
     <view wx:if="{{loading}}" class="state-card">
       <text class="state-title">任务列表加载中</text>
       <text class="state-desc">正在同步教师端任务数据，请稍候。</text>
@@ -129,7 +127,7 @@
     </view>
 
     <t-back-top theme="round" text="返回顶部" />
-  </view>
+  </scroll-view>
 </view>
 
 <t-fab
