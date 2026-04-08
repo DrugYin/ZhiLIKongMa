@@ -154,6 +154,8 @@ Page({
       studentName: item.student_name || '未命名学生',
       className: item.class_name || '未分班',
       taskTitle: item.task_title || '未命名任务',
+      taskId: item.task_id || '',
+      taskPoints: Number(item.task_points || item.points || 0),
       projectText: item.project_name || item.project_code || '未设置项目',
       status,
       statusText: STATUS_TEXT_MAP[status] || '待处理',
@@ -245,7 +247,9 @@ Page({
       },
       reviewForm: {
         score: record.score === null || record.score === undefined ? '' : `${Number(record.score)}`,
-        points: `${Number(record.points_earned || 0)}`,
+        points: record.status === 'pending'
+          ? `${Math.max(Number(record.taskPoints || 0), 0)}`
+          : `${Number(record.points_earned || 0)}`,
         feedback: record.feedbackText || (record.status === 'pending'
           ? ''
           : (REVIEW_ACTION_TEXT[record.status] && REVIEW_ACTION_TEXT[record.status].feedback) || '')
@@ -253,17 +257,28 @@ Page({
     })
 
     try {
-      const [imageInfo, attachmentFiles] = await Promise.all([
+      const [imageInfo, attachmentFiles, taskInfo] = await Promise.all([
         fileResource.buildImagePreviewData(record.images),
-        fileResource.buildAttachmentPreviewFiles(record.files)
+        fileResource.buildAttachmentPreviewFiles(record.files),
+        record.taskId ? TaskService.getTaskDetail(record.taskId).catch(() => null) : Promise.resolve(null)
       ])
 
+      const taskPoints = taskInfo ? Number(taskInfo.points || 0) : Math.max(Number(record.taskPoints || 0), 0)
+      const nextRecord = {
+        ...record,
+        taskPoints
+      }
+
       this.setData({
+        popupRecord: nextRecord,
         popupRecordDetail: {
           imageList: imageInfo.imageList,
           imagePreviewUrls: imageInfo.previewUrls,
           attachmentFiles
-        }
+        },
+        'reviewForm.points': record.status === 'pending'
+          ? `${taskPoints}`
+          : `${Number(record.points_earned || 0)}`
       })
     } catch (error) {
       console.error('[teacher-pending] openRecordPopup error:', error)
@@ -377,7 +392,9 @@ Page({
     }
 
     const actionConfig = REVIEW_ACTION_TEXT[status]
-    const pointsText = String(this.data.reviewForm.points || '').trim() || '0'
+    const pointsText = status === 'rejected'
+      ? '0'
+      : (String(this.data.reviewForm.points || '').trim() || '0')
     const confirmed = await Toast.confirm(
       `${status === 'approved' ? '通过' : '驳回'}后将发放 ${pointsText} 积分，确认继续吗？`,
       actionConfig.title
@@ -397,7 +414,9 @@ Page({
         status,
         feedback: String(this.data.reviewForm.feedback || '').trim() || actionConfig.feedback,
         score: String(this.data.reviewForm.score || '').trim(),
-        points_earned: String(this.data.reviewForm.points || '').trim()
+        points_earned: status === 'rejected'
+          ? '0'
+          : String(this.data.reviewForm.points || '').trim()
       })
 
       const formattedRecord = this.formatRecord(reviewedRecord)

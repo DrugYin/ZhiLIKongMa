@@ -162,9 +162,11 @@ exports.main = async (event) => {
     const reviewFeedback = feedback || (status === 'approved'
       ? '审核通过，继续保持。'
       : '当前提交未通过，请补充说明或附件后再次提交。')
-    const pointsEarned = customPoints !== null
-      ? customPoints
-      : (status === 'approved' ? Number(taskInfo.points || submissionInfo.points_earned || 0) : 0)
+    const pointsEarned = status === 'rejected'
+      ? 0
+      : (customPoints !== null
+          ? customPoints
+          : Number(taskInfo.points || submissionInfo.points_earned || 0))
 
     const updateData = {
       status,

@@ -270,11 +270,12 @@
               <input
                 class="review-input"
                 type="number"
-                placeholder="默认 0，可自定义发放积分"
+                placeholder="默认使用任务积分"
                 value="{{reviewForm.points}}"
                 data-field="points"
                 bindinput="onReviewFieldChange"
               />
+              <text class="review-field-tip">默认按任务积分发放：{{popupRecord.taskPoints}} 分。若驳回，本次不会发放积分。</text>
             </view>
 
             <view class="review-field">
