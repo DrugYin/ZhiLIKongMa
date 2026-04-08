@@ -5,12 +5,16 @@ cloud.init({
 })
 
 const db = cloud.database()
-const _ = db.command
 const PAGE_SIZE = 100
 
 async function getCurrentUser(openid) {
   const res = await db.collection('users').where({ _openid: openid }).limit(1).get()
   return res.data[0] || null
+}
+
+async function verifyTeacherRole(openid) {
+  const user = await getCurrentUser(openid)
+  return user && Array.isArray(user.roles) && user.roles.includes('teacher') ? user : null
 }
 
 async function getTaskById(taskId) {
@@ -84,10 +88,25 @@ exports.main = async (event) => {
 
     const taskId = normalizeString(event.task_id)
     const status = normalizeString(event.status)
+    const role = normalizeString(event.role || user.current_role || 'student')
+    const classId = normalizeString(event.class_id)
     const page = Math.max(Number(event.page || 1), 1)
     const pageSize = Math.min(Math.max(Number(event.page_size || 20), 1), 50)
-    const queryData = {
-      student_openid: OPENID
+    const queryData = {}
+
+    if (role === 'teacher') {
+      const teacher = await verifyTeacherRole(OPENID)
+      if (!teacher) {
+        return {
+          success: false,
+          message: '仅教师可以查看教师提交记录',
+          error_code: 403
+        }
+      }
+
+      queryData.teacher_openid = OPENID
+    } else {
+      queryData.student_openid = OPENID
     }
 
     if (taskId) {
@@ -101,18 +120,28 @@ exports.main = async (event) => {
         }
       }
 
-      const memberships = await getAllMembershipsByStudent(OPENID)
-      const joinedClassIds = memberships.map((item) => item.class_id).filter(Boolean)
+      if (role === 'teacher') {
+        if (taskInfo.teacher_openid !== OPENID) {
+          return {
+            success: false,
+            message: '无权查看该任务的提交记录',
+            error_code: 403
+          }
+        }
+      } else {
+        const memberships = await getAllMembershipsByStudent(OPENID)
+        const joinedClassIds = memberships.map((item) => item.class_id).filter(Boolean)
 
-      if (user.class_id && !joinedClassIds.includes(user.class_id)) {
-        joinedClassIds.push(user.class_id)
-      }
+        if (user.class_id && !joinedClassIds.includes(user.class_id)) {
+          joinedClassIds.push(user.class_id)
+        }
 
-      if (!canStudentAccessTask(taskInfo, joinedClassIds) && taskInfo.teacher_openid !== OPENID) {
-        return {
-          success: false,
-          message: '无权查看该任务的提交记录',
-          error_code: 403
+        if (!canStudentAccessTask(taskInfo, joinedClassIds) && taskInfo.teacher_openid !== OPENID) {
+          return {
+            success: false,
+            message: '无权查看该任务的提交记录',
+            error_code: 403
+          }
         }
       }
 
@@ -121,6 +150,10 @@ exports.main = async (event) => {
 
     if (status) {
       queryData.status = status
+    }
+
+    if (classId) {
+      queryData.class_id = classId
     }
 
     const query = db.collection('submissions').where(queryData)

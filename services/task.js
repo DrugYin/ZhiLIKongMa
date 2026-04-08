@@ -41,6 +41,14 @@ class TaskService {
     return res.data
   }
 
+  static async reviewSubmission(params) {
+    const res = await taskApi.reviewSubmission(params)
+    if (!res.success) {
+      throw new Error(res.message || '审核提交记录失败')
+    }
+    return res.data
+  }
+
   static async updateTask(params) {
     const res = await taskApi.updateTask(params);
     if (!res.success) {
