@@ -6,10 +6,16 @@
     </view>
   </view>
   <scroll-view class="content" scroll-y enhanced>
+    <view wx:if="{{loading}}" class="section-card">
+      <text class="empty-title">审核记录加载中</text>
+      <text class="empty-desc">正在同步学生提交和当前审核状态。</text>
+    </view>
+
+    <block wx:else>
     <view class="hero-card">
       <text class="hero-eyebrow">审核中心</text>
-      <text class="hero-title">先处理待审核记录，再回到班级与任务管理页继续维护。</text>
-      <text class="hero-desc">这里统一查看入班申请与任务打卡审核，处理结果会即时反馈到列表状态。</text>
+      <text class="hero-title">先处理学生任务提交，再回到任务管理页继续维护。</text>
+      <text class="hero-desc">这里展示当前教师名下任务的真实提交记录，审核结果会即时回写到学生侧状态。</text>
 
       <view class="summary-grid">
         <view class="summary-item">
@@ -79,12 +85,18 @@
           <view class="review-top">
             <view class="review-copy">
               <text class="review-name">{{item.studentName}}</text>
-              <text class="review-meta">{{item.className}} · {{item.source}}</text>
+              <text class="review-meta">{{item.className}} · {{item.projectText}}</text>
             </view>
             <text class="status-tag status-{{item.status}}">{{item.statusText}}</text>
           </view>
 
+          <text class="review-task-title">{{item.taskTitle}}</text>
           <text class="review-desc">{{item.summary}}</text>
+
+          <view wx:if="{{item.feedbackText && item.status !== 'pending'}}" class="review-feedback">
+            <text class="review-feedback-label">处理意见</text>
+            <text class="review-feedback-text">{{item.feedbackText}}</text>
+          </view>
 
           <view class="meta-grid">
             <view class="meta-item">
@@ -95,12 +107,20 @@
               <text class="meta-label">材料概览</text>
               <text class="meta-value">{{item.attachmentText}}</text>
             </view>
+            <view class="meta-item">
+              <text class="meta-label">审核评分</text>
+              <text class="meta-value">{{item.scoreText}}</text>
+            </view>
+            <view class="meta-item">
+              <text class="meta-label">积分结果</text>
+              <text class="meta-value">{{item.pointsText}} · {{item.overtimeText}}</text>
+            </view>
           </view>
 
           <view class="action-row" wx:if="{{item.status === 'pending'}}">
-            <button class="ghost-btn" bindtap="goToClassManage">查看班级</button>
-            <button class="danger-btn" data-id="{{item.id}}" bindtap="handleReject">驳回</button>
-            <button class="primary-btn" data-id="{{item.id}}" bindtap="handleApprove">通过</button>
+            <button class="ghost-btn" bindtap="goToTaskManage">任务管理</button>
+            <button class="danger-btn" data-id="{{item.id}}" disabled="{{processingId === item.id}}" bindtap="handleReject">驳回</button>
+            <button class="primary-btn" data-id="{{item.id}}" disabled="{{processingId === item.id}}" bindtap="handleApprove">通过</button>
           </view>
         </view>
       </view>
@@ -117,11 +137,11 @@
         <text class="section-extra">继续处理</text>
       </view>
       <view class="action-row action-row-secondary">
-        <button class="ghost-btn" bindtap="goToClassManage">前往班级管理</button>
         <button class="ghost-btn" bindtap="goToTaskManage">前往任务管理</button>
       </view>
     </view>
 
     <view class="footer-placeholder"></view>
+    </block>
   </scroll-view>
 </view>

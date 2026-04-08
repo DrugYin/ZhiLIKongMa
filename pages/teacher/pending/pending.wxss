@@ -44,6 +44,7 @@
 .hero-title,
 .section-title,
 .review-name,
+.review-task-title,
 .empty-title {
   display: block;
   color: #17314a;
@@ -182,8 +183,37 @@
   margin-top: 10rpx;
 }
 
-.review-desc {
+.review-task-title {
   margin-top: 16rpx;
+  font-size: 26rpx;
+  line-height: 1.6;
+}
+
+.review-desc {
+  margin-top: 12rpx;
+}
+
+.review-feedback {
+  margin-top: 16rpx;
+  padding: 20rpx 22rpx;
+  border-radius: 20rpx;
+  background: rgba(31, 122, 224, 0.08);
+}
+
+.review-feedback-label,
+.review-feedback-text {
+  display: block;
+  font-size: 22rpx;
+  line-height: 1.7;
+}
+
+.review-feedback-label {
+  color: #5f7387;
+}
+
+.review-feedback-text {
+  margin-top: 8rpx;
+  color: #35536c;
 }
 
 .status-tag {
@@ -235,6 +265,12 @@
 .ghost-btn::after,
 .danger-btn::after {
   border: none;
+}
+
+.primary-btn[disabled],
+.ghost-btn[disabled],
+.danger-btn[disabled] {
+  opacity: 0.72;
 }
 
 .primary-btn {
