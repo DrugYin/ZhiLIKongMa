@@ -61,6 +61,12 @@
   margin-top: 18rpx;
 }
 
+.submission-head {
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16rpx;
+}
+
 .hero-title-group {
   flex: 1;
   min-width: 0;
@@ -190,6 +196,9 @@
 }
 
 .submission-status {
+  display: inline-flex;
+  align-items: center;
+  align-self: flex-start;
   flex-shrink: 0;
   padding: 10rpx 18rpx;
   border-radius: 999rpx;
