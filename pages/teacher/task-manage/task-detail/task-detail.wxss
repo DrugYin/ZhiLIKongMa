@@ -1,17 +1,26 @@
 .container {
+  height: 100vh;
   min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: flex-start;
+  overflow: hidden;
   background: linear-gradient(180deg, #f7f8fa 0%, #eef2f7 100%);
 }
 
 .header {
   position: relative;
+  flex-shrink: 0;
   z-index: 20;
   background-color: rgba(255, 255, 255, 0.96);
 }
 
 .content {
+  flex: 1;
+  min-height: 0;
   box-sizing: border-box;
-  padding: 24rpx 24rpx 220rpx;
+  padding: 24rpx 24rpx calc(180rpx + env(safe-area-inset-bottom));
 }
 
 .hero-card,
@@ -377,5 +386,5 @@
 }
 
 .footer-placeholder {
-  height: 0;
+  height: 20rpx;
 }
