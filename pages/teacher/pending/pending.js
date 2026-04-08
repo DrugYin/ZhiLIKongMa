@@ -1,6 +1,7 @@
 const TaskService = require('../../../services/task')
 const Toast = require('../../../utils/toast')
 const formatUtils = require('../../../utils/format')
+const fileResource = require('../../../utils/file-resource')
 
 const STATUS_TEXT_MAP = {
   pending: '待审核',
@@ -11,15 +12,13 @@ const STATUS_TEXT_MAP = {
 const REVIEW_ACTION_TEXT = {
   approved: {
     title: '确认通过',
-    content: '通过后会给学生同步审核结果和任务积分，确认继续吗？',
-    feedback: '审核通过，继续保持。',
-    success: '已通过'
+    success: '已通过',
+    feedback: '审核通过，继续保持。'
   },
   rejected: {
     title: '确认驳回',
-    content: '驳回后学生会看到处理结果，确认继续吗？',
-    feedback: '当前提交未通过，请补充说明或附件后再次提交。',
-    success: '已驳回'
+    success: '已驳回',
+    feedback: '当前提交未通过，请补充说明或附件后再次提交。'
   }
 }
 
@@ -27,6 +26,8 @@ Page({
   data: {
     loading: true,
     processingId: '',
+    popupVisible: false,
+    popupLoading: false,
     statusFilter: 'all',
     classFilter: 'all',
     statusOptions: [
@@ -44,6 +45,17 @@ Page({
       pending: 0,
       approved: 0,
       rejected: 0
+    },
+    popupRecord: null,
+    popupRecordDetail: {
+      imageList: [],
+      imagePreviewUrls: [],
+      attachmentFiles: []
+    },
+    reviewForm: {
+      score: '',
+      points: '',
+      feedback: ''
     }
   },
 
@@ -145,14 +157,17 @@ Page({
       projectText: item.project_name || item.project_code || '未设置项目',
       status,
       statusText: STATUS_TEXT_MAP[status] || '待处理',
+      descriptionText: summary || '学生未填写提交说明。',
       summary: summary || (status === 'pending' ? '学生未填写提交说明。' : (feedback || '该提交已完成审核。')),
       feedbackText: feedback,
       submittedAt: item.submit_time ? this.formatDateTime(item.submit_time) : '刚刚提交',
-      source: '任务提交',
+      reviewedAt: item.review_time ? this.formatDateTime(item.review_time) : '待审核',
       attachmentText: `${imageCount} 张图片 · ${fileCount} 个附件`,
       scoreText: item.score === null || item.score === undefined ? '待评分' : `${Number(item.score)} 分`,
       pointsText: `${Number(item.points_earned || 0)} 分`,
-      overtimeText: item.is_overtime ? '超时提交' : '按时提交'
+      overtimeText: item.is_overtime ? '超时提交' : '按时提交',
+      imageCount,
+      fileCount
     }
   },
 
@@ -211,13 +226,162 @@ Page({
     )
   },
 
-  async handleReviewAction(status, record) {
-    if (!record || !record.id || this.data.processingId) {
+  async openRecordPopup(e) {
+    const { id } = e.currentTarget.dataset
+    const record = this.data.records.find((item) => item.id === id)
+
+    if (!record) {
+      return
+    }
+
+    this.setData({
+      popupVisible: true,
+      popupLoading: true,
+      popupRecord: record,
+      popupRecordDetail: {
+        imageList: [],
+        imagePreviewUrls: [],
+        attachmentFiles: []
+      },
+      reviewForm: {
+        score: record.score === null || record.score === undefined ? '' : `${Number(record.score)}`,
+        points: `${Number(record.points_earned || 0)}`,
+        feedback: record.feedbackText || (record.status === 'pending'
+          ? ''
+          : (REVIEW_ACTION_TEXT[record.status] && REVIEW_ACTION_TEXT[record.status].feedback) || '')
+      }
+    })
+
+    try {
+      const [imageInfo, attachmentFiles] = await Promise.all([
+        fileResource.buildImagePreviewData(record.images),
+        fileResource.buildAttachmentPreviewFiles(record.files)
+      ])
+
+      this.setData({
+        popupRecordDetail: {
+          imageList: imageInfo.imageList,
+          imagePreviewUrls: imageInfo.previewUrls,
+          attachmentFiles
+        }
+      })
+    } catch (error) {
+      console.error('[teacher-pending] openRecordPopup error:', error)
+      Toast.showToast('提交素材加载失败')
+    } finally {
+      this.setData({
+        popupLoading: false
+      })
+    }
+  },
+
+  onPopupVisibleChange(e) {
+    const visible = Boolean(e.detail && e.detail.visible)
+
+    if (!visible) {
+      this.closePopup()
+    }
+  },
+
+  closePopup() {
+    this.setData({
+      popupVisible: false,
+      popupLoading: false,
+      popupRecord: null,
+      popupRecordDetail: {
+        imageList: [],
+        imagePreviewUrls: [],
+        attachmentFiles: []
+      },
+      reviewForm: {
+        score: '',
+        points: '',
+        feedback: ''
+      }
+    })
+  },
+
+  onReviewFieldChange(e) {
+    const { field } = e.currentTarget.dataset
+    const value = e.detail && e.detail.value !== undefined ? e.detail.value : ''
+
+    this.setData({
+      [`reviewForm.${field}`]: typeof value === 'string' ? value : String(value)
+    })
+  },
+
+  onPreviewPopupImage(e) {
+    const { index } = e.currentTarget.dataset
+    fileResource.previewImages(this.data.popupRecordDetail.imagePreviewUrls, index)
+  },
+
+  async onPreviewPopupFile(e) {
+    const { index } = e.currentTarget.dataset
+    const file = this.data.popupRecordDetail.attachmentFiles[Number(index)]
+
+    if (!file) {
+      return
+    }
+
+    Toast.showLoading('正在打开附件...')
+
+    try {
+      const previewResult = await fileResource.resolvePreviewFilePath(file)
+      this.updatePopupFileLocalPath(file, previewResult.localPath)
+      await fileResource.openDocument(previewResult.filePath)
+      Toast.hideLoading()
+    } catch (error) {
+      console.error('[teacher-pending] onPreviewPopupFile error:', error)
+      Toast.hideLoading()
+      Toast.showToast('附件预览失败')
+    }
+  },
+
+  updatePopupFileLocalPath(file, localPath) {
+    this.setData({
+      'popupRecordDetail.attachmentFiles': fileResource.updateFileLocalPath(
+        this.data.popupRecordDetail.attachmentFiles,
+        file,
+        localPath
+      )
+    })
+  },
+
+  validateReviewForm(status) {
+    const scoreText = String(this.data.reviewForm.score || '').trim()
+    const pointsText = String(this.data.reviewForm.points || '').trim()
+
+    if (scoreText && (!Number.isFinite(Number(scoreText)) || Number(scoreText) < 0)) {
+      Toast.showToast('评分需为大于等于 0 的数字')
+      return false
+    }
+
+    if (pointsText && (!Number.isInteger(Number(pointsText)) || Number(pointsText) < 0)) {
+      Toast.showToast('发放积分需为大于等于 0 的整数')
+      return false
+    }
+
+    if (status === 'rejected' && !String(this.data.reviewForm.feedback || '').trim()) {
+      Toast.showToast('驳回时请填写处理意见')
+      return false
+    }
+
+    return true
+  },
+
+  async handleReviewAction(status) {
+    const record = this.data.popupRecord
+
+    if (!record || !record.id || this.data.processingId || !this.validateReviewForm(status)) {
       return
     }
 
     const actionConfig = REVIEW_ACTION_TEXT[status]
-    const confirmed = await Toast.confirm(actionConfig.content, actionConfig.title)
+    const pointsText = String(this.data.reviewForm.points || '').trim() || '0'
+    const confirmed = await Toast.confirm(
+      `${status === 'approved' ? '通过' : '驳回'}后将发放 ${pointsText} 积分，确认继续吗？`,
+      actionConfig.title
+    )
 
     if (!confirmed) {
       return
@@ -231,20 +395,25 @@ Page({
       const reviewedRecord = await TaskService.reviewSubmission({
         submission_id: record.id,
         status,
-        feedback: actionConfig.feedback
+        feedback: String(this.data.reviewForm.feedback || '').trim() || actionConfig.feedback,
+        score: String(this.data.reviewForm.score || '').trim(),
+        points_earned: String(this.data.reviewForm.points || '').trim()
       })
 
+      const formattedRecord = this.formatRecord(reviewedRecord)
       const records = this.data.records.map((item) => (
-        item.id === record.id ? this.formatRecord(reviewedRecord) : item
+        item.id === record.id ? formattedRecord : item
       ))
 
       this.setData({
-        records
+        records,
+        popupRecord: formattedRecord
       }, () => {
         this.applyFilters()
       })
 
       Toast.showSuccess(actionConfig.success, 1500)
+      this.closePopup()
     } catch (error) {
       console.error('[teacher-pending] handleReviewAction error:', error)
       Toast.showToast(error.message || '审核操作失败')
@@ -255,16 +424,12 @@ Page({
     }
   },
 
-  handleApprove(e) {
-    const { id } = e.currentTarget.dataset
-    const record = this.data.records.find((item) => item.id === id)
-    this.handleReviewAction('approved', record)
+  handleApprove() {
+    this.handleReviewAction('approved')
   },
 
-  handleReject(e) {
-    const { id } = e.currentTarget.dataset
-    const record = this.data.records.find((item) => item.id === id)
-    this.handleReviewAction('rejected', record)
+  handleReject() {
+    this.handleReviewAction('rejected')
   },
 
   goToTaskManage() {

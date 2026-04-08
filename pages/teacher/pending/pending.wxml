@@ -81,7 +81,7 @@
       </view>
 
       <view wx:if="{{displayRecords.length}}" class="review-list">
-        <view wx:for="{{displayRecords}}" wx:key="id" class="review-card">
+        <view wx:for="{{displayRecords}}" wx:key="id" class="review-card" data-id="{{item.id}}" bindtap="openRecordPopup">
           <view class="review-top">
             <view class="review-copy">
               <text class="review-name">{{item.studentName}}</text>
@@ -117,11 +117,7 @@
             </view>
           </view>
 
-          <view class="action-row" wx:if="{{item.status === 'pending'}}">
-            <button class="ghost-btn" bindtap="goToTaskManage">任务管理</button>
-            <button class="danger-btn" data-id="{{item.id}}" disabled="{{processingId === item.id}}" bindtap="handleReject">驳回</button>
-            <button class="primary-btn" data-id="{{item.id}}" disabled="{{processingId === item.id}}" bindtap="handleApprove">通过</button>
-          </view>
+          <text class="review-link">{{item.status === 'pending' ? '点击查看详情并审核' : '点击查看完整审核信息'}}</text>
         </view>
       </view>
 
@@ -144,4 +140,164 @@
     <view class="footer-placeholder"></view>
     </block>
   </scroll-view>
+
+  <t-popup
+    visible="{{popupVisible}}"
+    placement="bottom"
+    usingCustomNavbar="{{true}}"
+    close-on-overlay-click="{{true}}"
+    prevent-scroll-through="{{true}}"
+    bind:visible-change="onPopupVisibleChange"
+  >
+    <view class="popup-shell">
+      <view class="popup-header">
+        <view class="popup-header-copy">
+          <text class="popup-title">{{popupRecord ? popupRecord.taskTitle : '提交详情'}}</text>
+          <text class="popup-subtitle">{{popupRecord ? popupRecord.studentName + ' · ' + popupRecord.className : '正在加载'}}</text>
+        </view>
+        <text wx:if="{{popupRecord}}" class="status-tag status-{{popupRecord.status}}">{{popupRecord.statusText}}</text>
+      </view>
+
+      <scroll-view class="popup-content" scroll-y enhanced>
+        <view wx:if="{{popupLoading}}" class="popup-state-card">
+          <text class="empty-title">详情加载中</text>
+          <text class="empty-desc">正在同步提交说明、图片和附件。</text>
+        </view>
+
+        <block wx:elif="{{popupRecord}}">
+          <view class="popup-card">
+            <view class="popup-grid">
+              <view class="popup-item">
+                <text class="popup-label">提交时间</text>
+                <text class="popup-value">{{popupRecord.submittedAt}}</text>
+              </view>
+              <view class="popup-item">
+                <text class="popup-label">审核时间</text>
+                <text class="popup-value">{{popupRecord.reviewedAt}}</text>
+              </view>
+              <view class="popup-item">
+                <text class="popup-label">材料概览</text>
+                <text class="popup-value">{{popupRecord.attachmentText}}</text>
+              </view>
+              <view class="popup-item">
+                <text class="popup-label">当前积分</text>
+                <text class="popup-value">{{popupRecord.pointsText}} · {{popupRecord.overtimeText}}</text>
+              </view>
+            </view>
+          </view>
+
+          <view class="popup-card">
+            <text class="section-title">提交说明</text>
+            <view class="popup-panel">
+              <text class="review-desc">{{popupRecord.descriptionText}}</text>
+            </view>
+          </view>
+
+          <view class="popup-card">
+            <view class="section-header">
+              <text class="section-title">提交图片</text>
+              <text class="section-extra">{{popupRecord.imageCount}} 张</text>
+            </view>
+
+            <view wx:if="{{popupRecordDetail.imageList.length}}" class="popup-image-grid">
+              <image
+                wx:for="{{popupRecordDetail.imageList}}"
+                wx:key="fileId"
+                class="popup-image"
+                src="{{item.url}}"
+                mode="aspectFill"
+                data-index="{{index}}"
+                bindtap="onPreviewPopupImage"
+              />
+            </view>
+
+            <view wx:else class="popup-panel popup-panel-soft">
+              <text class="empty-desc">本次提交没有上传图片。</text>
+            </view>
+          </view>
+
+          <view class="popup-card">
+            <view class="section-header">
+              <text class="section-title">附件文件</text>
+              <text class="section-extra">{{popupRecord.fileCount}} 个</text>
+            </view>
+
+            <view wx:if="{{popupRecordDetail.attachmentFiles.length}}" class="popup-file-list">
+              <view
+                wx:for="{{popupRecordDetail.attachmentFiles}}"
+                wx:key="file_id"
+                class="popup-file-row"
+                data-index="{{index}}"
+                bindtap="onPreviewPopupFile"
+              >
+                <view class="popup-file-main">
+                  <text class="popup-file-name">{{item.file_name || item.name}}</text>
+                  <text class="popup-file-meta">点击预览 · {{item.sizeText || '大小待补充'}}</text>
+                </view>
+                <text class="popup-file-link">预览</text>
+              </view>
+            </view>
+
+            <view wx:else class="popup-panel popup-panel-soft">
+              <text class="empty-desc">本次提交没有上传附件。</text>
+            </view>
+          </view>
+
+          <view wx:if="{{popupRecord.feedbackText && popupRecord.status !== 'pending'}}" class="popup-card">
+            <text class="section-title">已处理意见</text>
+            <view class="popup-panel">
+              <text class="review-desc">{{popupRecord.feedbackText}}</text>
+            </view>
+          </view>
+
+          <view wx:if="{{popupRecord.status === 'pending'}}" class="popup-card">
+            <text class="section-title">审核操作</text>
+
+            <view class="review-field">
+              <text class="review-field-label">评分</text>
+              <input
+                class="review-input"
+                type="digit"
+                placeholder="可选，填写评分"
+                value="{{reviewForm.score}}"
+                data-field="score"
+                bindinput="onReviewFieldChange"
+              />
+            </view>
+
+            <view class="review-field">
+              <text class="review-field-label">发放积分</text>
+              <input
+                class="review-input"
+                type="number"
+                placeholder="默认 0，可自定义发放积分"
+                value="{{reviewForm.points}}"
+                data-field="points"
+                bindinput="onReviewFieldChange"
+              />
+            </view>
+
+            <view class="review-field">
+              <text class="review-field-label">处理意见</text>
+              <textarea
+                class="review-textarea"
+                maxlength="{{300}}"
+                placeholder="可填写审核意见；驳回时建议说明需要补充的内容"
+                value="{{reviewForm.feedback}}"
+                data-field="feedback"
+                bindinput="onReviewFieldChange"
+              />
+            </view>
+
+            <view class="action-row popup-action-row">
+              <button class="danger-btn" disabled="{{processingId === popupRecord.id}}" catchtap="handleReject">驳回</button>
+              <button class="primary-btn" disabled="{{processingId === popupRecord.id}}" catchtap="handleApprove">通过</button>
+            </view>
+          </view>
+
+          <view class="popup-bottom-space"></view>
+        </block>
+      </scroll-view>
+    </view>
+  </t-popup>
 </view>

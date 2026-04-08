@@ -58,6 +58,19 @@ function normalizeScore(value) {
   return score
 }
 
+function normalizePoints(value) {
+  if (value === '' || value === null || value === undefined) {
+    return null
+  }
+
+  const points = Number(value)
+  if (!Number.isInteger(points) || points < 0) {
+    return null
+  }
+
+  return points
+}
+
 async function writeOperationLog(openid, targetId, detail, now) {
   try {
     await db.collection('operation_logs').add({
@@ -84,6 +97,7 @@ exports.main = async (event) => {
     const status = normalizeStatus(event.status)
     const feedback = normalizeString(event.feedback)
     const score = normalizeScore(event.score)
+    const customPoints = normalizePoints(event.points_earned)
 
     if (!teacher) {
       return {
@@ -148,7 +162,9 @@ exports.main = async (event) => {
     const reviewFeedback = feedback || (status === 'approved'
       ? '审核通过，继续保持。'
       : '当前提交未通过，请补充说明或附件后再次提交。')
-    const pointsEarned = status === 'approved' ? Number(taskInfo.points || submissionInfo.points_earned || 0) : 0
+    const pointsEarned = customPoints !== null
+      ? customPoints
+      : (status === 'approved' ? Number(taskInfo.points || submissionInfo.points_earned || 0) : 0)
 
     const updateData = {
       status,
