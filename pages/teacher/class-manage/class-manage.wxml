@@ -11,6 +11,9 @@
       </t-dropdown-menu>
     </view>
   </view>
+
+  <view class="header-spacer"></view>
+
   <view class="content">
     <view wx:if="{{loading}}" class="state-card">
       <text class="state-title">班级列表加载中</text>

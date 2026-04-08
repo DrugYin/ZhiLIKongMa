@@ -4,7 +4,7 @@
       <custom-navbar placeholder="{{true}}" title="任务管理" />
     </view>
     <view class="dropdown-wrapper">
-      <t-dropdown-menu class="dropdown-menu">
+      <t-dropdown-menu placeholder class="dropdown-menu">
         <t-dropdown-item options="{{projects.options}}" placement="right" value="{{projects.value}}" data-field="projects" bindchange="onDropdownChange" />
         <t-dropdown-item options="{{taskTypes.options}}" placement="right" value="{{taskTypes.value}}" data-field="taskTypes" bindchange="onDropdownChange" />
         <t-dropdown-item options="{{visibility.options}}" placement="right" value="{{visibility.value}}" data-field="visibility" bindchange="onDropdownChange" />
@@ -13,6 +13,8 @@
       </t-dropdown-menu>
     </view>
   </view>
+
+  <view class="header-spacer"></view>
 
   <view class="content">
     <view wx:if="{{loading}}" class="state-card">

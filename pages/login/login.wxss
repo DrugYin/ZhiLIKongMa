@@ -1,71 +1,83 @@
-/* pages/login/login.wxss */
+.container {
+  min-height: 100vh;
+  background: linear-gradient(180deg, #f7f8fa 0%, #eef2f7 100%);
+}
 
 .header {
   width: 100%;
+  background: rgba(255, 255, 255, 0.96);
 }
 
 .content {
-  margin-top: 20%;
-  width: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  overflow-y: auto;
-  overflow-x: hidden;
+  box-sizing: border-box;
+  min-height: calc(100vh - 96rpx);
+  padding: 48rpx 32rpx 96rpx;
 }
 
 .login-page {
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
-  padding: 40px;
+  padding: 56rpx 36rpx;
+  border-radius: 32rpx;
+  background: rgba(255, 255, 255, 0.96);
+  box-shadow: 0 20rpx 50rpx rgba(24, 62, 107, 0.08);
 }
 
 .logo {
-  width: 160px;
-  height: 160px;
+  width: 176rpx;
+  height: 176rpx;
   border-radius: 50%;
-  margin-bottom: 20px;
+  margin-bottom: 28rpx;
 }
 
 .app-name {
-  font-size: 24px;
-  font-weight: bold;
-  margin-bottom: 10px;
+  font-size: 40rpx;
+  font-weight: 700;
+  color: #17314a;
 }
 
 .login-desc {
-  font-size: 14px;
-  margin-bottom: 40px;
+  margin-top: 16rpx;
+  margin-bottom: 40rpx;
+  color: #65788c;
+  font-size: 26rpx;
+  line-height: 1.8;
+  text-align: center;
 }
 
 .login-btn {
-  width: 80%;
-  max-width: 300px;
-  border-radius: 8px;
+  width: 100%;
+  border-radius: 999rpx;
   color: #fff;
-  font-size: 16px;
-  margin-bottom: 20px;
+  font-size: 28rpx;
+  margin-bottom: 20rpx;
+  background: linear-gradient(135deg, #1f7ae0 0%, #4a8ff5 100%);
+}
+
+.login-btn::after {
+  border: none;
 }
 
 .skip-btn {
-  font-size: 14px;
-  margin-bottom: 30px;
-  padding: 8px 16px;
+  padding: 16rpx 24rpx;
+  color: #1f4f78;
+  font-size: 24rpx;
 }
 
 .agreement {
-  margin-top: 30px;
-  font-size: 12px;
+  margin-top: 28rpx;
+  font-size: 22rpx;
+  color: #7a8797;
+  text-align: center;
 }
 
 .link {
-  color: #007aff;
+  color: #1f7ae0;
 }
 
 .action-wrapper {
-  margin-top: 20rpx;
+  margin-top: 24rpx;
   margin-left: auto;
   margin-right: auto;
   text-align: center;

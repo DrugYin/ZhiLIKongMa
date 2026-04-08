@@ -5,7 +5,81 @@
       <custom-navbar placeholder="{{true}}" title="智力控码" />
     </view>
   </view>
-  <view class="content">
-    <t-cell title="前往学生端" hover arrow bind:tap="goToStudent" />
-  </view>
+  <scroll-view class="content" scroll-y enhanced>
+    <view class="profile-card">
+      <view class="profile-top">
+        <view class="profile-copy">
+          <text class="profile-eyebrow">教师资料</text>
+          <text class="profile-name">{{userInfo.user_name || userInfo.name || '老师'}}</text>
+          <text class="profile-meta">{{userInfo.school || '学校信息待补充'}} · {{summary.gradeText}}</text>
+        </view>
+        <text class="role-tag">{{summary.currentRole}}</text>
+      </view>
+
+      <view class="summary-grid">
+        <view class="summary-item">
+          <text class="summary-label">积分</text>
+          <text class="summary-value">{{summary.points}}</text>
+        </view>
+        <view class="summary-item">
+          <text class="summary-label">可用角色</text>
+          <text class="summary-value">{{summary.roleCount}}</text>
+        </view>
+        <view class="summary-item">
+          <text class="summary-label">当前身份</text>
+          <text class="summary-value">{{summary.currentRole}}</text>
+        </view>
+        <view class="summary-item">
+          <text class="summary-label">年级信息</text>
+          <text class="summary-value">{{summary.gradeText}}</text>
+        </view>
+      </view>
+    </view>
+
+    <view class="section-card">
+      <view class="section-header">
+        <text class="section-title">管理入口</text>
+        <text class="section-extra">常用跳转</text>
+      </view>
+      <view class="action-list">
+        <view class="action-item" bindtap="goToPending">
+          <view class="action-copy">
+            <text class="action-title">审核中心</text>
+            <text class="action-desc">处理待审核记录与班级申请</text>
+          </view>
+          <text class="action-arrow">›</text>
+        </view>
+        <view class="action-item" bindtap="goToClassManage">
+          <view class="action-copy">
+            <text class="action-title">班级管理</text>
+            <text class="action-desc">查看班级详情、成员与申请状态</text>
+          </view>
+          <text class="action-arrow">›</text>
+        </view>
+        <view class="action-item" bindtap="goToTaskManage">
+          <view class="action-copy">
+            <text class="action-title">任务管理</text>
+            <text class="action-desc">维护任务内容、附件和发布状态</text>
+          </view>
+          <text class="action-arrow">›</text>
+        </view>
+        <view class="action-item" bindtap="goToStudent">
+          <view class="action-copy">
+            <text class="action-title">切换到学生端</text>
+            <text class="action-desc">回到学生首页查看学习视角与排行榜</text>
+          </view>
+          <text class="action-arrow">›</text>
+        </view>
+        <view class="action-item action-item-danger" bindtap="onLogout">
+          <view class="action-copy">
+            <text class="action-title action-title-danger">退出登录</text>
+            <text class="action-desc">退出当前账号并返回登录页</text>
+          </view>
+          <text class="action-arrow action-arrow-danger">›</text>
+        </view>
+      </view>
+    </view>
+
+    <view class="footer-placeholder"></view>
+  </scroll-view>
 </view>

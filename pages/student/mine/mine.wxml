@@ -4,43 +4,105 @@
   <view class="header">
     <custom-navbar placeholder="{{true}}" title="智力控码" />
   </view>
-  <view class="content">
-    <view class="user-card">
-      <t-avatar class="avatar" size="large" image="{{userInfo.avatar_url || '/assets/default-avatar.png'}}" />
-      <view class="user-info">
-        <text>{{ isLoggedIn ? userInfo.user_name : '游客' }}</text>
+  <scroll-view class="content" scroll-y enhanced>
+    <view class="profile-card">
+      <view class="profile-top">
+        <view class="profile-main">
+          <image class="avatar-image" src="{{userInfo.avatar_url || '/assets/default-avatar.png'}}" mode="aspectFill" />
+          <view class="profile-copy">
+            <text class="profile-name">{{isLoggedIn ? (userInfo.user_name || '同学') : '游客模式'}}</text>
+            <text class="profile-meta">{{profileMeta}}</text>
+          </view>
+        </view>
+        <text class="role-tag">{{roleText}}</text>
       </view>
-      <view class="login-btn" wx:if="{{ !isLoggedIn }}" bind:tap="goLogin">
-        <text>去登陆</text>
+
+      <view class="summary-grid">
+        <view class="summary-item">
+          <text class="summary-label">当前积分</text>
+          <text class="summary-value">{{summary.points}}</text>
+        </view>
+        <view class="summary-item">
+          <text class="summary-label">当前身份</text>
+          <text class="summary-value">{{summary.currentRole}}</text>
+        </view>
+        <view class="summary-item">
+          <text class="summary-label">可用角色</text>
+          <text class="summary-value">{{summary.roleCount}}</text>
+        </view>
+        <view class="summary-item">
+          <text class="summary-label">年级信息</text>
+          <text class="summary-value">{{summary.gradeText}}</text>
+        </view>
       </view>
-    </view>
-    <!-- 积分卡片 -->
-    <view class="points-card">
-      <view class="points-item">
-        <text class="points-icon">⭐</text>
-        <text class="points-value">{{isLoggedIn ? userInfo.points || 0 : '-'}}</text>
-        <text class="points-label">积分</text>
+
+      <view class="hero-actions">
+        <button wx:if="{{!isLoggedIn}}" class="primary-btn" bindtap="goLogin">立即登录</button>
+        <button wx:else class="ghost-btn" bindtap="goToSetting">编辑资料</button>
+        <button wx:if="{{isTeacher}}" class="primary-btn" bindtap="goToTeacher">切到教师端</button>
+        <button wx:else class="ghost-btn" bindtap="goToClassManage">查看班级</button>
       </view>
     </view>
 
-    <!-- 功能列表 -->
-    <view  class="function-card">
-      <t-cell-group theme="card" class="function-list">
-        <t-cell title="✅ 已提交任务" hover arrow url="{{ isLoggedIn ? '/pages/student/submissions/submissions' : '/pages/login/login' }}" />
-        <t-cell title="🎓 我的班级" hover arrow url="{{ isLoggedIn ? '/pages/student/class-manage/class-manage' : '/pages/login/login' }}" />
-        <t-cell title="⚙️ 账号设置" hover arrow url="{{ isLoggedIn ? '/pages/student/setting/setting' : '/pages/login/login'}}" />
-        <t-cell wx:if="{{isTeacher}}" title="🧑‍🏫 前往教师端" hover arrow bind:tap="goToTeacher"  />
-        <t-cell wx:if="{{isLoggedIn}}" title="🚪 退出登录" hover arrow bind:click="onLogout" />
-        <t-dialog
-          visible="{{showLogout}}"
-          title="退出登录"
-          content="确定退出登录"
-          confirm-btn="{{ { content: '确定', variant: 'base', theme: 'danger' } }}"
-          cancel-btn="取消"
-          bind:confirm="handleLogout"
-          bind:cancel="closeDialog"
-        />
-      </t-cell-group>
+    <view class="section-card">
+      <view class="section-header">
+        <text class="section-title">常用功能</text>
+        <text class="section-extra">学习相关</text>
+      </view>
+      <view class="action-list">
+        <view
+          wx:for="{{primaryActions}}"
+          wx:key="key"
+          class="action-item"
+          data-key="{{item.key}}"
+          bindtap="handlePrimaryAction"
+        >
+          <view class="action-copy">
+            <text class="action-title">{{item.title}}</text>
+            <text class="action-desc">{{item.desc}}</text>
+          </view>
+          <text class="action-arrow">›</text>
+        </view>
+      </view>
     </view>
-  </view>
+
+    <view class="section-card">
+      <view class="section-header">
+        <text class="section-title">账号操作</text>
+        <text class="section-extra">安全与切换</text>
+      </view>
+      <view class="action-list">
+        <view wx:if="{{isTeacher}}" class="action-item" bindtap="goToTeacher">
+          <view class="action-copy">
+            <text class="action-title">前往教师端</text>
+            <text class="action-desc">切换身份后进入教师侧首页与管理页面</text>
+          </view>
+          <text class="action-arrow">›</text>
+        </view>
+        <view wx:if="{{isLoggedIn}}" class="action-item action-item-danger" bindtap="onLogout">
+          <view class="action-copy">
+            <text class="action-title action-title-danger">退出登录</text>
+            <text class="action-desc">退出后会清除当前账号在本机缓存的登录信息</text>
+          </view>
+          <text class="action-arrow action-arrow-danger">›</text>
+        </view>
+        <view wx:else class="empty-card">
+          <text class="empty-title">当前处于游客模式</text>
+          <text class="empty-desc">登录后可以同步积分、角色和班级学习数据。</text>
+        </view>
+      </view>
+    </view>
+
+    <view class="footer-placeholder"></view>
+  </scroll-view>
+
+  <t-dialog
+    visible="{{showLogout}}"
+    title="退出登录"
+    content="确定退出当前账号吗？"
+    confirm-btn="{{ { content: '确定', variant: 'base', theme: 'danger' } }}"
+    cancel-btn="取消"
+    bind:confirm="handleLogout"
+    bind:cancel="closeDialog"
+  />
 </view>

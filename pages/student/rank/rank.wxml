@@ -5,22 +5,87 @@
       <custom-navbar title="智力控码" placeholder="{{true}}" />
     </view>
     <view class="tabs-wrapper">
-      <t-tabs defaultValue="week" bind:change="onTabsChange">
+      <t-tabs value="{{rankType}}" bind:change="onTabsChange">
         <t-tab-panel label="周榜" value="week" />
         <t-tab-panel label="月榜" value="month" />
         <t-tab-panel label="总榜" value="total" />
       </t-tabs>
     </view>
   </view>
-  <t-pull-down-refresh
-    value="{{enableRefresh}}"
-    loadingTexts="{{['下拉刷新', '松手刷新', '正在刷新', '刷新完成']}}"
-    usingCustomNavbar
-    bind:refresh="onRefresh"
-    bind:scroll="onScroll"
-  >
-    <view class="body">
-      排行
+
+  <scroll-view class="content" scroll-y enhanced>
+    <view class="hero-card">
+      <text class="hero-eyebrow">学习排行</text>
+      <text class="hero-title">{{rankTitle}}</text>
+      <text class="hero-desc">{{rankDesc}}</text>
+
+      <view class="summary-grid">
+        <view class="summary-item">
+          <text class="summary-label">参与人数</text>
+          <text class="summary-value">{{summary.participantCount}}</text>
+        </view>
+        <view class="summary-item">
+          <text class="summary-label">我的位置</text>
+          <text class="summary-value">{{summary.myRankText}}</text>
+        </view>
+        <view class="summary-item">
+          <text class="summary-label">当前积分</text>
+          <text class="summary-value">{{summary.myPoints}}</text>
+        </view>
+        <view class="summary-item">
+          <text class="summary-label">当前维度</text>
+          <text class="summary-value">{{rankType === 'week' ? '周榜' : rankType === 'month' ? '月榜' : '总榜'}}</text>
+        </view>
+      </view>
     </view>
-  </t-pull-down-refresh>
+
+    <view class="section-card" wx:if="{{topThree.length}}">
+      <view class="section-header">
+        <text class="section-title">前三名</text>
+        <text class="section-extra">当前高光</text>
+      </view>
+      <view class="podium-list">
+        <view wx:for="{{topThree}}" wx:key="rank" class="podium-item {{item.rankClass}}">
+          <view class="podium-rank">{{item.rank}}</view>
+          <view class="podium-copy">
+            <text class="podium-name">{{item.name}}</text>
+            <text class="podium-meta">{{item.grade}} · {{item.badgeText}}</text>
+          </view>
+          <text class="podium-score">{{item.points}}</text>
+        </view>
+      </view>
+    </view>
+
+    <view wx:if="{{currentUserCard}}" class="section-card current-card">
+      <view class="section-header">
+        <text class="section-title">我的表现</text>
+        <text class="section-extra">{{currentUserCard.rank}}</text>
+      </view>
+      <text class="current-name">{{currentUserCard.name}}</text>
+      <text class="current-meta">{{currentUserCard.grade}} · {{currentUserCard.badgeText}}</text>
+      <view class="current-summary">
+        <text class="current-pill">排名 {{currentUserCard.rank}}</text>
+        <text class="current-pill">积分 {{currentUserCard.points}}</text>
+      </view>
+    </view>
+
+    <view class="section-card">
+      <view class="section-header">
+        <text class="section-title">完整榜单</text>
+        <text class="section-extra">第 4 名起</text>
+      </view>
+      <view class="rank-list">
+        <view wx:for="{{displayRanks}}" wx:key="rank" class="rank-item {{item.isCurrentUser ? 'rank-item-current' : ''}}">
+          <view class="rank-order">{{item.rank}}</view>
+          <view class="rank-copy">
+            <text class="rank-name">{{item.name}}</text>
+            <text class="rank-meta">{{item.grade}} · {{item.trend}}</text>
+          </view>
+          <text class="rank-score">{{item.points}}</text>
+        </view>
+      </view>
+    </view>
+
+    <view class="footer-placeholder"></view>
+  </scroll-view>
 </view>

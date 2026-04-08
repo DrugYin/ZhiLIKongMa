@@ -5,80 +5,94 @@
       <custom-navbar placeholder="{{true}}" title="智力控码" />
     </view>
   </view>
-  <view class="content">
-    <!-- 顶部欢迎区 -->
-    <view class="welcome-section">
-      <view class="welcome-text">
-        <text class="greeting">{{greeting}}，</text>
-        <text class="teacher-name">{{userInfo.name || ''}}教练</text>
+  <scroll-view class="content" scroll-y enhanced>
+    <view class="hero-card">
+      <text class="hero-eyebrow">教师工作台</text>
+      <text class="hero-title">{{greeting}}，{{userInfo.user_name || userInfo.name || '老师'}}</text>
+      <text class="hero-desc">今天先处理审核中心待办，再查看班级与任务状态，整体节奏会更顺手。</text>
+
+      <view class="summary-grid">
+        <view class="summary-item">
+          <text class="summary-label">待审核</text>
+          <text class="summary-value">{{pendingCount}}</text>
+        </view>
+        <view class="summary-item">
+          <text class="summary-label">班级总数</text>
+          <text class="summary-value">{{overview.classCount}}</text>
+        </view>
+        <view class="summary-item">
+          <text class="summary-label">任务总数</text>
+          <text class="summary-value">{{overview.taskCount}}</text>
+        </view>
+        <view class="summary-item">
+          <text class="summary-label">活跃班级</text>
+          <text class="summary-value">{{overview.activeClassCount}}</text>
+        </view>
+      </view>
+
+      <view class="hero-actions">
+        <button class="primary-btn" bindtap="goToPending">立即审核</button>
+        <button class="ghost-btn" bindtap="goToTaskManage">查看任务</button>
       </view>
     </view>
 
-    <!-- 核心待办卡片 -->
-    <view class="pending-card" bind:tap="goToReview">
-      <view class="pending-content">
-        <view class="pending-icon">⏰</view>
-        <view class="pending-info">
-          <text class="pending-title">待审核打卡</text>
-          <text class="pending-desc">📝 {{pendingCount}}条记录待处理</text>
-        </view>
-      </view>
-      <view class="pending-action" bind:tap="goToPending">
-        <text class="action-text">立即审核</text>
-        <text class="action-arrow">›</text>
-      </view>
-    </view>
-
-    <!-- 本周数据概览 -->
-    <view class="stats-section">
-      <view class="section-title">本周数据概览</view>
-      <view class="stats-cards">
-        <view class="stat-card">
-          <text class="stat-value">{{weeklyStats.totalStudents}}</text>
-          <text class="stat-label">总学员</text>
-        </view>
-        <view class="stat-card">
-          <text class="stat-value">{{weeklyStats.weeklyCheckIns}}</text>
-          <text class="stat-label">本周打卡</text>
-        </view>
-        <view class="stat-card">
-          <text class="stat-value">{{weeklyStats.completionRate}}%</text>
-          <text class="stat-label">完成率</text>
-        </view>
-      </view>
-    </view>
-
-    <!-- 常用功能快速入口 -->
-    <view class="quick-actions">
-      <view class="action-item" bind:tap="goToTaskManage">
-        <view class="action-icon">📋</view>
-        <text class="action-name">任务管理</text>
-      </view>
-      <view class="action-item" bind:tap="goToPending">
-        <view class="action-icon">✏️</view>
-        <text class="action-name">提交审核</text>
-      </view>
-      <view class="action-item" bind:tap="goToClassManage">
-        <view class="action-icon">🎓</view>
-        <text class="action-name">班级管理</text>
-      </view>
-    </view>
-
-    <!-- 最新动态 -->
-    <view class="activities-section">
+    <view class="section-card">
       <view class="section-header">
-        <text class="section-title">最新动态</text>
-        <text class="view-all" bind:tap="viewAllActivities">查看全部</text>
+        <text class="section-title">本周概览</text>
+        <text class="section-extra">教学节奏</text>
       </view>
-      <view class="activities-list">
-        <view class="activity-item" wx:for="{{recentActivities}}" wx:key="id">
+      <view class="stats-row">
+        <view class="stats-item">
+          <text class="stats-value">{{weeklyStats.totalStudents}}</text>
+          <text class="stats-label">总学员</text>
+        </view>
+        <view class="stats-item">
+          <text class="stats-value">{{weeklyStats.weeklyCheckIns}}</text>
+          <text class="stats-label">本周打卡</text>
+        </view>
+        <view class="stats-item">
+          <text class="stats-value">{{weeklyStats.completionRate}}%</text>
+          <text class="stats-label">完成率</text>
+        </view>
+      </view>
+    </view>
+
+    <view class="section-card">
+      <view class="section-header">
+        <text class="section-title">快速入口</text>
+        <text class="section-extra">常用功能</text>
+      </view>
+      <view class="quick-grid">
+        <view
+          wx:for="{{quickActions}}"
+          wx:key="key"
+          class="quick-card"
+          data-key="{{item.key}}"
+          bindtap="handleQuickAction"
+        >
+          <view class="quick-mark">{{item.mark}}</view>
+          <text class="quick-title">{{item.title}}</text>
+          <text class="quick-desc">{{item.desc}}</text>
+        </view>
+      </view>
+    </view>
+
+    <view class="section-card">
+      <view class="section-header">
+        <text class="section-title">最近动态</text>
+        <text class="section-extra" bindtap="viewAllActivities">查看全部</text>
+      </view>
+      <view class="activity-list">
+        <view wx:for="{{recentActivities}}" wx:key="id" class="activity-item">
           <view class="activity-dot"></view>
-          <view class="activity-content">
+          <view class="activity-copy">
             <text class="activity-text">{{item.content}}</text>
             <text class="activity-time">{{item.time}}</text>
           </view>
         </view>
       </view>
     </view>
-  </view>
+
+    <view class="footer-placeholder"></view>
+  </scroll-view>
 </view>

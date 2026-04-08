@@ -11,14 +11,14 @@
 
 .avatar-wrapper {
   padding: 0;
-  width: 80px !important;
-  border-radius: 8px;
+  width: 160rpx !important;
+  border-radius: 16rpx;
 }
 
 .avatar {
   display: block;
-  width: 80px;
-  height: 80px;
+  width: 160rpx;
+  height: 160rpx;
 }
 
 .avatar-text {

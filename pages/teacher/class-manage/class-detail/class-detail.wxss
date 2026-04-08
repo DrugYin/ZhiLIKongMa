@@ -358,13 +358,7 @@
   text-align: center;
 }
 
-.inline-empty-icon {
-  font-size: 56rpx;
-  line-height: 1;
-}
-
 .inline-empty-title {
-  margin-top: 18rpx;
   color: #1d3552;
   font-size: 28rpx;
   font-weight: 600;
