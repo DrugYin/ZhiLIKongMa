@@ -1,6 +1,7 @@
 {
   "disableScroll": true,
   "usingComponents": {
-    "custom-navbar": "/components/custom-navbar/index"
+    "custom-navbar": "/components/custom-navbar/index",
+    "t-popup": "tdesign-miniprogram/popup/popup"
   }
 }
