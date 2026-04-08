@@ -1,6 +1,6 @@
 # 云函数 API 文档
 
-本文档基于当前仓库代码同步整理，覆盖已经落地的用户系统、班级管理与项目配置云函数，并标注前端已接入情况与仍待实现的调用入口。
+本文档基于当前仓库代码同步整理，覆盖已经落地的用户系统、班级管理、任务管理与项目配置云函数，并标注前端已接入情况与仍待实现的调用入口。
 
 ## 通用说明
 
@@ -955,7 +955,233 @@ ClassService.removeMember(classId, memberOpenid)
 - `config/project.js`、`pages/teacher/class-manage` 已通过该接口读取项目列表
 - `services/api.js` 中 `configApi.getProjects()` 为统一调用入口
 
-## 四、前端封装对照
+## 四、任务管理系统
+
+### 当前实现概览
+
+- 教师端已接入 `/pages/teacher/task-manage/task-manage`、`/pages/teacher/task-manage/task-detail/task-detail`、`/pages/teacher/task-manage/task-edit/task-edit`
+- 学生端已接入 `/pages/student/task-manage/task-manage` 与 `/pages/student/task-manage/task-detail/task-detail`
+- 服务层已提供 `services/task.js`，统一封装任务创建、查询、详情、更新、删除
+- 当前尚未接入 `submit-task`、`get-submissions`、`review-submission`
+
+### 1. `create-task`
+
+功能：教师创建任务，支持公开任务和班级任务两类，创建后写入 `tasks` 与 `operation_logs`，班级任务会同步更新班级统计字段。
+
+入参：
+
+```js
+{
+  title: '算法热身训练',
+  description: '完成 3 道基础算法题并整理思路',
+  task_type: 'class', // class 或 public
+  visibility: 'class_only', // class_only 或 public；public 任务会被归一成 public
+  class_id: 'class_id', // 班级任务必填
+  project_code: 'programming',
+  project_name: '编程',
+  category: '基础训练',
+  difficulty: 2,
+  points: 10,
+  status: 'published', // draft、published、closed
+  deadline_date: '2026-04-15',
+  deadline_time: '20:00',
+  cover_image: 'cloud://xxx/cover.png',
+  images: ['cloud://xxx/1.png'],
+  files: [
+    {
+      file_id: 'cloud://xxx/guide.pdf',
+      file_name: '题目说明.pdf',
+      file_size: 102400
+    }
+  ]
+}
+```
+
+说明：
+
+- 仅教师可调用
+- `task_type = 'class'` 时必须传 `class_id`，且班级必须属于当前教师
+- 难度限制为 `1-5` 整数，积分限制为大于等于 `0` 的整数
+- 截止日期和截止时间要么同时为空，要么同时合法
+
+返回示例：
+
+```js
+{
+  success: true,
+  message: '创建任务成功',
+  data: {
+    _id: 'task_id',
+    title: '算法热身训练',
+    task_type: 'class',
+    visibility: 'class_only',
+    class_id: 'class_id',
+    status: 'published'
+  }
+}
+```
+
+### 2. `get-tasks`
+
+功能：获取任务列表。
+
+入参：
+
+```js
+{
+  role: 'teacher', // teacher 或 student；不传时默认按当前用户 current_role 处理
+  page: 1,
+  page_size: 20,
+  task_type: 'class',
+  visibility: 'class_only',
+  status: 'published',
+  class_id: 'class_id',
+  sort_by: 'update_time', // create_time、update_time、publish_time、deadline、difficulty、points
+  sort_order: 'desc'
+}
+```
+
+权限与行为：
+
+- 教师模式：仅返回当前教师创建的未删除任务，支持按状态、范围、班级、排序分页查询
+- 学生模式：仅返回已发布且当前学生可见的任务
+- 学生可见规则：
+  - `public` 任务始终可见
+  - `class + public` 任务公开可见
+  - `class + class_only` 任务仅当前学生已加入班级可见
+
+返回示例：
+
+```js
+{
+  success: true,
+  message: '获取任务列表成功',
+  data: {
+    list: [],
+    page: 1,
+    page_size: 20,
+    total: 0,
+    has_more: false
+  }
+}
+```
+
+### 3. `get-task-detail`
+
+功能：获取单个任务详情。
+
+入参：
+
+```js
+{
+  task_id: 'task_id'
+}
+```
+
+权限规则：
+
+- 任务所属教师可直接查看
+- 学生仅能查看自己有权限访问的已发布任务
+- 已删除任务会直接返回 `404`
+
+返回示例：
+
+```js
+{
+  success: true,
+  message: '获取任务详情成功',
+  data: {
+    _id: 'task_id',
+    title: '算法热身训练',
+    description: '完成 3 道基础算法题并整理思路',
+    task_type: 'class',
+    visibility: 'class_only',
+    status: 'published',
+    images: [],
+    files: []
+  }
+}
+```
+
+### 4. `update-task`
+
+功能：教师更新自己创建的任务。
+
+入参：
+
+```js
+{
+  task_id: 'task_id',
+  title: '算法热身训练（更新版）',
+  description: '补充了题目说明',
+  task_type: 'class',
+  visibility: 'class_only',
+  class_id: 'class_id',
+  project_code: 'programming',
+  project_name: '编程',
+  category: '基础训练',
+  difficulty: 3,
+  points: 12,
+  status: 'published',
+  deadline_date: '2026-04-16',
+  deadline_time: '20:00',
+  cover_image: 'cloud://xxx/cover.png',
+  images: ['cloud://xxx/1.png'],
+  files: []
+}
+```
+
+说明：
+
+- 仅任务所属教师可更新
+- 所有字段按“传了才更新”的策略处理
+- 若任务所属班级或状态变化，会同步调整 `classes.task_count / published_task_count`
+
+返回示例：
+
+```js
+{
+  success: true,
+  message: '更新任务成功',
+  data: {
+    _id: 'task_id',
+    title: '算法热身训练（更新版）',
+    status: 'published'
+  }
+}
+```
+
+### 5. `delete-task`
+
+功能：教师删除自己创建的任务。
+
+入参：
+
+```js
+{
+  task_id: 'task_id'
+}
+```
+
+说明：
+
+- 删除采用软删除：写入 `is_deleted = true`、`delete_time`
+- 删除后任务状态会被置为 `closed`
+- 若原任务为班级任务，会同步回退班级任务统计
+
+返回示例：
+
+```js
+{
+  success: true,
+  message: '删除任务成功',
+  data: {
+    task_id: 'task_id'
+  }
+}
+```
+
+## 五、前端封装对照
 
 ### 用户模块
 
@@ -968,16 +1194,22 @@ ClassService.removeMember(classId, memberOpenid)
 - `services/class.js` 中的 `ClassService`
 - 已落地方法：`createClass`、`updateClass`、`deleteClass`、`getClasses`、`getClassDetail`、`getClassInviteInfo`、`getMyClassStatus`、`joinClass`、`getClassApplications`、`handleApplication`、`getClassMembers`、`removeMember`
 
+### 任务模块
+
+- `services/api.js` 中的 `taskApi`
+- `services/task.js` 中的 `TaskService`
+- 已落地方法：`createTask`、`getTasks`、`getTaskDetail`、`updateTask`、`deleteTask`
+
 ### 配置模块
 
 - `services/api.js` 中的 `configApi`
 - `config/project.js` 中的 `ProjectService`
 
-## 五、当前未落地但已预留的调用入口
+## 六、当前未落地但已预留的调用入口
 
 以下方法已经在 `services/api.js` 中预留，但仓库中还没有对应云函数实现：
 
-- 任务：`create-task`、`get-tasks`、`get-task-detail`、`submit-task`、`review-submission`、`get-submissions`
+- 任务：`submit-task`、`review-submission`、`get-submissions`
 - 抽奖：`get-prizes`、`start-draw`、`get-draw-records`
 - 排行榜：`get-ranking`
 - 配置：`get-config`
@@ -985,4 +1217,4 @@ ClassService.removeMember(classId, memberOpenid)
 同步建议：
 
 - 新增云函数时，优先更新本文件与 `DEVELOPMENT_PLAN.md`
-- 当前若继续推进任务/审核模块，建议先补任务与提交相关接口，再接前端页面
+- 当前若继续推进任务/审核模块，建议优先补 `submit-task`、`get-submissions`、`review-submission`，再把审核中心从 mock 数据切到真实记录
