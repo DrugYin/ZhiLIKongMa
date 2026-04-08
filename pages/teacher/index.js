@@ -16,7 +16,7 @@ Page({
     overview: {
       classCount: 0,
       taskCount: 0,
-      activeClassCount: 0,
+      studentCount: 5,
       pendingCount: 6
     },
     quickActions: [

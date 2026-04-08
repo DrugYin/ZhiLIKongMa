@@ -31,12 +31,13 @@
   flex: 1;
   min-height: 0;
   box-sizing: border-box;
-  padding: 24rpx 24rpx calc(110rpx + env(safe-area-inset-bottom));
+  padding: 0rpx 24rpx calc(110rpx + env(safe-area-inset-bottom));
 }
 
 .summary-card,
 .task-card,
 .state-card {
+  margin-top: 10rpx;
   background: rgba(255, 255, 255, 0.94);
   border: 1rpx solid rgba(103, 126, 167, 0.08);
   border-radius: 32rpx;

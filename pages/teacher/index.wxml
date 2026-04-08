@@ -25,8 +25,8 @@
           <text class="summary-value">{{overview.taskCount}}</text>
         </view>
         <view class="summary-item">
-          <text class="summary-label">活跃班级</text>
-          <text class="summary-value">{{overview.activeClassCount}}</text>
+          <text class="summary-label">学生数量</text>
+          <text class="summary-value">{{overview.studentCount}}</text>
         </view>
       </view>
 
