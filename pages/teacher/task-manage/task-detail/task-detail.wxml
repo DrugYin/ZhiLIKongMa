@@ -3,7 +3,7 @@
     <custom-navbar title="任务详情" showBack="{{true}}" placeholder="{{true}}" />
   </view>
 
-  <scroll-view class="content" scroll-y enhanced>
+  <scroll-view class="content" scroll-y enhanced bounces="{{false}}" show-scrollbar="{{false}}">
     <view wx:if="{{loading}}" class="state-card">
       <text class="state-title">任务详情加载中</text>
       <text class="state-desc">正在同步任务内容、范围和发布时间。</text>

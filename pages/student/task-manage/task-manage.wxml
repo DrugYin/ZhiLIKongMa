@@ -3,7 +3,7 @@
     <custom-navbar title="{{pageTitle}}" showBack="{{true}}" placeholder="{{true}}" />
   </view>
 
-  <scroll-view class="content" scroll-y enhanced>
+  <scroll-view class="content" scroll-y enhanced bounces="{{false}}" show-scrollbar="{{false}}">
     <view class="hero-card">
       <view class="hero-top">
         <view class="hero-copy">
