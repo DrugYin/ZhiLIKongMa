@@ -3,19 +3,18 @@ const AuthService = require('../../../services/auth')
 const Toast = require('../../../utils/toast')
 
 Page({
-
-  /**
-   * 页面的初始数据
-   */
   data: {
-
+    userInfo: {},
+    summary: {
+      currentRole: '教师',
+      roleCount: 0,
+      points: 0,
+      gradeText: '未填写'
+    }
   },
 
-  /**
-   * 生命周期函数--监听页面加载
-   */
-  onLoad(options) {
-
+  onLoad() {
+    this.syncProfile()
   },
 
   goToStudent() {
@@ -33,11 +32,58 @@ Page({
       Toast.showError(e.message)
     })
   },
-  
-  /**
-   * 生命周期函数--监听页面显示
-   */
+
+  goToPending() {
+    wx.switchTab({
+      url: '/pages/teacher/pending/pending'
+    })
+  },
+
+  goToTaskManage() {
+    wx.switchTab({
+      url: '/pages/teacher/task-manage/task-manage'
+    })
+  },
+
+  goToClassManage() {
+    wx.navigateTo({
+      url: '/pages/teacher/class-manage/class-manage'
+    })
+  },
+
+  syncProfile() {
+    const userInfo = AuthService.getLocalUserInfo() || {}
+    const roles = Array.isArray(userInfo.roles) ? userInfo.roles : []
+
+    this.setData({
+      userInfo,
+      summary: {
+        currentRole: userInfo.current_role === 'student' ? '学生' : '教师',
+        roleCount: roles.length,
+        points: Number(userInfo.points || 0),
+        gradeText: userInfo.grade || '未填写'
+      }
+    })
+  },
+
+  onLogout() {
+    wx.showModal({
+      title: '退出登录',
+      content: '确定退出当前教师账号吗？',
+      success: async (res) => {
+        if (!res.confirm) {
+          return
+        }
+
+        await AuthService.logout()
+        wx.reLaunch({
+          url: '/pages/login/login'
+        })
+      }
+    })
+  },
   onShow() {
+    this.syncProfile()
     const tabBar = this.getTabBar && this.getTabBar()
     if (tabBar) {
       tabBar.changeData({ type: 'teacher' })
@@ -45,46 +91,15 @@ Page({
     }
   },
 
-  /**
-   * 生命周期函数--监听页面初次渲染完成
-   */
-  onReady() {
-
-  },
-
-
-  /**
-   * 生命周期函数--监听页面隐藏
-   */
-  onHide() {
-
-  },
-
-  /**
-   * 生命周期函数--监听页面卸载
-   */
-  onUnload() {
-
-  },
-
-  /**
-   * 页面相关事件处理函数--监听用户下拉动作
-   */
   onPullDownRefresh() {
-
+    this.syncProfile()
+    wx.stopPullDownRefresh()
   },
 
-  /**
-   * 页面上拉触底事件的处理函数
-   */
-  onReachBottom() {
-
-  },
-
-  /**
-   * 用户点击右上角分享
-   */
   onShareAppMessage() {
-
+    return {
+      title: '智力控码教师资料页',
+      path: '/pages/teacher/mine/mine'
+    }
   }
 })

@@ -1,15 +1,139 @@
-<!--pages/teacher/task-manage/task-manage.wxml-->
 <view class="container">
   <view class="header">
-    <custom-navbar placeholder="{{true}}" title="智力控码" />
+    <view class="navbar-wrapper">
+      <custom-navbar placeholder="{{true}}" title="任务管理" />
+    </view>
+    <view class="dropdown-wrapper">
+      <t-dropdown-menu placeholder class="dropdown-menu">
+        <t-dropdown-item options="{{projects.options}}" placement="right" value="{{projects.value}}" data-field="projects" bindchange="onDropdownChange" />
+        <t-dropdown-item options="{{taskTypes.options}}" placement="right" value="{{taskTypes.value}}" data-field="taskTypes" bindchange="onDropdownChange" />
+        <t-dropdown-item options="{{visibility.options}}" placement="right" value="{{visibility.value}}" data-field="visibility" bindchange="onDropdownChange" />
+        <t-dropdown-item options="{{status.options}}" placement="right" value="{{status.value}}" data-field="status" bindchange="onDropdownChange" />
+        <t-dropdown-item options="{{sorted.options}}" placement="right" value="{{sorted.value}}" data-field="sorted" bindchange="onDropdownChange" />
+      </t-dropdown-menu>
+    </view>
   </view>
-  <view class="body">
-    renwu
-  </view>
+
+  <scroll-view class="content" scroll-y enhanced bounces="{{false}}" show-scrollbar="{{false}}">
+    <view wx:if="{{loading}}" class="state-card">
+      <text class="state-title">任务列表加载中</text>
+      <text class="state-desc">正在同步教师端任务数据，请稍候。</text>
+    </view>
+
+    <block wx:elif="{{tasks.length}}">
+      <view class="summary-card">
+        <view class="summary-header">
+          <text class="summary-title">任务概览</text>
+          <text class="summary-desc">支持按项目、类型、范围和状态快速筛选</text>
+        </view>
+        <view class="summary-grid">
+          <view class="summary-item">
+            <text class="summary-label">任务总数</text>
+            <text class="summary-value">{{stats.total}}</text>
+          </view>
+          <view class="summary-item">
+            <text class="summary-label">已发布</text>
+            <text class="summary-value">{{stats.published}}</text>
+          </view>
+          <view class="summary-item">
+            <text class="summary-label">公开任务</text>
+            <text class="summary-value">{{stats.publicCount}}</text>
+          </view>
+          <view class="summary-item">
+            <text class="summary-label">班级任务</text>
+            <text class="summary-value">{{stats.classCount}}</text>
+          </view>
+        </view>
+      </view>
+
+      <block wx:if="{{displayTasks.length}}">
+        <view
+          wx:for="{{displayTasks}}"
+          wx:key="_id"
+          class="task-card"
+          data-task-id="{{item._id}}"
+          bindtap="goToTaskDetail"
+        >
+          <view class="card-top">
+            <view class="card-title-group">
+              <text class="task-title">{{item.titleText}}</text>
+              <text class="task-project">{{item.projectText}}</text>
+            </view>
+            <text class="status-tag {{item.statusClass}}">{{item.statusText}}</text>
+          </view>
+
+          <view class="tag-row">
+            <text class="plain-tag">{{item.taskTypeText}}</text>
+            <text class="plain-tag plain-tag-light">{{item.visibilityText}}</text>
+            <text class="plain-tag" style="{{item.difficultyStyle}}">{{item.difficultyText}}</text>
+          </view>
+
+          <view class="task-meta-grid">
+            <view class="meta-item">
+              <text class="meta-label">面向对象</text>
+              <text class="meta-value">{{item.classText}}</text>
+            </view>
+            <view class="meta-item">
+              <text class="meta-label">任务积分</text>
+              <text class="meta-value">{{item.pointsText}}</text>
+            </view>
+            <view class="meta-item">
+              <text class="meta-label">截止时间</text>
+              <text class="meta-value">{{item.deadlineText}}</text>
+            </view>
+            <view class="meta-item">
+              <text class="meta-label">附件情况</text>
+              <text class="meta-value">{{item.imageCountText}} / {{item.fileCountText}}</text>
+            </view>
+          </view>
+
+          <view class="task-desc">{{item.descriptionText}}</view>
+
+          <view class="card-footer">
+            <view class="time-group">
+              <text class="time-text">发布时间：{{item.publishTimeText}}</text>
+              <text class="time-text">更新时间：{{item.updateTimeText}}</text>
+            </view>
+            <view class="action-group">
+              <button
+                class="action-btn action-btn-secondary"
+                data-task-id="{{item._id}}"
+                catchtap="goToTaskDetail"
+              >
+                详情
+              </button>
+              <button
+                class="action-btn action-btn-danger"
+                data-task-id="{{item._id}}"
+                data-task-title="{{item.titleText}}"
+                catchtap="onDeleteTask"
+              >
+                删除
+              </button>
+            </view>
+          </view>
+        </view>
+      </block>
+
+      <view wx:else class="state-card empty-card">
+        <text class="state-title">暂无匹配任务</text>
+        <text class="state-desc">{{emptyText}}</text>
+      </view>
+    </block>
+
+    <view wx:else class="state-card empty-card">
+      <text class="state-title">还没有任务</text>
+      <text class="state-desc">{{emptyText}}</text>
+    </view>
+
+    <t-back-top theme="round" text="返回顶部" />
+  </scroll-view>
 </view>
+
 <t-fab
   y-bounds="{{[50, 100]}}"
   using-custom-navbar
   draggable
   icon="add"
+  bind:click="goToAddTask"
 />

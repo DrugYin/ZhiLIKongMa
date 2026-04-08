@@ -1,97 +1,241 @@
-/* pages/student/mine/mine.wxss */
+.container {
+  min-height: 100vh;
+  background: linear-gradient(180deg, #f7f8fa 0%, #eef2f7 100%);
+}
 
 .header {
-  width: 100%;
+  position: relative;
+  z-index: 10;
+  background: rgba(255, 255, 255, 0.96);
 }
 
 .content {
-  /* min-height: 100vh; */
-  width: 100%;
+  box-sizing: border-box;
+  height: calc(100vh - 96rpx);
+  padding: 0rpx 24rpx calc(180rpx + env(safe-area-inset-bottom));
 }
 
-/* 用户卡片 */
-.user-card {
+.profile-card,
+.section-card {
+  margin-top: 24rpx;
+  padding: 28rpx;
+  border-radius: 28rpx;
+  background: rgba(255, 255, 255, 0.96);
+  border: 1rpx solid rgba(103, 126, 167, 0.08);
+  box-shadow: 0 20rpx 50rpx rgba(24, 62, 107, 0.08);
+}
+
+.profile-card {
+  background: linear-gradient(135deg, #ffffff 0%, #eef6ff 54%, #f8fbff 100%);
+}
+
+.profile-top,
+.profile-main,
+.section-header,
+.hero-actions,
+.action-item {
   display: flex;
   align-items: center;
+}
+
+.profile-top,
+.section-header,
+.action-item {
   justify-content: space-between;
-  background: linear-gradient(135deg, #728af6 0%, #e5cefd 100%);
-  border-radius: 25rpx;
-  width: 80%;
-  margin: 40rpx auto;
-  padding: 60rpx 40rpx;
+  gap: 16rpx;
 }
 
-.avatar {
+.profile-top {
+  align-items: flex-start;
+}
+
+.profile-main {
+  flex: 1;
+  min-width: 0;
+  gap: 18rpx;
+}
+
+.profile-copy {
+  flex: 1;
+  min-width: 0;
+}
+
+.avatar-image {
+  width: 88rpx;
+  height: 88rpx;
+  flex-shrink: 0;
   border-radius: 50%;
-  border: 4rpx solid rgba(255, 255, 255, 0.3);
+  background: #eef3f8;
 }
 
-.user-info {
-  display: flex;
-  flex-direction: column;
-  margin-left: 20rpx;
-  margin-right: auto;
-  font-size: 36rpx;
-  color: #000;
-  font-weight: bold;
+.profile-name,
+.section-title,
+.action-title {
+  display: block;
+  color: #17314a;
+  font-weight: 700;
 }
 
-.login-btn {
-  background-color: rgba(255, 255, 255, 0.2);
-  padding: 12rpx 24rpx;
-  border-radius: 32rpx;
-  border: 1rpx solid rgba(255, 255, 255, 0.3);
+.profile-name {
+  font-size: 34rpx;
 }
 
-.login-btn text {
+.profile-meta,
+.section-extra,
+.action-desc,
+.empty-desc {
+  display: block;
+  color: #65788c;
   font-size: 24rpx;
-  color: #000;
+  line-height: 1.8;
 }
 
-/* 积分卡片 */
-.points-card {
+.profile-meta {
+  margin-top: 10rpx;
+}
+
+.role-tag {
+  flex-shrink: 0;
+  padding: 8rpx 18rpx;
+  border-radius: 999rpx;
+  color: #1f4f78;
+  background: rgba(31, 122, 224, 0.1);
+  font-size: 22rpx;
+  font-weight: 600;
+}
+
+.summary-grid {
   display: flex;
-  justify-content: center;
-  margin: 40rpx auto;
-  width: 90%;
-  background: #fff;
-  border-radius: 24rpx;
-  box-shadow: 0 4rpx 16rpx rgba(0, 0, 0, 0.06);
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 18rpx 0;
+  margin-top: 24rpx;
 }
 
-.points-item {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: 40rpx 60rpx;
+.summary-item {
+  width: calc(50% - 10rpx);
+  box-sizing: border-box;
+  padding: 22rpx;
+  border-radius: 22rpx;
+  background: #f6f9fc;
 }
 
-.points-icon {
-  font-size: 40rpx;
-  margin-bottom: 12rpx;
+.summary-label {
+  display: block;
+  color: #7b8798;
+  font-size: 22rpx;
 }
 
-.points-value {
-  font-size: 48rpx;
-  font-weight: bold;
-  color: #667eea;
-  margin-bottom: 8rpx;
+.summary-value {
+  display: block;
+  margin-top: 10rpx;
+  color: #1f3349;
+  font-size: 28rpx;
+  font-weight: 700;
+  line-height: 1.6;
 }
 
-.points-label {
-  font-size: 24rpx;
-  color: #999;
+.hero-actions {
+  gap: 16rpx;
+  margin-top: 24rpx;
 }
 
-.function-card {
-  margin: 40rpx auto;
-  width: 90%;
-  background: #fff;
-  border-radius: 24rpx;
-  box-shadow: 0 4rpx 16rpx rgba(0, 0, 0, 0.06);
+.primary-btn,
+.ghost-btn {
+  flex: 1;
+  height: 72rpx;
+  line-height: 72rpx;
+  padding: 0 24rpx;
+  margin: 0;
+  border-radius: 999rpx;
+  font-size: 26rpx;
+  font-weight: 600;
 }
 
-.function-list {
-  width: 100% !important;
-  margin: auto !important;
+.primary-btn::after,
+.ghost-btn::after {
+  border: none;
+}
+
+.primary-btn {
+  color: #ffffff;
+  background: linear-gradient(135deg, #1f7ae0 0%, #4a8ff5 100%);
+}
+
+.ghost-btn {
+  color: #1f4f78;
+  background: #e7f1fb;
+}
+
+.section-title {
+  font-size: 30rpx;
+}
+
+.section-extra {
+  font-size: 22rpx;
+}
+
+.action-list {
+  margin-top: 18rpx;
+}
+
+.action-item {
+  padding: 24rpx 0;
+  border-bottom: 1rpx solid rgba(223, 229, 237, 0.9);
+}
+
+.action-item:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.action-copy {
+  flex: 1;
+  min-width: 0;
+}
+
+.action-title {
+  font-size: 28rpx;
+}
+
+.action-desc {
+  margin-top: 10rpx;
+}
+
+.action-arrow {
+  flex-shrink: 0;
+  color: #7a8797;
+  font-size: 34rpx;
+  line-height: 1;
+}
+
+.action-item-danger {
+  border-bottom: none;
+}
+
+.action-title-danger,
+.action-arrow-danger {
+  color: #d84a55;
+}
+
+.empty-card {
+  margin-top: 18rpx;
+  padding: 24rpx;
+  border-radius: 22rpx;
+  background: #f7f9fc;
+}
+
+.empty-title {
+  display: block;
+  color: #17314a;
+  font-size: 28rpx;
+  font-weight: 700;
+}
+
+.empty-desc {
+  margin-top: 10rpx;
+}
+
+.footer-placeholder {
+  height: 20rpx;
 }

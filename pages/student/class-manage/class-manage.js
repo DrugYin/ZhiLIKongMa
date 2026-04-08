@@ -168,6 +168,19 @@ Page({
     });
   },
 
+  goToClassDetail(e) {
+    const classId = String(e.currentTarget.dataset.classId || '').trim();
+
+    if (!classId) {
+      Toast.showToast('缺少班级ID');
+      return;
+    }
+
+    wx.navigateTo({
+      url: `/pages/student/class-manage/class-detail/class-detail?class_id=${classId}`
+    });
+  },
+
   onCopyClassCode(e) {
     const classCode = String(e.currentTarget.dataset.classCode || '');
 

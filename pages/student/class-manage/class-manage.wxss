@@ -12,14 +12,14 @@
 .content {
   box-sizing: border-box;
   height: calc(100vh - 96rpx);
-  padding: 24rpx;
+  padding: 0rpx 24rpx calc(24rpx + env(safe-area-inset-bottom));
 }
 
 .hero-card,
 .section-card,
 .state-card,
 .tips-card {
-  margin-bottom: 24rpx;
+  margin-top: 24rpx;
   padding: 28rpx;
   border-radius: 28rpx;
   background: rgba(255, 255, 255, 0.96);
@@ -141,6 +141,11 @@
   margin-top: 22rpx;
 }
 
+.action-row-split {
+  display: flex;
+  gap: 16rpx;
+}
+
 .list-wrap {
   margin-top: 20rpx;
 }
@@ -229,6 +234,10 @@
   background: #e7f1fb;
   font-size: 26rpx;
   font-weight: 600;
+}
+
+.ghost-btn-light {
+  background: rgba(31, 122, 224, 0.08);
 }
 
 .ghost-btn::after {

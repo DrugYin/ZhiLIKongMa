@@ -1,3 +1,6 @@
 {
-  "usingComponents": {}
+  "disableScroll": true,
+  "usingComponents": {
+    "custom-navbar": "/components/custom-navbar/index"
+  }
 }

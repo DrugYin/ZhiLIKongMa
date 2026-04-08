@@ -99,7 +99,8 @@
               <text class="detail-meta">加入时间：{{item.joinTimeText}}</text>
             </view>
 
-            <view class="action-row">
+            <view class="action-row action-row-split">
+              <button class="ghost-btn ghost-btn-light" data-class-id="{{item._id}}" bindtap="goToClassDetail">查看详情</button>
               <button class="ghost-btn" data-class-code="{{item.class_code}}" bindtap="onCopyClassCode">复制邀请码</button>
             </view>
           </view>

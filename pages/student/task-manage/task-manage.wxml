@@ -1,0 +1,123 @@
+<view class="container">
+  <view class="header">
+    <custom-navbar title="{{pageTitle}}" showBack="{{true}}" placeholder="{{true}}" />
+  </view>
+
+  <scroll-view class="content" scroll-y enhanced bounces="{{false}}" show-scrollbar="{{false}}">
+    <view class="hero-card">
+      <view class="hero-top">
+        <view class="hero-copy">
+          <text class="hero-title">{{heroTitle}}</text>
+          <text class="hero-desc">{{heroDesc}}</text>
+        </view>
+        <text wx:if="{{filterClassName}}" class="hero-tag">{{filterClassName}}</text>
+      </view>
+    </view>
+
+    <view wx:if="{{loading}}" class="state-card">
+      <text class="state-title">任务列表加载中</text>
+      <text class="state-desc">正在同步你当前可查看的任务内容。</text>
+    </view>
+
+    <block wx:elif="{{!isLoggedIn}}">
+      <view class="state-card">
+        <text class="state-title">还没有登录</text>
+        <text class="state-desc">登录并完成注册后，才可以查看学生端任务列表。</text>
+        <button class="primary-btn state-btn" bindtap="goLogin">去登录</button>
+      </view>
+    </block>
+
+    <block wx:else>
+      <view class="summary-card">
+        <view class="summary-grid">
+          <view class="summary-item">
+            <text class="summary-label">当前任务</text>
+            <text class="summary-value">{{stats.total}}</text>
+          </view>
+          <view class="summary-item">
+            <text class="summary-label">我的班级任务</text>
+            <text class="summary-value">{{stats.myClassCount}}</text>
+          </view>
+          <view class="summary-item">
+            <text class="summary-label">公开可见</text>
+            <text class="summary-value">{{stats.publicCount}}</text>
+          </view>
+          <view class="summary-item">
+            <text class="summary-label">近期截止</text>
+            <text class="summary-value">{{stats.deadlineSoonCount}}</text>
+          </view>
+        </view>
+      </view>
+
+      <view wx:if="{{displayTasks.length}}" class="task-list">
+        <view
+          wx:for="{{displayTasks}}"
+          wx:key="_id"
+          class="task-card"
+          data-task-id="{{item._id}}"
+          bindtap="goToTaskDetail"
+        >
+          <view class="task-top">
+            <view class="task-copy">
+              <text class="task-title">{{item.titleText}}</text>
+              <text class="task-project">{{item.projectText}}</text>
+            </view>
+            <text class="scope-tag {{item.isMyTask ? 'scope-tag-active' : ''}}">{{item.scopeText}}</text>
+          </view>
+
+          <view class="tag-row">
+            <text class="plain-tag">{{item.taskTypeText}}</text>
+            <text class="plain-tag plain-tag-light">{{item.visibilityText}}</text>
+            <text class="plain-tag" style="{{item.difficultyStyle}}">{{item.difficultyText}}</text>
+          </view>
+
+          <view class="meta-grid">
+            <view class="meta-item">
+              <text class="meta-label">面向对象</text>
+              <text class="meta-value">{{item.classText}}</text>
+            </view>
+            <view class="meta-item">
+              <text class="meta-label">任务积分</text>
+              <text class="meta-value">{{item.pointsText}}</text>
+            </view>
+            <view class="meta-item">
+              <text class="meta-label">截止时间</text>
+              <text class="meta-value">{{item.deadlineText}}</text>
+            </view>
+            <view class="meta-item">
+              <text class="meta-label">素材数量</text>
+              <text class="meta-value">{{item.imageCountText}} / {{item.fileCountText}}</text>
+            </view>
+          </view>
+
+          <text class="task-desc">{{item.descriptionText}}</text>
+
+          <view class="task-footer">
+            <text class="time-text">发布时间：{{item.publishTimeText}}</text>
+            <text class="detail-link">查看详情</text>
+          </view>
+        </view>
+      </view>
+
+      <view wx:else class="state-card">
+        <text class="state-title">暂时没有任务</text>
+        <text class="state-desc">{{emptyText}}</text>
+        <button class="ghost-btn state-btn" bindtap="goBack">返回上一页</button>
+      </view>
+    </block>
+  </scroll-view>
+
+  <view wx:if="{{isLoggedIn && !loading}}">
+    <t-tab-bar
+      value="{{currentTab}}"
+      bindchange="onTabChange"
+      theme="tag"
+      split="{{false}}"
+      placeholder
+    >
+      <t-tab-bar-item wx:for="{{tabs}}" wx:key="value" value="{{item.value}}">
+        {{item.label}}
+      </t-tab-bar-item>
+    </t-tab-bar>
+  </view>
+</view>
