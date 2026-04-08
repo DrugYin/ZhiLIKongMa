@@ -3,6 +3,8 @@
     "pages/student/index",
     "pages/student/task-manage/task-manage",
     "pages/student/task-manage/task-detail/task-detail",
+    "pages/student/task-manage/submission-edit/submission-edit",
+    "pages/student/task-manage/submission-records/submission-records",
     "pages/student/mine/mine",
     "pages/student/class-manage/class-manage",
     "pages/student/class-manage/class-detail/class-detail",

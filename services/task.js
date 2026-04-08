@@ -1,6 +1,14 @@
 const { taskApi } = require('./api');
 
 class TaskService {
+  static async submitTask(params) {
+    const res = await taskApi.submitTask(params)
+    if (!res.success) {
+      throw new Error(res.message || '提交任务失败')
+    }
+    return res.data
+  }
+
   static async createTask(params) {
     const res = await taskApi.createTask(params);
     if (!res.success) {
@@ -23,6 +31,14 @@ class TaskService {
       throw new Error(res.message || '获取任务详情失败');
     }
     return res.data;
+  }
+
+  static async getSubmissions(params = {}) {
+    const res = await taskApi.getSubmissions(params)
+    if (!res.success) {
+      throw new Error(res.message || '获取提交记录失败')
+    }
+    return res.data
   }
 
   static async updateTask(params) {
