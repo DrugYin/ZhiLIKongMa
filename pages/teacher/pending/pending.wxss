@@ -481,9 +481,39 @@
   margin-top: 18rpx;
 }
 
+.review-field-tip {
+  display: block;
+  margin-top: 10rpx;
+  color: #7b8798;
+  font-size: 22rpx;
+  line-height: 1.7;
+}
+
 .review-input-wrap,
-.review-textarea-wrap {
+.review-textarea-wrap,
+.review-upload-wrap {
   margin-top: 12rpx;
+}
+
+.section-header-compact {
+  align-items: center;
+}
+
+.review-file-toolbar {
+  margin-top: 12rpx;
+}
+
+.file-select-btn {
+  width: 100%;
+}
+
+.review-file-list,
+.review-empty-panel {
+  margin-top: 14rpx;
+}
+
+.popup-file-delete {
+  color: #d84a55;
 }
 
 .popup-action-row {

@@ -71,6 +71,40 @@ function normalizePoints(value) {
   return points
 }
 
+function normalizeImageList(value) {
+  if (!Array.isArray(value)) {
+    return []
+  }
+
+  return value
+    .map((item) => normalizeString(item))
+    .filter(Boolean)
+}
+
+function normalizeFileList(value) {
+  if (!Array.isArray(value)) {
+    return []
+  }
+
+  return value.reduce((result, item) => {
+    if (!item || typeof item !== 'object') {
+      return result
+    }
+
+    const fileId = normalizeString(item.file_id)
+    if (!fileId) {
+      return result
+    }
+
+    result.push({
+      file_id: fileId,
+      file_name: normalizeString(item.file_name) || fileId,
+      file_size: Number(item.file_size || 0)
+    })
+    return result
+  }, [])
+}
+
 async function writeOperationLog(openid, targetId, detail, now) {
   try {
     await db.collection('operation_logs').add({
@@ -98,6 +132,8 @@ exports.main = async (event) => {
     const feedback = normalizeString(event.feedback)
     const score = normalizeScore(event.score)
     const customPoints = normalizePoints(event.points_earned)
+    const feedbackImages = normalizeImageList(event.feedback_images)
+    const feedbackFiles = normalizeFileList(event.feedback_files)
 
     if (!teacher) {
       return {
@@ -172,6 +208,8 @@ exports.main = async (event) => {
       status,
       score,
       feedback: reviewFeedback,
+      feedback_images: feedbackImages,
+      feedback_files: feedbackFiles,
       review_time: now,
       review_teacher_openid: OPENID,
       review_teacher_name: teacher.user_name || teacher.nick_name || '',
@@ -202,7 +240,9 @@ exports.main = async (event) => {
       student_name: submissionInfo.student_name || '',
       status,
       score,
-      points_earned: pointsEarned
+      points_earned: pointsEarned,
+      feedback_image_count: feedbackImages.length,
+      feedback_file_count: feedbackFiles.length
     }, now)
 
     return {

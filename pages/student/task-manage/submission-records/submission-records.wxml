@@ -45,7 +45,7 @@
       </view>
 
       <view wx:if="{{records.length}}" class="record-list">
-        <view wx:for="{{records}}" wx:key="_id" class="record-card">
+        <view wx:for="{{records}}" wx:key="_id" class="record-card" data-index="{{index}}" bindtap="openRecordPopup">
           <view wx:if="{{isAllRecords}}" class="record-task-head">
             <text class="record-task-title">{{item.taskTitle}}</text>
             <text class="record-task-meta">{{item.projectText}} · {{item.classText}}</text>
@@ -71,6 +71,8 @@
             <text class="feedback-label">教师反馈</text>
             <text class="feedback-text">{{item.feedbackText}}</text>
           </view>
+
+          <text class="record-link">点击查看提交详情与老师反馈附件</text>
         </view>
       </view>
 
@@ -92,4 +94,164 @@
 
     <view class="footer-placeholder"></view>
   </scroll-view>
+
+  <t-popup
+    visible="{{popupVisible}}"
+    placement="bottom"
+    usingCustomNavbar="{{true}}"
+    close-on-overlay-click="{{true}}"
+    prevent-scroll-through="{{true}}"
+    bind:visible-change="onPopupVisibleChange"
+  >
+    <view class="detail-popup-shell">
+      <view class="detail-popup-header">
+        <view class="detail-popup-copy">
+          <text class="detail-popup-title">{{popupRecord ? popupRecord.taskTitle : '提交详情'}}</text>
+          <text class="detail-popup-subtitle">{{popupRecord ? '第 ' + popupRecord.submitNoText + ' 次提交 · ' + popupRecord.submitTimeText : '正在加载'}}</text>
+        </view>
+        <text wx:if="{{popupRecord}}" class="status-tag" style="{{popupRecord.statusStyle}}">{{popupRecord.statusText}}</text>
+      </view>
+
+      <scroll-view class="detail-popup-content" scroll-y enhanced>
+        <view wx:if="{{popupLoading}}" class="state-card detail-state-card">
+          <text class="state-title">提交详情加载中</text>
+          <text class="state-desc">正在同步提交素材和老师反馈附件。</text>
+        </view>
+
+        <block wx:elif="{{popupRecord}}">
+          <view class="detail-card">
+            <view class="summary-grid">
+              <view class="summary-item">
+                <text class="summary-label">审核状态</text>
+                <text class="summary-value">{{popupRecord.statusText}}</text>
+              </view>
+              <view class="summary-item">
+                <text class="summary-label">评分结果</text>
+                <text class="summary-value">{{popupRecord.scoreText}}</text>
+              </view>
+              <view class="summary-item">
+                <text class="summary-label">提交材料</text>
+                <text class="summary-value">{{popupRecord.materialText}}</text>
+              </view>
+              <view class="summary-item">
+                <text class="summary-label">提交时效</text>
+                <text class="summary-value">{{popupRecord.overtimeText}}</text>
+              </view>
+            </view>
+          </view>
+
+          <view class="detail-card">
+            <text class="detail-section-title">提交说明</text>
+            <text class="record-desc detail-desc">{{popupRecord.descriptionText}}</text>
+          </view>
+
+          <view class="detail-card">
+            <view class="detail-section-head">
+              <text class="detail-section-title">提交图片</text>
+              <text class="section-extra">{{popupRecord.imageCount}} 张</text>
+            </view>
+            <view wx:if="{{popupRecordDetail.imageList.length}}" class="detail-image-grid">
+              <image
+                wx:for="{{popupRecordDetail.imageList}}"
+                wx:key="fileId"
+                class="detail-image"
+                src="{{item.url}}"
+                mode="aspectFill"
+                data-type="submission"
+                data-index="{{index}}"
+                bindtap="onPreviewPopupImage"
+              />
+            </view>
+            <view wx:else class="detail-empty-panel">
+              <text class="state-desc">本次提交没有上传图片。</text>
+            </view>
+          </view>
+
+          <view class="detail-card">
+            <view class="detail-section-head">
+              <text class="detail-section-title">提交附件</text>
+              <text class="section-extra">{{popupRecord.fileCount}} 个</text>
+            </view>
+            <view wx:if="{{popupRecordDetail.attachmentFiles.length}}" class="detail-file-list">
+              <view
+                wx:for="{{popupRecordDetail.attachmentFiles}}"
+                wx:key="file_id"
+                class="detail-file-row"
+                data-type="submission"
+                data-index="{{index}}"
+                bindtap="onPreviewPopupFile"
+              >
+                <view class="detail-file-main">
+                  <text class="detail-file-name">{{item.file_name || item.name}}</text>
+                  <text class="detail-file-meta">点击预览 · {{item.sizeText || '大小待补充'}}</text>
+                </view>
+                <text class="detail-file-link">预览</text>
+              </view>
+            </view>
+            <view wx:else class="detail-empty-panel">
+              <text class="state-desc">本次提交没有上传附件。</text>
+            </view>
+          </view>
+
+          <view class="detail-card">
+            <view class="detail-section-head">
+              <text class="detail-section-title">教师反馈</text>
+              <text class="section-extra">{{popupRecord.feedbackImageCount}} 张图 · {{popupRecord.feedbackFileCount}} 个附件</text>
+            </view>
+            <view wx:if="{{popupRecord.feedbackText}}" class="feedback-panel detail-feedback-panel">
+              <text class="feedback-label">处理意见</text>
+              <text class="feedback-text">{{popupRecord.feedbackText}}</text>
+            </view>
+            <view wx:else class="detail-empty-panel detail-empty-panel-top">
+              <text class="state-desc">老师暂时还没有填写反馈说明。</text>
+            </view>
+
+            <view class="detail-subsection">
+              <text class="detail-subtitle">反馈图片</text>
+              <view wx:if="{{popupRecordDetail.feedbackImageList.length}}" class="detail-image-grid">
+                <image
+                  wx:for="{{popupRecordDetail.feedbackImageList}}"
+                  wx:key="fileId"
+                  class="detail-image"
+                  src="{{item.url}}"
+                  mode="aspectFill"
+                  data-type="feedback"
+                  data-index="{{index}}"
+                  bindtap="onPreviewPopupImage"
+                />
+              </view>
+              <view wx:else class="detail-empty-panel">
+                <text class="state-desc">老师没有补充图片材料。</text>
+              </view>
+            </view>
+
+            <view class="detail-subsection">
+              <text class="detail-subtitle">反馈附件</text>
+              <view wx:if="{{popupRecordDetail.feedbackAttachmentFiles.length}}" class="detail-file-list">
+                <view
+                  wx:for="{{popupRecordDetail.feedbackAttachmentFiles}}"
+                  wx:key="file_id"
+                  class="detail-file-row"
+                  data-type="feedback"
+                  data-index="{{index}}"
+                  bindtap="onPreviewPopupFile"
+                >
+                  <view class="detail-file-main">
+                    <text class="detail-file-name">{{item.file_name || item.name}}</text>
+                    <text class="detail-file-meta">点击预览 · {{item.sizeText || '大小待补充'}}</text>
+                  </view>
+                  <text class="detail-file-link">预览</text>
+                </view>
+              </view>
+              <view wx:else class="detail-empty-panel">
+                <text class="state-desc">老师没有补充附件材料。</text>
+              </view>
+            </view>
+          </view>
+
+          <view class="detail-bottom-space"></view>
+        </block>
+      </scroll-view>
+    </view>
+  </t-popup>
 </view>

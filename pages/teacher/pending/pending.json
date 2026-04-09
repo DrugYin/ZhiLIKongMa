@@ -4,6 +4,7 @@
     "custom-navbar": "/components/custom-navbar/index",
     "t-popup": "tdesign-miniprogram/popup/popup",
     "t-input": "tdesign-miniprogram/input/input",
-    "t-textarea": "tdesign-miniprogram/textarea/textarea"
+    "t-textarea": "tdesign-miniprogram/textarea/textarea",
+    "t-upload": "tdesign-miniprogram/upload/upload"
   }
 }
