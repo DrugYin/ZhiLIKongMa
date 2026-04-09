@@ -9,7 +9,7 @@ Page({
       currentRole: '教师',
       roleCount: 0,
       points: 0,
-      gradeText: '未填写'
+      projectText: '未填写'
     }
   },
 
@@ -61,7 +61,7 @@ Page({
         currentRole: userInfo.current_role === 'student' ? '学生' : '教师',
         roleCount: roles.length,
         points: Number(userInfo.points || 0),
-        gradeText: userInfo.grade || '未填写'
+        projectText: userInfo.teacher_project || '未填写'
       }
     })
   },
