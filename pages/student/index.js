@@ -15,7 +15,7 @@ Page({
     showNotice: false,
     featuredTask: {
       title: '登录后查看本周任务',
-      description: '系统会自动同步你本周可见任务中最新的待提交任务。',
+      description: '系统会自动同步你已加入班级中本周最新的待提交任务。',
       taskId: '',
       deadlineText: '待同步',
       progressText: '0 / 0',
@@ -115,12 +115,13 @@ Page({
     })
 
     try {
-      const [userInfo, classSummary, weeklyTaskSummary, weeklyRankText] = await Promise.all([
+      const [userInfo, classSummary, weeklyRankText] = await Promise.all([
         this.loadCurrentUserInfo(cachedUserInfo, isLoggedIn),
         this.loadClassSummary(),
-        this.loadWeeklyTaskSummary(),
         this.loadWeeklyRankText(isLoggedIn)
       ])
+
+      const weeklyTaskSummary = await this.loadWeeklyTaskSummary(classSummary)
 
       if (requestId !== this._initRequestId) {
         return
@@ -190,13 +191,19 @@ Page({
 
       return {
         joinedCount: joinedClasses.length,
-        pendingCount: pendingApplications.length
+        pendingCount: pendingApplications.length,
+        joinedClasses,
+        joinedClassIds: joinedClasses
+          .map((item) => String(item.class_id || item._id || '').trim())
+          .filter(Boolean)
       }
     } catch (error) {
       console.error('[student-index] loadClassSummary error:', error)
       return {
         joinedCount: 0,
-        pendingCount: 0
+        pendingCount: 0,
+        joinedClasses: [],
+        joinedClassIds: []
       }
     }
   },
@@ -217,19 +224,40 @@ Page({
     return '还没有加入班级时，也可以先浏览公开任务与排行榜，后续再补充班级学习内容。'
   },
 
-  async loadWeeklyTaskSummary() {
+  async loadWeeklyTaskSummary(classSummary = {}) {
     if (!AuthService.isLoggedIn()) {
       return null
     }
 
     try {
+      const joinedClassIds = Array.isArray(classSummary.joinedClassIds)
+        ? classSummary.joinedClassIds.filter(Boolean)
+        : []
+
+      if (!joinedClassIds.length) {
+        return {
+          weeklyTaskCount: 0,
+          submittedCount: 0,
+          latestTask: null,
+          hasPendingTask: false,
+          fallbackToAllTasks: false
+        }
+      }
+
       const taskResponse = await TaskService.getTasks({
         page: 1,
         page_size: 50,
         sort_by: 'publish_time',
         sort_order: 'desc'
       })
-      const taskList = Array.isArray(taskResponse.list) ? taskResponse.list : []
+      const taskList = (Array.isArray(taskResponse.list) ? taskResponse.list : []).filter((item) => {
+        if (!item || item.task_type !== 'class') {
+          return false
+        }
+
+        const taskClassId = String(item.class_id || item.classId || '').trim()
+        return Boolean(taskClassId) && joinedClassIds.includes(taskClassId)
+      })
       let submissionTaskIds = new Set()
 
       try {
@@ -298,7 +326,7 @@ Page({
     if (!this.data.isLoggedIn) {
       return {
         title: '登录后查看本周任务',
-        description: '系统会自动同步你本周可见任务中最新的待提交任务。',
+        description: '系统会自动同步你已加入班级中本周最新的待提交任务。',
         taskId: '',
         deadlineText: '待同步',
         progressText: '0 / 0',
@@ -317,8 +345,8 @@ Page({
       return {
         title: '本周还没有待跟进任务',
         description: joinedCount > 0
-          ? '当前没有落在本周的任务安排，可以先去任务中心查看全部历史任务。'
-          : '当前没有同步到本周任务，加入班级后这里会自动聚合最新任务。',
+          ? '当前已加入班级里还没有落在本周范围内的任务，可以先去任务中心查看全部班级任务。'
+          : '当前还没有加入班级，加入班级后这里会自动聚合最新班级任务。',
         taskId: '',
         deadlineText: '本周暂无任务',
         progressText: '0 / 0',
@@ -336,7 +364,7 @@ Page({
     if (weeklyTaskSummary.fallbackToAllTasks) {
       return {
         title: latestTask.titleText,
-        description: `当前没有稳定命中“本周任务”时间范围，先展示任务中心里最新的待跟进任务。`,
+        description: '当前没有稳定命中“本周任务”时间范围，先展示已加入班级里最新的待跟进任务。',
         taskId: latestTask.taskId,
         deadlineText: latestTask.deadlineText,
         progressText: `${submittedCount} / ${weeklyTaskCount}`,
