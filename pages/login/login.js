@@ -4,6 +4,21 @@ const toast = require('../../utils/toast')
 const { uploadFile } = require('../../services/api')
 const { GRADE_OPTIONS } = require('../../utils/constant')
 
+const USER_AGREEMENT_TEXT = [
+  '欢迎使用智力控码小程序。',
+  '1. 用户登录、注册和使用本小程序功能时，应保证提交的信息真实、合法、有效。',
+  '2. 你可以使用本小程序查看任务、班级、提交记录、审核结果和排行榜等学习服务。',
+  '3. 请勿利用本小程序上传违法、侵权、骚扰或其他不当内容。',
+  '4. 因系统升级、网络波动、平台维护等原因，部分功能可能出现延迟、中断或调整。',
+  '5. 你应妥善保管自己的账号相关信息，并对本人操作行为负责。'
+].join('\n\n')
+
+const PRIVACY_SUMMARY_TEXT = [
+  '智力控码小程序会在必要范围内收集和使用你的相关信息，用于完成登录注册、班级管理、任务提交、审核反馈、排行榜展示等服务。',
+  '可能涉及的信息包括：微信身份标识、头像昵称、手机号、学校与年级信息、任务图片与附件、审核反馈内容等。',
+  '我们会在微信官方隐私保护指引中展示完整隐私说明。'
+].join('\n\n')
+
 Page({
 
   /**
@@ -88,5 +103,42 @@ Page({
       url: '/pages/student/index'
     })
   },
+
+  handleOpenUserAgreement() {
+    toast.showModal({
+      title: '用户协议',
+      content: USER_AGREEMENT_TEXT,
+      showCancel: false,
+      confirmText: '我已了解'
+    }).catch((error) => {
+      console.error('打开用户协议失败:', error)
+    })
+  },
+
+  handleOpenPrivacyPolicy() {
+    if (wx.openPrivacyContract) {
+      wx.openPrivacyContract({
+        success: () => {},
+        fail: (error) => {
+          console.error('打开隐私协议失败:', error)
+          this.showPrivacyFallback()
+        }
+      })
+      return
+    }
+
+    this.showPrivacyFallback()
+  },
+
+  showPrivacyFallback() {
+    toast.showModal({
+      title: '隐私政策',
+      content: PRIVACY_SUMMARY_TEXT,
+      showCancel: false,
+      confirmText: '我已了解'
+    }).catch((error) => {
+      console.error('打开隐私政策说明失败:', error)
+    })
+  }
 
 })
