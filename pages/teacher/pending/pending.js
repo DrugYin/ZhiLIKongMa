@@ -1,7 +1,39 @@
 const TaskService = require('../../../services/task')
+const { uploadFile } = require('../../../services/api')
 const Toast = require('../../../utils/toast')
 const formatUtils = require('../../../utils/format')
 const fileResource = require('../../../utils/file-resource')
+const {
+  IMAGE_MAX_COUNT,
+  IMAGE_MAX_SIZE,
+  FILE_MAX_COUNT,
+  FILE_MAX_SIZE,
+  FILE_ALLOWED_TYPES
+} = require('../../../utils/constant')
+
+const IMAGE_UPLOAD_CONFIG = {
+  count: IMAGE_MAX_COUNT.SUBMISSION,
+  sizeType: ['compressed', 'original'],
+  sourceType: ['album', 'camera']
+}
+
+const IMAGE_SIZE_LIMIT = {
+  size: Math.round(IMAGE_MAX_SIZE / (1024 * 1024)),
+  unit: 'MB',
+  message: '图片大小不超过 {sizeLimit} MB'
+}
+
+const FILE_SIZE_LIMIT = {
+  size: Math.round(FILE_MAX_SIZE / (1024 * 1024)),
+  unit: 'MB',
+  message: '文件大小不超过 {sizeLimit} MB'
+}
+
+const IMAGE_GRID_CONFIG = {
+  column: 3,
+  width: 184,
+  height: 184
+}
 
 const STATUS_TEXT_MAP = {
   pending: '待审核',
@@ -50,8 +82,21 @@ Page({
     popupRecordDetail: {
       imageList: [],
       imagePreviewUrls: [],
-      attachmentFiles: []
+      attachmentFiles: [],
+      feedbackImageList: [],
+      feedbackImagePreviewUrls: [],
+      feedbackAttachmentFiles: []
     },
+    reviewImageFiles: [],
+    reviewFileFiles: [],
+    imageUploadConfig: IMAGE_UPLOAD_CONFIG,
+    imageSizeLimit: IMAGE_SIZE_LIMIT,
+    fileSizeLimit: FILE_SIZE_LIMIT,
+    imageGridConfig: IMAGE_GRID_CONFIG,
+    imageMediaType: ['image'],
+    reviewImageMax: IMAGE_MAX_COUNT.SUBMISSION,
+    reviewFileMax: FILE_MAX_COUNT,
+    fileAcceptText: FILE_ALLOWED_TYPES.join(' / '),
     reviewForm: {
       score: '',
       points: '',
@@ -145,6 +190,8 @@ Page({
     const status = item.status || 'pending'
     const imageCount = Array.isArray(item.images) ? item.images.length : 0
     const fileCount = Array.isArray(item.files) ? item.files.length : 0
+    const feedbackImageCount = Array.isArray(item.feedback_images) ? item.feedback_images.length : 0
+    const feedbackFileCount = Array.isArray(item.feedback_files) ? item.feedback_files.length : 0
     const summary = String(item.description || '').trim()
     const feedback = String(item.feedback || '').trim()
 
@@ -169,7 +216,10 @@ Page({
       pointsText: `${Number(item.points_earned || 0)} 分`,
       overtimeText: item.is_overtime ? '超时提交' : '按时提交',
       imageCount,
-      fileCount
+      fileCount,
+      feedbackImageCount,
+      feedbackFileCount,
+      feedbackAttachmentText: `${feedbackImageCount} 张图片 · ${feedbackFileCount} 个附件`
     }
   },
 
@@ -243,8 +293,13 @@ Page({
       popupRecordDetail: {
         imageList: [],
         imagePreviewUrls: [],
-        attachmentFiles: []
+        attachmentFiles: [],
+        feedbackImageList: [],
+        feedbackImagePreviewUrls: [],
+        feedbackAttachmentFiles: []
       },
+      reviewImageFiles: [],
+      reviewFileFiles: [],
       reviewForm: {
         score: record.score === null || record.score === undefined ? '' : `${Number(record.score)}`,
         points: record.status === 'pending'
@@ -257,9 +312,11 @@ Page({
     })
 
     try {
-      const [imageInfo, attachmentFiles, taskInfo] = await Promise.all([
+      const [imageInfo, attachmentFiles, feedbackImageInfo, feedbackAttachmentFiles, taskInfo] = await Promise.all([
         fileResource.buildImagePreviewData(record.images),
         fileResource.buildAttachmentPreviewFiles(record.files),
+        fileResource.buildImagePreviewData(record.feedback_images),
+        fileResource.buildAttachmentPreviewFiles(record.feedback_files),
         record.taskId ? TaskService.getTaskDetail(record.taskId).catch(() => null) : Promise.resolve(null)
       ])
 
@@ -274,8 +331,21 @@ Page({
         popupRecordDetail: {
           imageList: imageInfo.imageList,
           imagePreviewUrls: imageInfo.previewUrls,
-          attachmentFiles
+          attachmentFiles,
+          feedbackImageList: feedbackImageInfo.imageList,
+          feedbackImagePreviewUrls: feedbackImageInfo.previewUrls,
+          feedbackAttachmentFiles
         },
+        reviewImageFiles: record.status === 'pending'
+          ? []
+          : feedbackImageInfo.imageList.map((item) => ({
+              ...item,
+              percent: 100,
+              status: 'done',
+              file_id: item.fileId,
+              file_name: item.name
+            })),
+        reviewFileFiles: record.status === 'pending' ? [] : feedbackAttachmentFiles,
         'reviewForm.points': record.status === 'pending'
           ? `${taskPoints}`
           : `${Number(record.points_earned || 0)}`
@@ -306,8 +376,13 @@ Page({
       popupRecordDetail: {
         imageList: [],
         imagePreviewUrls: [],
-        attachmentFiles: []
+        attachmentFiles: [],
+        feedbackImageList: [],
+        feedbackImagePreviewUrls: [],
+        feedbackAttachmentFiles: []
       },
+      reviewImageFiles: [],
+      reviewFileFiles: [],
       reviewForm: {
         score: '',
         points: '',
@@ -330,6 +405,11 @@ Page({
   onPreviewPopupImage(e) {
     const { index } = e.currentTarget.dataset
     fileResource.previewImages(this.data.popupRecordDetail.imagePreviewUrls, index)
+  },
+
+  onPreviewFeedbackImage(e) {
+    const { index } = e.currentTarget.dataset
+    fileResource.previewImages(this.data.popupRecordDetail.feedbackImagePreviewUrls, index)
   },
 
   async onPreviewPopupFile(e) {
@@ -364,9 +444,303 @@ Page({
     })
   },
 
+  async onPreviewFeedbackFile(e) {
+    const { index } = e.currentTarget.dataset
+    const file = this.data.popupRecordDetail.feedbackAttachmentFiles[Number(index)]
+
+    if (!file) {
+      return
+    }
+
+    Toast.showLoading('正在打开附件...')
+
+    try {
+      const previewResult = await fileResource.resolvePreviewFilePath(file)
+      this.updateFeedbackFileLocalPath(file, previewResult.localPath)
+      await fileResource.openDocument(previewResult.filePath)
+      Toast.hideLoading()
+    } catch (error) {
+      console.error('[teacher-pending] onPreviewFeedbackFile error:', error)
+      Toast.hideLoading()
+      Toast.showToast('反馈附件预览失败')
+    }
+  },
+
+  updateFeedbackFileLocalPath(file, localPath) {
+    this.setData({
+      'popupRecordDetail.feedbackAttachmentFiles': fileResource.updateFileLocalPath(
+        this.data.popupRecordDetail.feedbackAttachmentFiles,
+        file,
+        localPath
+      ),
+      reviewFileFiles: fileResource.updateFileLocalPath(
+        this.data.reviewFileFiles,
+        file,
+        localPath
+      )
+    })
+  },
+
+  onReviewImageAdd(e) {
+    const files = this.normalizeUploadEventFiles(e)
+    if (!files.length) {
+      return
+    }
+
+    const remainCount = this.data.reviewImageMax - this.data.reviewImageFiles.length
+    if (remainCount <= 0) {
+      Toast.showToast(`最多上传 ${this.data.reviewImageMax} 张图片`)
+      return
+    }
+
+    const pendingFiles = files
+      .slice(0, remainCount)
+      .map((item, index) => this.createPendingUploadFile(item, 'image', index))
+
+    this.setData({
+      reviewImageFiles: this.data.reviewImageFiles.concat(pendingFiles)
+    }, () => {
+      this.uploadSelectedFiles('reviewImageFiles', 'review-images', pendingFiles)
+    })
+  },
+
+  onReviewImageRemove(e) {
+    const { index } = e.detail || {}
+    this.removeUploadFileAt('reviewImageFiles', index)
+  },
+
+  async onSelectReviewFiles() {
+    const remainCount = this.data.reviewFileMax - this.data.reviewFileFiles.length
+
+    if (remainCount <= 0) {
+      Toast.showToast(`最多上传 ${this.data.reviewFileMax} 个附件`)
+      return
+    }
+
+    try {
+      const chooseResult = await this.chooseMessageFiles(remainCount)
+      const files = Array.isArray(chooseResult.tempFiles) ? chooseResult.tempFiles : []
+      if (!files.length) {
+        return
+      }
+
+      const invalidFile = files.find((item) => !this.isAllowedAttachment(item))
+      if (invalidFile) {
+        Toast.showToast(`附件格式暂不支持，仅支持：${FILE_ALLOWED_TYPES.join('、')}`)
+        return
+      }
+
+      const oversizeFile = files.find((item) => Number(item.size || 0) > FILE_MAX_SIZE)
+      if (oversizeFile) {
+        Toast.showToast(`单个附件大小不能超过 ${FILE_SIZE_LIMIT.size} MB`)
+        return
+      }
+
+      const pendingFiles = files.map((item, index) => this.createPendingUploadFile({
+        ...item,
+        url: item.path
+      }, 'file', index))
+
+      this.setData({
+        reviewFileFiles: this.data.reviewFileFiles.concat(pendingFiles)
+      }, () => {
+        this.uploadSelectedFiles('reviewFileFiles', 'review-files', pendingFiles)
+      })
+    } catch (error) {
+      if (error && /cancel/i.test(String(error.errMsg || error.message || ''))) {
+        return
+      }
+      console.error('[teacher-pending] onSelectReviewFiles error:', error)
+      Toast.showToast('选择反馈附件失败')
+    }
+  },
+
+  onDeleteReviewFile(e) {
+    const { index } = e.currentTarget.dataset
+    this.removeUploadFileAt('reviewFileFiles', Number(index))
+  },
+
+  async onPreviewReviewUploadFile(e) {
+    const { index } = e.currentTarget.dataset
+    const file = this.data.reviewFileFiles[Number(index)]
+
+    if (!file) {
+      return
+    }
+
+    if (file.status === 'loading') {
+      Toast.showToast('附件上传中，请稍后预览')
+      return
+    }
+
+    if (file.status === 'failed') {
+      Toast.showToast('该附件上传失败，请移除后重新上传')
+      return
+    }
+
+    Toast.showLoading('正在打开附件...')
+
+    try {
+      const previewResult = await fileResource.resolvePreviewFilePath(file)
+      this.updateReviewUploadFilePreviewPath(file, previewResult.localPath)
+      await fileResource.openDocument(previewResult.filePath)
+      Toast.hideLoading()
+    } catch (error) {
+      console.error('[teacher-pending] onPreviewReviewUploadFile error:', error)
+      Toast.hideLoading()
+      Toast.showToast('反馈附件预览失败')
+    }
+  },
+
+  updateReviewUploadFilePreviewPath(file, localPath) {
+    this.setData({
+      reviewFileFiles: fileResource.updateFileLocalPath(this.data.reviewFileFiles, file, localPath)
+    })
+  },
+
+  normalizeUploadEventFiles(event) {
+    const detail = event && event.detail
+    if (detail && Array.isArray(detail.files)) {
+      return detail.files
+    }
+
+    if (Array.isArray(detail)) {
+      return detail
+    }
+
+    return []
+  },
+
+  createPendingUploadFile(file, kind, index) {
+    return {
+      ...file,
+      name: file.name || fileResource.getFileNameFromPath(file.url) || `${kind === 'image' ? '图片' : '附件'}${index + 1}`,
+      sizeText: fileResource.formatFileSize(file.size),
+      percent: 0,
+      status: 'loading',
+      _uploadId: `${Date.now()}_${Math.random().toString(36).slice(2, 10)}_${index}`,
+      _uploadKind: kind
+    }
+  },
+
+  async uploadSelectedFiles(field, folder, files) {
+    const uploaded = []
+    const failed = []
+
+    for (let index = 0; index < files.length; index += 1) {
+      const file = files[index]
+
+      try {
+        const cloudPath = this.buildCloudPath(folder, file, index)
+        const result = await uploadFile(file.url, cloudPath)
+        uploaded.push({
+          ...file,
+          percent: 100,
+          status: 'done',
+          localPath: file.localPath || file.url,
+          file_id: result.fileID,
+          sizeText: fileResource.formatFileSize(file.size),
+          file_name: file.name || fileResource.getFileNameFromPath(file.url)
+        })
+      } catch (error) {
+        console.error('[teacher-pending] uploadSelectedFiles error:', error)
+        failed.push({
+          ...file,
+          percent: 0,
+          status: 'failed'
+        })
+      }
+    }
+
+    this.replaceUploadFiles(field, uploaded.concat(failed))
+
+    if (failed.length) {
+      Toast.showToast(`${failed.length} 个${field === 'reviewImageFiles' ? '图片' : '附件'}上传失败，可移除后重试`)
+      return
+    }
+
+    if (uploaded.length) {
+      Toast.showSuccess(`${uploaded.length} 个${field === 'reviewImageFiles' ? '图片' : '附件'}上传成功`, 1500)
+    }
+  },
+
+  replaceUploadFiles(field, changedFiles) {
+    const changedMap = changedFiles.reduce((result, item) => {
+      if (item && item._uploadId) {
+        result[item._uploadId] = item
+      }
+      return result
+    }, {})
+
+    this.setData({
+      [field]: (this.data[field] || []).map((item) => changedMap[item._uploadId] || item)
+    })
+  },
+
+  buildCloudPath(folder, file, index) {
+    const extension = fileResource.getFileExtension(file.url || file.name)
+    const fileName = `${Date.now()}-${index}-${Math.random().toString(36).slice(2, 8)}${extension}`
+    const date = new Date()
+    const month = `${date.getMonth() + 1}`.padStart(2, '0')
+    const day = `${date.getDate()}`.padStart(2, '0')
+
+    return `reviews/${folder}/${date.getFullYear()}${month}${day}/${fileName}`
+  },
+
+  chooseMessageFiles(count) {
+    return new Promise((resolve, reject) => {
+      wx.chooseMessageFile({
+        count: Math.min(count, FILE_MAX_COUNT),
+        type: 'file',
+        success: resolve,
+        fail: reject
+      })
+    })
+  },
+
+  isAllowedAttachment(file = {}) {
+    const name = file.name || fileResource.getFileNameFromPath(file.url)
+    const extension = fileResource.getFileExtension(name).replace('.', '').toLowerCase()
+
+    if (!extension) {
+      return false
+    }
+
+    return FILE_ALLOWED_TYPES.includes(extension)
+  },
+
+  removeUploadFileAt(field, index) {
+    if (!Number.isInteger(index) || index < 0) {
+      return
+    }
+
+    const nextFiles = (this.data[field] || []).slice()
+    nextFiles.splice(index, 1)
+    this.setData({
+      [field]: nextFiles
+    })
+  },
+
+  getReviewFeedbackImagesPayload() {
+    return this.data.reviewImageFiles
+      .filter((item) => item.status === 'done' && item.file_id)
+      .map((item) => item.file_id)
+  },
+
+  getReviewFeedbackFilesPayload() {
+    return this.data.reviewFileFiles
+      .filter((item) => item.status === 'done' && item.file_id)
+      .map((item) => ({
+        file_id: item.file_id,
+        file_name: item.file_name || item.name || fileResource.getFileNameFromPath(item.url),
+        file_size: Number(item.size || 0)
+      }))
+  },
+
   validateReviewForm(status) {
     const scoreText = String(this.data.reviewForm.score || '').trim()
     const pointsText = String(this.data.reviewForm.points || '').trim()
+    const reviewUploads = this.data.reviewImageFiles.concat(this.data.reviewFileFiles)
 
     if (scoreText && (!Number.isFinite(Number(scoreText)) || Number(scoreText) < 0)) {
       Toast.showToast('评分需为大于等于 0 的数字')
@@ -380,6 +754,16 @@ Page({
 
     if (status === 'rejected' && !String(this.data.reviewForm.feedback || '').trim()) {
       Toast.showToast('驳回时请填写处理意见')
+      return false
+    }
+
+    if (reviewUploads.some((item) => item.status === 'loading')) {
+      Toast.showToast('反馈素材上传中，请稍后再提交审核')
+      return false
+    }
+
+    if (reviewUploads.some((item) => item.status === 'failed')) {
+      Toast.showToast('存在上传失败的反馈素材，请移除后重试')
       return false
     }
 
@@ -416,6 +800,8 @@ Page({
         status,
         feedback: String(this.data.reviewForm.feedback || '').trim() || actionConfig.feedback,
         score: String(this.data.reviewForm.score || '').trim(),
+        feedback_images: this.getReviewFeedbackImagesPayload(),
+        feedback_files: this.getReviewFeedbackFilesPayload(),
         points_earned: status === 'rejected'
           ? '0'
           : String(this.data.reviewForm.points || '').trim()

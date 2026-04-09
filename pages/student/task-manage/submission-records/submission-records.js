@@ -1,6 +1,7 @@
 const TaskService = require('../../../../services/task')
 const Toast = require('../../../../utils/toast')
 const formatUtils = require('../../../../utils/format')
+const fileResource = require('../../../../utils/file-resource')
 const {
   SUBMISSION_STATUS_TEXT,
   SUBMISSION_STATUS_COLOR
@@ -13,8 +14,19 @@ Page({
     isAllRecords: false,
     loading: true,
     loadingMore: false,
+    popupVisible: false,
+    popupLoading: false,
     taskInfo: null,
     records: [],
+    popupRecord: null,
+    popupRecordDetail: {
+      imageList: [],
+      imagePreviewUrls: [],
+      attachmentFiles: [],
+      feedbackImageList: [],
+      feedbackImagePreviewUrls: [],
+      feedbackAttachmentFiles: []
+    },
     total: 0,
     page: 1,
     pageSize: 10,
@@ -115,6 +127,8 @@ Page({
     const statusColor = SUBMISSION_STATUS_COLOR[status] || '#faad14'
     const imageCount = Array.isArray(item.images) ? item.images.length : 0
     const fileCount = Array.isArray(item.files) ? item.files.length : 0
+    const feedbackImageCount = Array.isArray(item.feedback_images) ? item.feedback_images.length : 0
+    const feedbackFileCount = Array.isArray(item.feedback_files) ? item.feedback_files.length : 0
     const submitNo = Number(item.submit_no || 0)
     const scoreValue = item.score === null || item.score === undefined ? '' : `${Number(item.score)} 分`
 
@@ -131,7 +145,11 @@ Page({
       materialText: `${imageCount} 张图片 / ${fileCount} 个附件`,
       feedbackText: String(item.feedback || '').trim(),
       scoreText: scoreValue || '待评分',
-      overtimeText: item.is_overtime ? '已超截止时间提交' : '按时提交'
+      overtimeText: item.is_overtime ? '已超截止时间提交' : '按时提交',
+      imageCount,
+      fileCount,
+      feedbackImageCount,
+      feedbackFileCount
     }
   },
 
@@ -203,6 +221,117 @@ Page({
       this.setData({
         loadingMore: false
       })
+    }
+  },
+
+  async openRecordPopup(e) {
+    const { index } = e.currentTarget.dataset
+    const record = this.data.records[Number(index)]
+
+    if (!record) {
+      return
+    }
+
+    this.setData({
+      popupVisible: true,
+      popupLoading: true,
+      popupRecord: record,
+      popupRecordDetail: {
+        imageList: [],
+        imagePreviewUrls: [],
+        attachmentFiles: [],
+        feedbackImageList: [],
+        feedbackImagePreviewUrls: [],
+        feedbackAttachmentFiles: []
+      }
+    })
+
+    try {
+      const [imageInfo, attachmentFiles, feedbackImageInfo, feedbackAttachmentFiles] = await Promise.all([
+        fileResource.buildImagePreviewData(record.images),
+        fileResource.buildAttachmentPreviewFiles(record.files),
+        fileResource.buildImagePreviewData(record.feedback_images),
+        fileResource.buildAttachmentPreviewFiles(record.feedback_files)
+      ])
+
+      this.setData({
+        popupRecordDetail: {
+          imageList: imageInfo.imageList,
+          imagePreviewUrls: imageInfo.previewUrls,
+          attachmentFiles,
+          feedbackImageList: feedbackImageInfo.imageList,
+          feedbackImagePreviewUrls: feedbackImageInfo.previewUrls,
+          feedbackAttachmentFiles
+        }
+      })
+    } catch (error) {
+      console.error('[submission-records] openRecordPopup error:', error)
+      Toast.showToast('提交详情加载失败')
+    } finally {
+      this.setData({
+        popupLoading: false
+      })
+    }
+  },
+
+  onPopupVisibleChange(e) {
+    const visible = Boolean(e.detail && e.detail.visible)
+    if (!visible) {
+      this.closePopup()
+    }
+  },
+
+  closePopup() {
+    this.setData({
+      popupVisible: false,
+      popupLoading: false,
+      popupRecord: null,
+      popupRecordDetail: {
+        imageList: [],
+        imagePreviewUrls: [],
+        attachmentFiles: [],
+        feedbackImageList: [],
+        feedbackImagePreviewUrls: [],
+        feedbackAttachmentFiles: []
+      }
+    })
+  },
+
+  onPreviewPopupImage(e) {
+    const { index, type } = e.currentTarget.dataset
+    const urls = type === 'feedback'
+      ? this.data.popupRecordDetail.feedbackImagePreviewUrls
+      : this.data.popupRecordDetail.imagePreviewUrls
+    fileResource.previewImages(urls, index)
+  },
+
+  async onPreviewPopupFile(e) {
+    const { index, type } = e.currentTarget.dataset
+    const field = type === 'feedback'
+      ? 'popupRecordDetail.feedbackAttachmentFiles'
+      : 'popupRecordDetail.attachmentFiles'
+    const sourceFiles = type === 'feedback'
+      ? this.data.popupRecordDetail.feedbackAttachmentFiles
+      : this.data.popupRecordDetail.attachmentFiles
+    const file = sourceFiles[Number(index)]
+
+    if (!file) {
+      return
+    }
+
+    Toast.showLoading('正在打开附件...')
+
+    try {
+      const previewResult = await fileResource.resolvePreviewFilePath(file)
+      this.setData({
+        [field]: fileResource.updateFileLocalPath(sourceFiles, file, previewResult.localPath)
+      })
+      await fileResource.openDocument(previewResult.filePath)
+      Toast.hideLoading()
+    } catch (error) {
+      console.error('[submission-records] onPreviewPopupFile error:', error)
+      Toast.hideLoading()
+      Toast.showToast('附件预览失败')
     }
   },
 

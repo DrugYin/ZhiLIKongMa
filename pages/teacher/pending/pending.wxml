@@ -250,6 +250,56 @@
             </view>
           </view>
 
+          <view wx:if="{{popupRecord.status !== 'pending'}}" class="popup-card">
+            <view class="section-header">
+              <text class="section-title">教师补充图片</text>
+              <text class="section-extra">{{popupRecord.feedbackImageCount}} 张</text>
+            </view>
+
+            <view wx:if="{{popupRecordDetail.feedbackImageList.length}}" class="popup-image-grid">
+              <image
+                wx:for="{{popupRecordDetail.feedbackImageList}}"
+                wx:key="fileId"
+                class="popup-image"
+                src="{{item.url}}"
+                mode="aspectFill"
+                data-index="{{index}}"
+                bindtap="onPreviewFeedbackImage"
+              />
+            </view>
+
+            <view wx:else class="popup-panel popup-panel-soft">
+              <text class="empty-desc">老师没有补充图片材料。</text>
+            </view>
+          </view>
+
+          <view wx:if="{{popupRecord.status !== 'pending'}}" class="popup-card">
+            <view class="section-header">
+              <text class="section-title">教师补充附件</text>
+              <text class="section-extra">{{popupRecord.feedbackFileCount}} 个</text>
+            </view>
+
+            <view wx:if="{{popupRecordDetail.feedbackAttachmentFiles.length}}" class="popup-file-list">
+              <view
+                wx:for="{{popupRecordDetail.feedbackAttachmentFiles}}"
+                wx:key="file_id"
+                class="popup-file-row"
+                data-index="{{index}}"
+                bindtap="onPreviewFeedbackFile"
+              >
+                <view class="popup-file-main">
+                  <text class="popup-file-name">{{item.file_name || item.name}}</text>
+                  <text class="popup-file-meta">点击预览 · {{item.sizeText || '大小待补充'}}</text>
+                </view>
+                <text class="popup-file-link">预览</text>
+              </view>
+            </view>
+
+            <view wx:else class="popup-panel popup-panel-soft">
+              <text class="empty-desc">老师没有补充附件材料。</text>
+            </view>
+          </view>
+
           <view wx:if="{{popupRecord.status === 'pending'}}" class="popup-card">
             <text class="section-title">审核操作</text>
 
@@ -296,6 +346,66 @@
                   bind:change="onReviewFieldChange"
                 />
               </view>
+            </view>
+
+            <view class="review-field">
+              <view class="section-header section-header-compact">
+                <text class="review-field-label">补充图片</text>
+                <text class="section-extra">{{reviewImageFiles.length}} / {{reviewImageMax}}</text>
+              </view>
+              <view class="review-upload-wrap">
+                <t-upload
+                  files="{{reviewImageFiles}}"
+                  max="{{reviewImageMax}}"
+                  media-type="{{imageMediaType}}"
+                  config="{{imageUploadConfig}}"
+                  size-limit="{{imageSizeLimit}}"
+                  grid-config="{{imageGridConfig}}"
+                  draggable
+                  bind:add="onReviewImageAdd"
+                  bind:remove="onReviewImageRemove"
+                />
+              </view>
+            </view>
+
+            <view class="review-field">
+              <view class="section-header section-header-compact">
+                <text class="review-field-label">补充附件</text>
+                <text class="section-extra">{{reviewFileFiles.length}} / {{reviewFileMax}}</text>
+              </view>
+              <view class="review-file-toolbar">
+                <button
+                  class="ghost-btn file-select-btn"
+                  bindtap="onSelectReviewFiles"
+                  disabled="{{reviewFileFiles.length >= reviewFileMax}}"
+                >
+                  添加反馈附件
+                </button>
+              </view>
+
+              <view wx:if="{{reviewFileFiles.length}}" class="popup-file-list review-file-list">
+                <view
+                  wx:for="{{reviewFileFiles}}"
+                  wx:key="_uploadId"
+                  class="popup-file-row"
+                  data-index="{{index}}"
+                  bindtap="onPreviewReviewUploadFile"
+                >
+                  <view class="popup-file-main">
+                    <text class="popup-file-name">{{item.file_name || item.name}}</text>
+                    <text class="popup-file-meta">
+                      {{item.status === 'loading' ? '上传中' : item.status === 'failed' ? '上传失败' : '点击预览'}} · {{item.sizeText || '大小待补充'}}
+                    </text>
+                  </view>
+                  <text class="popup-file-link popup-file-delete" data-index="{{index}}" catchtap="onDeleteReviewFile">移除</text>
+                </view>
+              </view>
+
+              <view wx:else class="popup-panel popup-panel-soft review-empty-panel">
+                <text class="empty-desc">可选上传批注截图、示例答案或补充说明文档。</text>
+              </view>
+
+              <text class="review-field-tip">支持格式：{{fileAcceptText}}</text>
             </view>
 
             <view class="action-row popup-action-row">
