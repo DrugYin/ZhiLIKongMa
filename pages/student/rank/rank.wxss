@@ -85,6 +85,32 @@
   gap: 16rpx;
 }
 
+.primary-btn,
+.ghost-btn {
+  height: 72rpx;
+  line-height: 72rpx;
+  padding: 0 24rpx;
+  margin: 0;
+  border-radius: 999rpx;
+  font-size: 26rpx;
+  font-weight: 600;
+}
+
+.primary-btn::after,
+.ghost-btn::after {
+  border: none;
+}
+
+.primary-btn {
+  color: #ffffff;
+  background: linear-gradient(135deg, #1f7ae0 0%, #4a8ff5 100%);
+}
+
+.ghost-btn {
+  color: #1f4f78;
+  background: #e7f1fb;
+}
+
 .section-title {
   font-size: 30rpx;
 }
@@ -200,6 +226,30 @@
 
 .current-card {
   background: linear-gradient(135deg, rgba(31, 122, 224, 0.08) 0%, rgba(47, 143, 87, 0.08) 100%);
+}
+
+.state-card {
+  text-align: left;
+}
+
+.state-title {
+  display: block;
+  color: #17314a;
+  font-size: 30rpx;
+  font-weight: 700;
+}
+
+.state-desc {
+  display: block;
+  margin-top: 14rpx;
+  color: #65788c;
+  font-size: 24rpx;
+  line-height: 1.8;
+}
+
+.state-btn {
+  width: 100%;
+  margin-top: 24rpx;
 }
 
 .current-name {

@@ -39,7 +39,24 @@
       </view>
     </view>
 
-    <view class="section-card" wx:if="{{topThree.length}}">
+    <view wx:if="{{loading}}" class="section-card state-card">
+      <text class="state-title">排行榜加载中</text>
+      <text class="state-desc">正在同步当前维度下的真实积分排名。</text>
+    </view>
+
+    <view wx:elif="{{!isLoggedIn}}" class="section-card state-card">
+      <text class="state-title">登录后查看排行榜</text>
+      <text class="state-desc">学生登录后可查看周榜、月榜和总榜的实时表现。</text>
+      <button class="primary-btn state-btn" bindtap="goLogin">去登录</button>
+    </view>
+
+    <view wx:elif="{{errorText}}" class="section-card state-card">
+      <text class="state-title">排行榜加载失败</text>
+      <text class="state-desc">{{errorText}}</text>
+      <button class="ghost-btn state-btn" bindtap="loadRankData">重新加载</button>
+    </view>
+
+    <view wx:elif="{{topThree.length}}" class="section-card">
       <view class="section-header">
         <text class="section-title">前三名</text>
         <text class="section-extra">当前高光</text>
@@ -69,7 +86,7 @@
       </view>
     </view>
 
-    <view class="section-card">
+    <view wx:if="{{displayRanks.length}}" class="section-card">
       <view class="section-header">
         <text class="section-title">完整榜单</text>
         <text class="section-extra">第 4 名起</text>
@@ -84,6 +101,11 @@
           <text class="rank-score">{{item.points}}</text>
         </view>
       </view>
+    </view>
+
+    <view wx:elif="{{!loading}}" class="section-card state-card">
+      <text class="state-title">当前还没有榜单数据</text>
+      <text class="state-desc">等有学生积分或审核数据产生后，这里会自动同步真实排行。</text>
     </view>
 
     <view class="footer-placeholder"></view>
