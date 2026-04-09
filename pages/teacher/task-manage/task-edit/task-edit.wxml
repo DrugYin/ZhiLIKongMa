@@ -156,6 +156,21 @@
     </view>
 
     <view class="form-card">
+      <view class="card-title">任务说明</view>
+      <view class="textarea-wrapper">
+        <t-textarea
+          autosize
+          placeholder="可填写任务目标、要求、提交说明、评判标准等信息"
+          indicator
+          value="{{taskForm.description}}"
+          data-field="description"
+          bind:change="onInputChange"
+        />
+      </view>
+      <t-divider />
+    </view>
+
+    <view class="form-card">
       <view class="section-head">
         <view>
           <view class="card-title">截止时间</view>
@@ -262,31 +277,6 @@
       </view>
 
       <text class="upload-tip">支持格式：{{fileAcceptText}}</text>
-    </view>
-
-    <view class="form-card">
-      <view class="card-title">任务说明</view>
-      <view class="textarea-wrapper">
-        <t-textarea
-          autosize
-          placeholder="可填写任务目标、要求、提交说明、评判标准等信息"
-          indicator
-          value="{{taskForm.description}}"
-          data-field="description"
-          bind:change="onInputChange"
-        />
-      </view>
-      <t-divider />
-    </view>
-
-    <view class="tips-card">
-      <view class="card-title">接入说明</view>
-      <t-divider align="left">当前先完成基础字段的创建与编辑</t-divider>
-      <view class="tips-list">
-        <text class="tip-item">1. 上传成功后的图片会写入 `images` 字段，文件会写入 `files` 字段并保留文件名与大小。</text>
-        <text class="tip-item">2. 班级任务选择班级后，会自动同步项目，避免任务和班级项目不一致。</text>
-        <text class="tip-item">3. 若附件上传失败，可以先移除失败项，再重新添加上传。</text>
-      </view>
     </view>
 
     <view wx:if="{{loading}}" class="loading-panel">
