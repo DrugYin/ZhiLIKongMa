@@ -87,6 +87,9 @@ Page({
   },
 
   async initPage({ silent = false } = {}) {
+    const requestId = (this._initRequestId || 0) + 1
+    this._initRequestId = requestId
+
     if (!silent) {
       this.setData({ loading: true })
     }
@@ -94,6 +97,10 @@ Page({
     const userInfo = AuthService.getLocalUserInfo() || {}
     const isLoggedIn = AuthService.isLoggedIn()
     const weeklyRank = Number(userInfo.weeklyRank || 0)
+
+    if (requestId !== this._initRequestId) {
+      return
+    }
 
     this.setData({
       isLoggedIn,
@@ -117,6 +124,11 @@ Page({
         this.loadClassSummary(),
         this.loadWeeklyTaskSummary()
       ])
+
+      if (requestId !== this._initRequestId) {
+        return
+      }
+
       this.setData({
         notice: this.buildNoticeText(isLoggedIn, classSummary),
         showNotice: true,
@@ -130,6 +142,11 @@ Page({
       this._pageReady = true
     } catch (error) {
       console.error('[student-index] initPage error:', error)
+
+      if (requestId !== this._initRequestId) {
+        return
+      }
+
       this.setData({
         notice: isLoggedIn
           ? '当前数据同步稍慢，先查看任务中心与班级页也可以继续学习。'
@@ -141,6 +158,10 @@ Page({
         }, null)
       })
     } finally {
+      if (requestId !== this._initRequestId) {
+        return
+      }
+
       this.setData({ loading: false })
       wx.stopPullDownRefresh()
     }
@@ -200,20 +221,32 @@ Page({
         sort_by: 'publish_time',
         sort_order: 'desc'
       })
-      const submissionTaskIds = await this.loadSubmittedTaskIds()
       const taskList = Array.isArray(taskResponse.list) ? taskResponse.list : []
+      let submissionTaskIds = new Set()
+
+      try {
+        submissionTaskIds = await this.loadSubmittedTaskIds()
+      } catch (error) {
+        console.error('[student-index] loadSubmittedTaskIds error:', error)
+      }
+
       const weeklyTasks = taskList.filter((item) => this.isCurrentWeekTask(item))
-      const submittedCount = weeklyTasks.filter((item) => submissionTaskIds.has(item._id)).length
-      const pendingTasks = weeklyTasks
+      const sourceTasks = weeklyTasks.length ? weeklyTasks : taskList
+      const submittedCount = sourceTasks.filter((item) => submissionTaskIds.has(item._id)).length
+      const pendingTasks = sourceTasks
         .filter((item) => !submissionTaskIds.has(item._id))
         .sort((left, right) => this.getTaskReferenceTime(right) - this.getTaskReferenceTime(left))
-      const latestTask = pendingTasks[0] || weeklyTasks[0] || null
+      const sortedSourceTasks = sourceTasks
+        .slice()
+        .sort((left, right) => this.getTaskReferenceTime(right) - this.getTaskReferenceTime(left))
+      const latestTask = pendingTasks[0] || sortedSourceTasks[0] || null
 
       return {
-        weeklyTaskCount: weeklyTasks.length,
+        weeklyTaskCount: sourceTasks.length,
         submittedCount,
         latestTask: latestTask ? this.formatWeeklyTask(latestTask) : null,
-        hasPendingTask: pendingTasks.length > 0
+        hasPendingTask: pendingTasks.length > 0,
+        fallbackToAllTasks: !weeklyTasks.length && taskList.length > 0
       }
     } catch (error) {
       console.error('[student-index] loadWeeklyTaskSummary error:', error)
@@ -289,6 +322,26 @@ Page({
         statusStyle: 'color:#2f8f57;background:rgba(47, 143, 87, 0.12);',
         weeklyTaskCount: 0,
         submittedCount: 0
+      }
+    }
+
+    if (weeklyTaskSummary.fallbackToAllTasks) {
+      return {
+        title: latestTask.titleText,
+        description: `当前没有稳定命中“本周任务”时间范围，先展示任务中心里最新的待跟进任务。`,
+        taskId: latestTask.taskId,
+        deadlineText: latestTask.deadlineText,
+        progressText: `${submittedCount} / ${weeklyTaskCount}`,
+        progressPercent,
+        assistantText: latestTask.projectText,
+        projectText: latestTask.projectText,
+        classText: latestTask.classText,
+        statusText: weeklyTaskSummary.hasPendingTask ? '最新任务' : '已提交任务',
+        statusStyle: weeklyTaskSummary.hasPendingTask
+          ? 'color:#1f7ae0;background:rgba(31, 122, 224, 0.12);'
+          : 'color:#2f8f57;background:rgba(47, 143, 87, 0.12);',
+        weeklyTaskCount,
+        submittedCount
       }
     }
 
