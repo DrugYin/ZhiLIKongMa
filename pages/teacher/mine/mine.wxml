@@ -11,7 +11,7 @@
         <view class="profile-copy">
           <text class="profile-eyebrow">教师资料</text>
           <text class="profile-name">{{userInfo.user_name || userInfo.name || '老师'}}</text>
-          <text class="profile-meta">{{userInfo.school || '学校信息待补充'}} · {{summary.gradeText}}</text>
+          <text class="profile-meta">{{userInfo.school || '学校信息待补充'}} · {{summary.projectText}}</text>
         </view>
         <text class="role-tag">{{summary.currentRole}}</text>
       </view>
@@ -30,8 +30,8 @@
           <text class="summary-value">{{summary.currentRole}}</text>
         </view>
         <view class="summary-item">
-          <text class="summary-label">年级信息</text>
-          <text class="summary-value">{{summary.gradeText}}</text>
+          <text class="summary-label">负责项目</text>
+          <text class="summary-value">{{summary.projectText}}</text>
         </view>
       </view>
     </view>

@@ -108,16 +108,6 @@
       </view>
     </view>
 
-    <view class="section-card">
-      <view class="section-header">
-        <text class="section-title">今日建议</text>
-        <text class="section-extra">按顺序完成</text>
-      </view>
-      <view class="tip-list">
-        <text wx:for="{{focusList}}" wx:key="*this" class="tip-item">{{index + 1}}. {{item}}</text>
-      </view>
-    </view>
-
     <view class="footer-placeholder"></view>
   </scroll-view>
 </view>
