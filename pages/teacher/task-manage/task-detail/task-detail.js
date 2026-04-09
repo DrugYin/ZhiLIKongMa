@@ -1,4 +1,5 @@
 const TaskService = require('../../../../services/task')
+const ClassService = require('../../../../services/class')
 const Toast = require('../../../../utils/toast')
 const formatUtils = require('../../../../utils/format')
 const fileResource = require('../../../../utils/file-resource')
@@ -86,14 +87,16 @@ Page({
     })
 
     try {
-      const taskInfo = await TaskService.getTaskDetail(this.data.taskId)
+      const rawTaskInfo = await TaskService.getTaskDetail(this.data.taskId)
+      const progressStats = await this.loadTaskProgressStats(rawTaskInfo)
       const [imageInfo, attachmentFiles] = await Promise.all([
-        fileResource.buildImagePreviewData(taskInfo.images),
-        fileResource.buildAttachmentPreviewFiles(taskInfo.files)
+        fileResource.buildImagePreviewData(rawTaskInfo.images),
+        fileResource.buildAttachmentPreviewFiles(rawTaskInfo.files)
       ])
       this.setData({
         taskInfo: this.formatTaskInfo({
-          ...taskInfo,
+          ...rawTaskInfo,
+          progress_stats: progressStats,
           image_list: imageInfo.imageList,
           image_preview_urls: imageInfo.previewUrls,
           attachment_files: attachmentFiles
@@ -114,6 +117,79 @@ Page({
 
       wx.stopPullDownRefresh()
     }
+  },
+
+  async loadTaskProgressStats(taskInfo = {}) {
+    const submissions = await this.loadAllTaskSubmissions()
+    const targetCount = await this.loadTaskTargetCount(taskInfo)
+    const approvedList = submissions.filter((item) => item.status === 'approved')
+    const pendingList = submissions.filter((item) => item.status === 'pending')
+    const rejectedList = submissions.filter((item) => item.status === 'rejected')
+    const submittedStudentSet = new Set(
+      submissions
+        .map((item) => item.student_openid)
+        .filter(Boolean)
+    )
+    const lastSubmitTime = submissions.reduce((latest, item) => {
+      const current = item.submit_time ? new Date(item.submit_time).getTime() : 0
+      return current > latest ? current : latest
+    }, 0)
+
+    return {
+      submission_count: submissions.length,
+      passed_count: approvedList.length,
+      pending_count: pendingList.length,
+      rejected_count: rejectedList.length,
+      target_count: typeof targetCount === 'number' ? targetCount : null,
+      participant_count: submittedStudentSet.size,
+      completion_rate: typeof targetCount === 'number' && targetCount > 0
+        ? Math.round((submittedStudentSet.size / targetCount) * 100)
+        : null,
+      pass_rate: submissions.length > 0
+        ? Math.round((approvedList.length / submissions.length) * 100)
+        : 0,
+      last_submit_time: lastSubmitTime || null
+    }
+  },
+
+  async loadAllTaskSubmissions() {
+    const result = []
+    let page = 1
+    let hasMore = true
+
+    while (hasMore) {
+      const response = await TaskService.getSubmissions({
+        role: 'teacher',
+        task_id: this.data.taskId,
+        page,
+        page_size: 50
+      })
+      const list = Array.isArray(response.list) ? response.list : []
+
+      result.push(...list)
+      hasMore = Boolean(response.has_more)
+      page += 1
+    }
+
+    return result
+  },
+
+  async loadTaskTargetCount(taskInfo = {}) {
+    if (typeof taskInfo.target_count === 'number' && !Number.isNaN(taskInfo.target_count)) {
+      return taskInfo.target_count
+    }
+
+    if (taskInfo.task_type === 'class' && taskInfo.class_id) {
+      try {
+        const classInfo = await ClassService.getClassDetail(taskInfo.class_id)
+        const memberCount = Number(classInfo.member_count || 0)
+        return Number.isNaN(memberCount) ? null : memberCount
+      } catch (error) {
+        console.error('[task-detail] loadTaskTargetCount error:', error)
+      }
+    }
+
+    return null
   },
 
   formatTaskInfo(item = {}) {
@@ -157,6 +233,11 @@ Page({
 
   formatProgressInfo(item = {}) {
     const source = item.progress_stats || item.progress || item.completion_stats || {}
+    const participantCount = this.getNumberValue(source, item, [
+      'participant_count',
+      'submitted_student_count',
+      'unique_student_count'
+    ])
     const submissionCount = this.getNumberValue(source, item, [
       'submission_count',
       'submit_count',
@@ -188,7 +269,7 @@ Page({
     const completionRate = this.getRateValue(source, item, [
       'completion_rate',
       'submit_rate'
-    ], submissionCount, targetCount)
+    ], participantCount, targetCount)
     const passRate = this.getRateValue(source, item, [
       'pass_rate',
       'approved_rate'
@@ -207,16 +288,24 @@ Page({
       passedCountText: this.formatCountText(passedCount),
       pendingCountText: this.formatCountText(pendingCount),
       rejectedCountText: this.formatCountText(rejectedCount),
-      targetCountText: this.formatCountText(targetCount),
+      targetCountText: this.formatTargetCountText(targetCount),
       completionRateText: this.formatRateText(completionRate),
       passRateText: this.formatRateText(passRate),
       completionPercent: completionRate,
       completionBarStyle: `width:${completionRate}%;`,
-      lastSubmitTimeText: lastSubmitTime ? this.formatDateTime(lastSubmitTime) : '待接入',
+      lastSubmitTimeText: lastSubmitTime ? this.formatDateTime(lastSubmitTime) : '暂无提交',
       noteText: hasRealData
-        ? '当前统计将随着任务提交与审核结果自动刷新。'
+        ? this.buildProgressNoteText(targetCount, participantCount)
         : '已预留提交统计字段，后续接入任务提交接口后会自动展示。'
     }
+  },
+
+  buildProgressNoteText(targetCount, participantCount) {
+    if (typeof targetCount === 'number' && targetCount > 0) {
+      return `当前已有 ${typeof participantCount === 'number' ? participantCount : 0} 名学生提交，统计会随着审核结果自动刷新。`
+    }
+
+    return '当前已接入真实提交与审核数据，公开任务暂不统计目标参与人数。'
   },
 
   getNumberValue(primarySource, fallbackSource, keys = []) {
@@ -293,6 +382,10 @@ Page({
 
   formatCountText(value) {
     return typeof value === 'number' ? `${value}` : '待接入'
+  },
+
+  formatTargetCountText(value) {
+    return typeof value === 'number' ? `${value}` : '未设定'
   },
 
   formatRateText(value) {
