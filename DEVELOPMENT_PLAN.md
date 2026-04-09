@@ -29,8 +29,8 @@
 | 项目系统 | 训练项目配置（编程、无人机、机器人） | 🟡 `get-projects` 云函数、ProjectService 与默认配置已完成，后台管理待开发 |
 | 班级系统 | 创建班级、加入班级、班级成员管理 | 🟡 班级云函数、教师端列表/详情/编辑/审批、学生端班级管理/邀请码申请/分享加入已完成，多班级关系已接入 |
 | 任务系统 | 发布任务（task）、任务分类、截止时间、积分设置 | ✅ 任务 CRUD 云函数、教师端列表/详情/编辑、学生端任务中心/详情、素材上传已完成 |
-| 提交系统 | 学生提交作业、图片/文件上传、提交记录 | ⬜ 提交记录云函数与学生提交流程待开发 |
-| 审核系统 | 教师审核批改、评分、反馈 | 🟡 审核中心 UI 与筛选骨架已完成，任务提交审核流仍待开发 |
+| 提交系统 | 学生提交作业、图片/文件上传、提交记录 | ✅ `submit-task`、`get-submissions` 云函数、学生提交页、任务内记录页与总提交记录入口已完成 |
+| 审核系统 | 教师审核批改、评分、反馈 | ✅ `review-submission` 云函数、教师审核页真实数据、审核弹层、反馈图片/附件与积分发放已完成 |
 | 积分系统 | 积分累计、积分消费、积分排行 | ⬜ 待开发 |
 | 抽奖系统 | 积分抽奖、奖品管理 | ⬜ 待开发 |
 | 排行榜 | 学生积分排行、任务完成排行 | 🟡 排行榜页已完成周/月/总榜 UI 与 mock 数据，真实榜单接口待接入 |
@@ -109,6 +109,7 @@ ZhiLiKongMa/
 │   ├── get-classes/           # 获取班级列表
 │   ├── get-my-class-status/   # 获取学生班级状态
 │   ├── get-projects/          # 获取项目列表
+│   ├── get-submissions/       # 获取提交记录
 │   ├── get-task-detail/       # 获取任务详情
 │   ├── get-tasks/             # 获取任务列表
 │   ├── get-user-info/         # 获取用户信息
@@ -117,7 +118,9 @@ ZhiLiKongMa/
 │   ├── join-class/            # 申请加入班级
 │   ├── login/                 # 用户登录
 │   ├── register/              # 用户注册
+│   ├── review-submission/     # 审核提交记录
 │   ├── remove-member/         # 移除班级成员
+│   ├── submit-task/           # 提交任务
 │   ├── switch-role/           # 切换角色
 │   ├── update-class/          # 更新班级
 │   ├── update-task/           # 更新任务
@@ -391,7 +394,7 @@ chore(deps): 更新依赖版本
 ├───────────────┼─────────────────────────────────────────────┤
 │    班级相关    │  classes, class_memberships, class_join_applications │
 ├───────────────┼─────────────────────────────────────────────┤
-│    任务相关    │  tasks（已接入）, submissions（规划）      │
+│    任务相关    │  tasks, submissions（均已接入）           │
 ├───────────────┼─────────────────────────────────────────────┤
 │    奖品相关    │  prizes, draw_records                       │
 ├───────────────┼─────────────────────────────────────────────┤
@@ -835,15 +838,15 @@ chore(deps): 更新依赖版本
 | get-task-detail | 获取任务详情 | ✅ 已完成 |
 | update-task | 更新任务 | ✅ 已完成 |
 | delete-task | 删除任务 | ✅ 已完成 |
+| submit-task | 提交任务 | ✅ 已完成 |
+| get-submissions | 获取提交记录 | ✅ 已完成 |
+| review-submission | 审核提交记录 | ✅ 已完成 |
 
 ### 7.2 待实现的云函数
 
 | 云函数 | 功能描述 | 优先级 | 状态 |
 |--------|----------|--------|------|
-| submit-task | 提交任务 | P0 | ⬜ 待开发 |
-| get-submissions | 获取提交列表 | P0 | ⬜ 待开发 |
 | get-submission-detail | 获取提交详情 | P0 | ⬜ 待开发 |
-| review-submission | 审核提交 | P0 | ⬜ 待开发 |
 | start-draw | 开始抽奖 | P0 | ⬜ 待开发 |
 | get-prizes | 获取奖品列表 | P0 | ⬜ 待开发 |
 | get-draw-records | 获取抽奖记录 | P1 | ⬜ 待开发 |
@@ -933,10 +936,12 @@ chore(deps): 更新依赖版本
 ├─────────────────────────────────────────────────────────────────┤
 │  学生端 (自定义 TabBar)                                          │
 │  ├── 首页 (student/index)                                        │
-│  │   ├── 班级状态与快捷入口                                      │
+│  │   ├── 班级状态、快捷入口与总提交记录入口                      │
 │  │   └── 学习概览                                                │
 │  ├── 任务中心 (student/task-manage/task-manage)                  │
-│  │   └── 任务详情 (task-detail)                                  │
+│  │   ├── 任务详情 (task-detail)                                  │
+│  │   ├── 提交任务 (submission-edit)                              │
+│  │   └── 提交记录 (submission-records)                           │
 │  ├── 班级管理 (student/class-manage/class-manage)                │
 │  │   ├── 班级详情 (class-detail)                                 │
 │  │   └── 入班确认 (join-confirm)                                 │
@@ -944,7 +949,8 @@ chore(deps): 更新依赖版本
 │  ├── 训练记录 (student/training)                                 │
 │  ├── 设置 (student/setting)                                      │
 │  └── 我的 (student/mine)                                         │
-│      └── 个人信息                                                │
+│      ├── 个人信息                                                │
+│      └── 总提交记录入口                                          │
 ├─────────────────────────────────────────────────────────────────┤
 │  教师端 (自定义 TabBar)                                          │
 │  ├── 首页 (teacher/index)                                        │
@@ -1014,10 +1020,12 @@ const TEACHER_TABBAR = [
     "pages/student/index",
     "pages/student/task-manage/task-manage",
     "pages/student/task-manage/task-detail/task-detail",
+    "pages/student/task-manage/submission-edit/submission-edit",
+    "pages/student/task-manage/submission-records/submission-records",
+    "pages/student/mine/mine",
     "pages/student/class-manage/class-manage",
     "pages/student/class-manage/class-detail/class-detail",
     "pages/student/class-manage/join-confirm/join-confirm",
-    "pages/student/mine/mine",
     "pages/login/login",
     "pages/teacher/index",
     "pages/student/setting/setting",
@@ -1360,7 +1368,7 @@ const ERROR_CODE = {
 
 ---
 
-**文档版本**: v3.4.0
-**最后更新**: 2026-04-08
+**文档版本**: v3.5.0
+**最后更新**: 2026-04-09
 **编写者**: 开发团队
-**更新说明**: 同步任务 CRUD 云函数、学生任务中心/详情页、滚动交互修复与当前项目结构状态
+**更新说明**: 同步提交审核闭环、总提交记录入口、任务相关云函数与页面结构的最新开发进度
