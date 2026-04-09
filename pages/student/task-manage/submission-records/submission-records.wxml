@@ -1,24 +1,26 @@
 <view class="container">
   <view class="header">
-    <custom-navbar title="提交记录" showBack="{{true}}" placeholder="{{true}}" />
+    <custom-navbar title="{{pageTitle}}" showBack="{{true}}" placeholder="{{true}}" />
   </view>
 
   <scroll-view class="content" scroll-y enhanced bounces="{{false}}" show-scrollbar="{{false}}">
     <view wx:if="{{loading}}" class="state-card">
       <text class="state-title">提交记录加载中</text>
-      <text class="state-desc">正在同步该任务下的提交历史。</text>
+      <text class="state-desc">{{isAllRecords ? '正在同步你在所有任务中的提交历史。' : '正在同步该任务下的提交历史。'}}</text>
     </view>
 
-    <block wx:elif="{{taskInfo}}">
+    <block wx:elif="{{isAllRecords || taskInfo}}">
       <view class="hero-card">
         <view class="hero-top">
           <view class="hero-copy">
-            <text class="hero-title">{{taskInfo.titleText}}</text>
-            <text class="hero-desc">{{taskInfo.projectText}} · {{taskInfo.classText}}</text>
+            <text class="hero-title">{{isAllRecords ? '全部提交记录' : taskInfo.titleText}}</text>
+            <text class="hero-desc">{{isAllRecords ? '这里会汇总你在所有任务中的历史提交，方便统一回看审核状态与完成情况。' : (taskInfo.projectText + ' · ' + taskInfo.classText)}}</text>
           </view>
-          <t-button size="small" theme="primary" bind:tap="goToSubmit">再次提交</t-button>
+          <t-button size="small" theme="primary" bind:tap="handleHeroAction">
+            {{isAllRecords ? '任务中心' : '再次提交'}}
+          </t-button>
         </view>
-        <text class="hero-tip">任务详情页只展示最近两次提交，这里会继续承接更多提交记录。</text>
+        <text class="hero-tip">{{isAllRecords ? '首页和我的页都可以直接进入这里，统一查看你的所有提交沉淀。' : '任务详情页只展示最近两次提交，这里会继续承接更多提交记录。'}}</text>
       </view>
 
       <view class="summary-card">
@@ -44,6 +46,11 @@
 
       <view wx:if="{{records.length}}" class="record-list">
         <view wx:for="{{records}}" wx:key="_id" class="record-card">
+          <view wx:if="{{isAllRecords}}" class="record-task-head">
+            <text class="record-task-title">{{item.taskTitle}}</text>
+            <text class="record-task-meta">{{item.projectText}} · {{item.classText}}</text>
+          </view>
+
           <view class="record-head">
             <view class="record-copy">
               <text class="record-title">第 {{item.submitNoText}} 次提交</text>
@@ -69,8 +76,8 @@
 
       <view wx:else class="state-card">
         <text class="state-title">还没有提交记录</text>
-        <text class="state-desc">先去完成一次提交，后续所有历史都会沉淀在这里。</text>
-        <button class="ghost-btn" bindtap="goToSubmit">去提交</button>
+        <text class="state-desc">{{isAllRecords ? '先去任务中心完成一次提交，后续所有历史都会沉淀在这里。' : '先去完成一次提交，后续所有历史都会沉淀在这里。'}}</text>
+        <button class="ghost-btn" bindtap="handleEmptyAction">{{isAllRecords ? '去任务中心' : '去提交'}}</button>
       </view>
 
       <button wx:if="{{hasMore}}" class="load-more-btn" bindtap="onLoadMore" loading="{{loadingMore}}">

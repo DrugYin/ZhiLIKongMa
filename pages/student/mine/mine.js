@@ -27,6 +27,11 @@ Page({
         desc: '管理邀请码、查看班级详情'
       },
       {
+        key: 'records',
+        title: '提交记录',
+        desc: '统一查看任务提交、审核状态和历史反馈'
+      },
+      {
         key: 'setting',
         title: '账号设置',
         desc: '完善头像、昵称和基础资料'
@@ -82,7 +87,18 @@ Page({
 
     if (key === 'setting') {
       this.goToSetting()
+      return
     }
+
+    if (key === 'records') {
+      this.goToSubmissionRecords()
+    }
+  },
+
+  goToSubmissionRecords() {
+    wx.navigateTo({
+      url: '/pages/student/task-manage/submission-records/submission-records'
+    })
   },
 
   goToTaskCenter() {
@@ -119,7 +135,7 @@ Page({
       console.error(e)
     })
   },
-  
+
   onLogout() {
     this.setData({
       showLogout: true
