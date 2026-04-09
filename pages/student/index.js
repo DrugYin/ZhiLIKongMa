@@ -346,14 +346,16 @@ Page({
   },
 
   isCurrentWeekTask(item = {}) {
-    const referenceDate = this.getTaskReferenceDate(item)
-    if (!referenceDate) {
-      return false
-    }
-
     const { start, end } = this.getCurrentWeekRange()
-    const time = referenceDate.getTime()
-    return time >= start.getTime() && time < end.getTime()
+    const candidateDates = [
+      this.parseTaskDate(item.publish_time),
+      this.parseTaskDate(item.create_time),
+      this.parseTaskDate(item.update_time),
+      this.parseTaskDate(item.deadline),
+      this.parseTaskDate(this.buildTaskDeadlineValue(item))
+    ].filter(Boolean)
+
+    return candidateDates.some((date) => this.isDateInRange(date, start, end))
   },
 
   getTaskReferenceTime(item = {}) {
@@ -362,11 +364,11 @@ Page({
   },
 
   getTaskReferenceDate(item = {}) {
-    return this.parseTaskDate(item.deadline)
-      || this.parseTaskDate(this.buildTaskDeadlineValue(item))
-      || this.parseTaskDate(item.publish_time)
+    return this.parseTaskDate(item.publish_time)
       || this.parseTaskDate(item.create_time)
       || this.parseTaskDate(item.update_time)
+      || this.parseTaskDate(item.deadline)
+      || this.parseTaskDate(this.buildTaskDeadlineValue(item))
   },
 
   buildTaskDeadlineValue(item = {}) {
@@ -395,6 +397,15 @@ Page({
     end.setDate(end.getDate() + 7)
 
     return { start, end }
+  },
+
+  isDateInRange(date, start, end) {
+    if (!date) {
+      return false
+    }
+
+    const time = date.getTime()
+    return time >= start.getTime() && time < end.getTime()
   },
 
   closeNotice() {
