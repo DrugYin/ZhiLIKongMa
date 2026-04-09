@@ -1,5 +1,7 @@
 const AuthService = require('../../services/auth')
 const ClassService = require('../../services/class')
+const TaskService = require('../../services/task')
+const formatUtils = require('../../utils/format')
 
 Page({
   data: {
@@ -11,12 +13,18 @@ Page({
     notice: '',
     showNotice: false,
     featuredTask: {
-      title: '本周训练计划待同步',
-      description: '登录后可以查看你当前可见的任务安排与截止时间。',
+      title: '登录后查看本周任务',
+      description: '系统会自动同步你本周可见任务中最新的待提交任务。',
       deadlineText: '待同步',
       progressText: '0 / 0',
       progressPercent: 0,
-      assistantText: '综合训练'
+      assistantText: '综合训练',
+      projectText: '任务待同步',
+      classText: '登录后查看',
+      statusText: '未登录',
+      statusStyle: 'color:#7a8797;background:rgba(122, 135, 151, 0.12);',
+      weeklyTaskCount: 0,
+      submittedCount: 0
     },
     summary: {
       points: 0,
@@ -104,11 +112,14 @@ Page({
     })
 
     try {
-      const classSummary = await this.loadClassSummary()
+      const [classSummary, weeklyTaskSummary] = await Promise.all([
+        this.loadClassSummary(),
+        this.loadWeeklyTaskSummary()
+      ])
       this.setData({
         notice: this.buildNoticeText(isLoggedIn, classSummary),
         showNotice: true,
-        featuredTask: this.buildFeaturedTask(userInfo, classSummary),
+        featuredTask: this.buildFeaturedTask(userInfo, classSummary, weeklyTaskSummary),
         summary: {
           ...this.data.summary,
           joinedClasses: classSummary.joinedCount,
@@ -126,7 +137,7 @@ Page({
         featuredTask: this.buildFeaturedTask(userInfo, {
           joinedCount: 0,
           pendingCount: 0
-        })
+        }, null)
       })
     } finally {
       this.setData({ loading: false })
@@ -135,7 +146,7 @@ Page({
   },
 
   async loadClassSummary() {
-    if (!this.data.isLoggedIn) {
+    if (!AuthService.isLoggedIn()) {
       return {
         joinedCount: 0,
         pendingCount: 0
@@ -176,21 +187,214 @@ Page({
     return '还没有加入班级时，也可以先浏览公开任务与排行榜，后续再补充班级学习内容。'
   },
 
-  buildFeaturedTask(userInfo, classSummary) {
+  async loadWeeklyTaskSummary() {
+    if (!AuthService.isLoggedIn()) {
+      return null
+    }
+
+    try {
+      const taskResponse = await TaskService.getTasks({
+        page: 1,
+        page_size: 50,
+        sort_by: 'publish_time',
+        sort_order: 'desc'
+      })
+      const submissionTaskIds = await this.loadSubmittedTaskIds()
+      const taskList = Array.isArray(taskResponse.list) ? taskResponse.list : []
+      const weeklyTasks = taskList.filter((item) => this.isCurrentWeekTask(item))
+      const submittedCount = weeklyTasks.filter((item) => submissionTaskIds.has(item._id)).length
+      const pendingTasks = weeklyTasks
+        .filter((item) => !submissionTaskIds.has(item._id))
+        .sort((left, right) => this.getTaskReferenceTime(right) - this.getTaskReferenceTime(left))
+      const latestTask = pendingTasks[0] || weeklyTasks[0] || null
+
+      return {
+        weeklyTaskCount: weeklyTasks.length,
+        submittedCount,
+        latestTask: latestTask ? this.formatWeeklyTask(latestTask) : null,
+        hasPendingTask: pendingTasks.length > 0
+      }
+    } catch (error) {
+      console.error('[student-index] loadWeeklyTaskSummary error:', error)
+      return null
+    }
+  },
+
+  async loadSubmittedTaskIds() {
+    const taskIds = new Set()
+    let page = 1
+    let hasMore = true
+    const maxPages = 4
+
+    while (hasMore && page <= maxPages) {
+      const response = await TaskService.getSubmissions({
+        page,
+        page_size: 50
+      })
+      const list = Array.isArray(response.list) ? response.list : []
+      list.forEach((item) => {
+        if (item && item.task_id) {
+          taskIds.add(item.task_id)
+        }
+      })
+      hasMore = Boolean(response.has_more)
+      page += 1
+    }
+
+    return taskIds
+  },
+
+  buildFeaturedTask(userInfo, classSummary, weeklyTaskSummary) {
     const joinedCount = classSummary.joinedCount || 0
-    const progressCurrent = joinedCount > 0 ? Math.min(joinedCount + 1, 3) : 0
-    const progressTotal = joinedCount > 0 ? 3 : 0
+    const weeklyTaskCount = Number(weeklyTaskSummary && weeklyTaskSummary.weeklyTaskCount) || 0
+    const submittedCount = Number(weeklyTaskSummary && weeklyTaskSummary.submittedCount) || 0
+    const latestTask = weeklyTaskSummary && weeklyTaskSummary.latestTask
+    const progressPercent = weeklyTaskCount > 0
+      ? Math.round((submittedCount / weeklyTaskCount) * 100)
+      : 0
+
+    if (!this.data.isLoggedIn) {
+      return {
+        title: '登录后查看本周任务',
+        description: '系统会自动同步你本周可见任务中最新的待提交任务。',
+        deadlineText: '待同步',
+        progressText: '0 / 0',
+        progressPercent: 0,
+        assistantText: '综合训练',
+        projectText: '任务待同步',
+        classText: '登录后查看',
+        statusText: '未登录',
+        statusStyle: 'color:#7a8797;background:rgba(122, 135, 151, 0.12);',
+        weeklyTaskCount: 0,
+        submittedCount: 0
+      }
+    }
+
+    if (!weeklyTaskCount || !latestTask) {
+      return {
+        title: '本周还没有待跟进任务',
+        description: joinedCount > 0
+          ? '当前没有落在本周的任务安排，可以先去任务中心查看全部历史任务。'
+          : '当前没有同步到本周任务，加入班级后这里会自动聚合最新任务。',
+        deadlineText: '本周暂无任务',
+        progressText: '0 / 0',
+        progressPercent: 0,
+        assistantText: userInfo.grade || userInfo.school || '综合训练',
+        projectText: '任务中心待同步',
+        classText: joinedCount > 0 ? `已加入 ${joinedCount} 个班级` : '暂未加入班级',
+        statusText: '本周空闲',
+        statusStyle: 'color:#2f8f57;background:rgba(47, 143, 87, 0.12);',
+        weeklyTaskCount: 0,
+        submittedCount: 0
+      }
+    }
+
+    if (!weeklyTaskSummary.hasPendingTask) {
+      return {
+        title: '本周任务已全部提交',
+        description: `你本周共有 ${weeklyTaskCount} 个任务，已经全部完成提交，记得留意后续审核反馈。`,
+        deadlineText: latestTask.deadlineText,
+        progressText: `${submittedCount} / ${weeklyTaskCount}`,
+        progressPercent,
+        assistantText: latestTask.projectText,
+        projectText: latestTask.projectText,
+        classText: latestTask.classText,
+        statusText: '已全部提交',
+        statusStyle: 'color:#2f8f57;background:rgba(47, 143, 87, 0.12);',
+        weeklyTaskCount,
+        submittedCount
+      }
+    }
 
     return {
-      title: joinedCount > 0 ? '本周班级任务整理' : '先完成账号与班级准备',
-      description: joinedCount > 0
-        ? `你当前已关联 ${joinedCount} 个班级，建议先进入任务中心查看本周任务清单与截止时间。`
-        : '当前还没有班级任务，建议先完成登录、注册或加入班级，系统会自动同步后续训练内容。',
-      deadlineText: joinedCount > 0 ? '建议今天 20:00 前完成浏览' : '准备中',
-      progressText: progressTotal > 0 ? `${progressCurrent} / ${progressTotal}` : '0 / 0',
-      progressPercent: progressTotal > 0 ? Math.round((progressCurrent / progressTotal) * 100) : 0,
-      assistantText: userInfo.grade || userInfo.school || '综合训练'
+      title: latestTask.titleText,
+      description: latestTask.descriptionText,
+      deadlineText: latestTask.deadlineText,
+      progressText: `${submittedCount} / ${weeklyTaskCount}`,
+      progressPercent,
+      assistantText: latestTask.projectText,
+      projectText: latestTask.projectText,
+      classText: latestTask.classText,
+      statusText: '待提交',
+      statusStyle: 'color:#d88412;background:rgba(216, 132, 18, 0.12);',
+      weeklyTaskCount,
+      submittedCount
     }
+  },
+
+  formatWeeklyTask(item = {}) {
+    return {
+      titleText: item.title || '未命名任务',
+      descriptionText: String(item.description || '').trim() || '请前往任务中心查看任务详情和素材要求。',
+      projectText: item.project_name || item.project_code || '未设置项目',
+      classText: item.task_type === 'class'
+        ? (item.class_name || '未设置班级')
+        : '全部学生可见',
+      deadlineText: this.getTaskDeadlineText(item)
+    }
+  },
+
+  getTaskDeadlineText(item = {}) {
+    const deadline = this.parseTaskDate(item.deadline)
+      || this.parseTaskDate(this.buildTaskDeadlineValue(item))
+
+    if (!deadline) {
+      return '未设置截止时间'
+    }
+
+    return `截止 ${formatUtils.formatDate(deadline, 'MM-DD HH:mm')}`
+  },
+
+  isCurrentWeekTask(item = {}) {
+    const referenceDate = this.getTaskReferenceDate(item)
+    if (!referenceDate) {
+      return false
+    }
+
+    const { start, end } = this.getCurrentWeekRange()
+    const time = referenceDate.getTime()
+    return time >= start.getTime() && time < end.getTime()
+  },
+
+  getTaskReferenceTime(item = {}) {
+    const referenceDate = this.getTaskReferenceDate(item)
+    return referenceDate ? referenceDate.getTime() : 0
+  },
+
+  getTaskReferenceDate(item = {}) {
+    return this.parseTaskDate(item.deadline)
+      || this.parseTaskDate(this.buildTaskDeadlineValue(item))
+      || this.parseTaskDate(item.publish_time)
+      || this.parseTaskDate(item.create_time)
+      || this.parseTaskDate(item.update_time)
+  },
+
+  buildTaskDeadlineValue(item = {}) {
+    if (item.deadline_date && item.deadline_time) {
+      return `${item.deadline_date} ${item.deadline_time}`
+    }
+    return ''
+  },
+
+  parseTaskDate(value) {
+    if (!value) {
+      return null
+    }
+
+    const date = new Date(value)
+    return Number.isNaN(date.getTime()) ? null : date
+  },
+
+  getCurrentWeekRange() {
+    const start = new Date()
+    const day = start.getDay() || 7
+    start.setHours(0, 0, 0, 0)
+    start.setDate(start.getDate() - day + 1)
+
+    const end = new Date(start)
+    end.setDate(end.getDate() + 7)
+
+    return { start, end }
   },
 
   closeNotice() {

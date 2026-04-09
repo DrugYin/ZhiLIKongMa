@@ -51,11 +51,27 @@
 
     <view class="section-card">
       <view class="section-header">
-        <text class="section-title">本周聚焦</text>
+        <text class="section-title">每周任务</text>
         <text class="section-extra">{{featuredTask.deadlineText}}</text>
       </view>
       <text class="focus-title">{{featuredTask.title}}</text>
+      <view class="weekly-tag-row">
+        <text class="weekly-tag">{{featuredTask.projectText}}</text>
+        <text class="weekly-tag weekly-tag-light">{{featuredTask.classText}}</text>
+        <text class="weekly-tag" style="{{featuredTask.statusStyle}}">{{featuredTask.statusText}}</text>
+      </view>
       <text class="focus-desc">{{featuredTask.description}}</text>
+
+      <view class="weekly-summary-row">
+        <view class="weekly-summary-item">
+          <text class="weekly-summary-label">本周任务数</text>
+          <text class="weekly-summary-value">{{featuredTask.weeklyTaskCount}}</text>
+        </view>
+        <view class="weekly-summary-item">
+          <text class="weekly-summary-label">已提交任务</text>
+          <text class="weekly-summary-value">{{featuredTask.submittedCount}}</text>
+        </view>
+      </view>
 
       <view class="focus-progress">
         <view class="progress-track">
