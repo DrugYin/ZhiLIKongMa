@@ -28,6 +28,7 @@
         <text class="hero-desc">{{taskInfo.descriptionText}}</text>
 
         <view class="hero-actions">
+          <button class="share-btn" open-type="share">邀请完成</button>
           <button class="ghost-btn" bindtap="goToEditTask">编辑任务</button>
           <button class="danger-btn" bindtap="onDeleteTask">删除任务</button>
         </view>

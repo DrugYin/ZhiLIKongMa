@@ -402,7 +402,7 @@ Page({
     const title = this.data.taskInfo ? this.data.taskInfo.titleText : '任务详情'
     return {
       title,
-      path: `/pages/teacher/task-manage/task-detail/task-detail?task_id=${this.data.taskId}`
+      path: `/pages/student/task-manage/task-detail/task-detail?task_id=${this.data.taskId}`
     }
   }
 })
