@@ -399,9 +399,11 @@ Page({
   },
 
   onShareAppMessage() {
-    const title = this.data.taskInfo ? this.data.taskInfo.titleText : '任务详情'
+    const taskInfo = this.data.taskInfo || {}
+    const teacherName = taskInfo.teacher_name || taskInfo.teacherName || '老师'
+    const taskTitle = taskInfo.titleText || '任务'
     return {
-      title,
+      title: `${teacherName}邀请你完成${taskTitle}`,
       path: `/pages/student/task-manage/task-detail/task-detail?task_id=${this.data.taskId}`
     }
   }
