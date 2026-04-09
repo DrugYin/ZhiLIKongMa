@@ -1,7 +1,11 @@
 const AuthService = require('../../../services/auth')
+const RankingService = require('../../../services/ranking')
 
 Page({
   data: {
+    loading: true,
+    isLoggedIn: false,
+    errorText: '',
     rankType: 'week',
     userInfo: {},
     rankTitle: '本周学习榜',
@@ -47,27 +51,72 @@ Page({
     this.loadRankData()
   },
 
-  loadRankData() {
+  async loadRankData() {
     const userInfo = AuthService.getLocalUserInfo() || {}
-    const rankingList = this.buildRankings(this.data.rankType, userInfo)
-    const currentUserCard = rankingList.find((item) => item.isCurrentUser) || null
+    const isLoggedIn = AuthService.isLoggedIn()
 
     this.setData({
+      loading: true,
+      isLoggedIn,
+      errorText: '',
       userInfo,
       rankTitle: this.getRankTitle(this.data.rankType),
-      rankDesc: this.getRankDesc(this.data.rankType),
-      topThree: rankingList.slice(0, 3),
-      displayRanks: rankingList.slice(3),
-      currentUserCard,
-      summary: {
-        participantCount: rankingList.length,
-        myRankText: currentUserCard ? `第 ${currentUserCard.rank} 名` : '未上榜',
-        myPoints: currentUserCard ? currentUserCard.points : 0
-      }
+      rankDesc: this.getRankDesc(this.data.rankType)
     })
 
-    this._pageReady = true
-    wx.stopPullDownRefresh()
+    if (!isLoggedIn) {
+      this.setData({
+        loading: false,
+        topThree: [],
+        displayRanks: [],
+        currentUserCard: null,
+        summary: {
+          participantCount: 0,
+          myRankText: '未登录',
+          myPoints: 0
+        }
+      })
+      wx.stopPullDownRefresh()
+      return
+    }
+
+    try {
+      const rankRes = await RankingService.getRanking({
+        rank_type: this.data.rankType
+      })
+      const rankingList = this.formatRankingList(rankRes.list || [])
+      const currentUserCard = rankingList.find((item) => item.isCurrentUser) || null
+
+      this.setData({
+        topThree: rankingList.slice(0, 3),
+        displayRanks: rankingList.slice(3),
+        currentUserCard,
+        summary: {
+          participantCount: Number(rankRes.participant_count || rankingList.length || 0),
+          myRankText: currentUserCard ? `第 ${currentUserCard.rank} 名` : '未上榜',
+          myPoints: currentUserCard ? currentUserCard.points : 0
+        }
+      })
+      this._pageReady = true
+    } catch (error) {
+      console.error('[student-rank] loadRankData error:', error)
+      this.setData({
+        topThree: [],
+        displayRanks: [],
+        currentUserCard: null,
+        errorText: error.message || '排行榜加载失败',
+        summary: {
+          participantCount: 0,
+          myRankText: '加载失败',
+          myPoints: 0
+        }
+      })
+    } finally {
+      this.setData({
+        loading: false
+      })
+      wx.stopPullDownRefresh()
+    }
   },
 
   getRankTitle(rankType) {
@@ -94,45 +143,53 @@ Page({
     return '周榜会更强调最近的学习节奏，适合快速判断当前状态。'
   },
 
-  buildRankings(rankType, userInfo) {
-    const displayName = userInfo.user_name || userInfo.userName || '你'
-    const base = [
-      { name: '赵昱睿', grade: '六年级', points: { week: 128, month: 420, total: 980 }, trend: '稳定推进' },
-      { name: '兰光宸', grade: '初一', points: { week: 121, month: 405, total: 950 }, trend: '任务完成率高' },
-      { name: '李雨桐', grade: '五年级', points: { week: 118, month: 386, total: 918 }, trend: '班级任务活跃' },
-      { name: '陈知予', grade: '六年级', points: { week: 105, month: 358, total: 860 }, trend: '公开任务进步快' },
-      { name: displayName, grade: userInfo.grade || '待完善', points: { week: 96, month: 330, total: Number(userInfo.points || 780) }, trend: '当前账号' },
-      { name: '吴梓涵', grade: '初二', points: { week: 90, month: 315, total: 772 }, trend: '打卡稳定' },
-      { name: '周若溪', grade: '四年级', points: { week: 84, month: 288, total: 720 }, trend: '最近状态回升' }
-    ]
-
-    const pointKey = rankType === 'month' ? 'month' : rankType === 'total' ? 'total' : 'week'
-
-    return base
-      .map((item) => ({
-        ...item,
-        points: item.points[pointKey],
-        isCurrentUser: item.name === displayName,
-        badgeText: this.getBadgeText(item.points[pointKey], pointKey)
-      }))
-      .sort((left, right) => right.points - left.points)
-      .map((item, index) => ({
-        ...item,
-        rank: index + 1,
-        rankClass: index < 3 ? `rank-top-${index + 1}` : ''
-      }))
+  formatRankingList(list = []) {
+    return (Array.isArray(list) ? list : []).map((item, index) => ({
+      ...item,
+      name: item.name || '未命名同学',
+      grade: item.grade || '待完善',
+      trend: item.trend_text || this.getTrendText(item),
+      badgeText: this.getBadgeText(item.points, this.data.rankType, item.task_count),
+      isCurrentUser: Boolean(item.is_current_user),
+      rankClass: index < 3 ? `rank-top-${index + 1}` : ''
+    }))
   },
 
-  getBadgeText(points, pointKey) {
+  getBadgeText(points, pointKey, taskCount = 0) {
     if (pointKey === 'week') {
-      return points >= 120 ? '本周冲刺' : '稳步推进'
+      if (points >= 100) {
+        return '本周冲刺'
+      }
+      return taskCount >= 1 ? '本周活跃' : '等待突破'
     }
 
     if (pointKey === 'month') {
-      return points >= 400 ? '月度优选' : '持续积累'
+      return points >= 200 ? '月度优选' : '持续积累'
     }
 
-    return points >= 900 ? '长期领先' : '成长进行中'
+    return points >= 500 ? '长期领先' : '成长进行中'
+  },
+
+  getTrendText(item = {}) {
+    if (this.data.rankType === 'total') {
+      return Number(item.points || 0) > 0 ? '累计积分持续增长' : '等待首次积分入榜'
+    }
+
+    if (Number(item.task_count || 0) >= 3) {
+      return '任务完成率较高'
+    }
+
+    if (Number(item.task_count || 0) >= 1) {
+      return '本期保持活跃'
+    }
+
+    return this.data.rankType === 'month' ? '本月继续加油' : '本周继续冲刺'
+  },
+
+  goLogin() {
+    wx.navigateTo({
+      url: '/pages/login/login'
+    })
   },
 
   onShareAppMessage() {
