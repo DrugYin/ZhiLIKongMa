@@ -37,7 +37,7 @@
       <view class="section-card">
         <view class="section-head">
           <text class="section-title">完成情况</text>
-          <text class="section-subtitle">任务提交业务接入后会展示实时数据</text>
+          <text class="section-subtitle">已接入提交与审核实时统计</text>
         </view>
 
         <view class="progress-overview">
