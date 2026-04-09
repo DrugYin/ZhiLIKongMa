@@ -442,15 +442,40 @@ Page({
       return null
     }
 
-    const date = new Date(value)
-    return Number.isNaN(date.getTime()) ? null : date
+    if (value instanceof Date) {
+      return Number.isNaN(value.getTime()) ? null : value
+    }
+
+    if (typeof value === 'number') {
+      const timestampDate = new Date(value)
+      return Number.isNaN(timestampDate.getTime()) ? null : timestampDate
+    }
+
+    const text = String(value).trim()
+    if (!text) {
+      return null
+    }
+
+    let normalizedText = text
+    if (text.includes(' ') && !text.includes('T')) {
+      normalizedText = text.replace(' ', 'T')
+    }
+
+    const primaryDate = new Date(normalizedText)
+    if (!Number.isNaN(primaryDate.getTime())) {
+      return primaryDate
+    }
+
+    const slashDate = new Date(text.replace(/-/g, '/'))
+    return Number.isNaN(slashDate.getTime()) ? null : slashDate
   },
 
   getCurrentWeekRange() {
     const start = new Date()
-    const day = start.getDay() || 7
+    const day = start.getDay()
+    const offset = (day + 1) % 7
     start.setHours(0, 0, 0, 0)
-    start.setDate(start.getDate() - day + 1)
+    start.setDate(start.getDate() - offset)
 
     const end = new Date(start)
     end.setDate(end.getDate() + 7)
