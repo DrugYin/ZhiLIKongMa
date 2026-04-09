@@ -58,6 +58,7 @@
 }
 
 .hero-title,
+.record-task-title,
 .record-title,
 .state-title {
   color: #16324c;
@@ -77,8 +78,15 @@
   font-size: 30rpx;
 }
 
+.record-task-title {
+  display: block;
+  font-size: 28rpx;
+  line-height: 1.5;
+}
+
 .hero-desc,
 .hero-tip,
+.record-task-meta,
 .record-time,
 .state-desc,
 .feedback-text {
@@ -138,6 +146,14 @@
 }
 
 .record-time {
+  margin-top: 8rpx;
+}
+
+.record-task-head {
+  margin-bottom: 18rpx;
+}
+
+.record-task-meta {
   margin-top: 8rpx;
 }
 

@@ -8,7 +8,9 @@ const {
 
 Page({
   data: {
+    pageTitle: '提交记录',
     taskId: '',
+    isAllRecords: false,
     loading: true,
     loadingMore: false,
     taskInfo: null,
@@ -28,16 +30,10 @@ Page({
   onLoad(options) {
     const taskId = String(options.task_id || '').trim()
 
-    if (!taskId) {
-      Toast.showToast('缺少任务ID')
-      setTimeout(() => {
-        wx.navigateBack()
-      }, 1200)
-      return
-    }
-
     this.setData({
-      taskId
+      taskId,
+      isAllRecords: !taskId,
+      pageTitle: taskId ? '提交记录' : '总提交记录'
     })
 
     this.initPage()
@@ -64,18 +60,23 @@ Page({
     })
 
     try {
+      const requestParams = {
+        page: 1,
+        page_size: this.data.pageSize
+      }
+
+      if (this.data.taskId) {
+        requestParams.task_id = this.data.taskId
+      }
+
       const [taskInfo, submissionRes] = await Promise.all([
-        TaskService.getTaskDetail(this.data.taskId),
-        TaskService.getSubmissions({
-          task_id: this.data.taskId,
-          page: 1,
-          page_size: this.data.pageSize
-        })
+        this.data.taskId ? TaskService.getTaskDetail(this.data.taskId) : Promise.resolve(null),
+        TaskService.getSubmissions(requestParams)
       ])
 
       const records = this.formatSubmissionList(submissionRes.list)
       this.setData({
-        taskInfo: this.formatTaskInfo(taskInfo),
+        taskInfo: taskInfo ? this.formatTaskInfo(taskInfo) : null,
         records,
         total: Number(submissionRes.total || 0),
         hasMore: Boolean(submissionRes.has_more),
@@ -120,6 +121,9 @@ Page({
     return {
       ...item,
       submitNoText: submitNo || '--',
+      taskTitle: item.task_title || '未命名任务',
+      projectText: item.project_name || item.project_code || '未设置项目',
+      classText: item.class_name || '未设置班级',
       statusText: SUBMISSION_STATUS_TEXT[status] || '待处理',
       statusStyle: `color:${statusColor};background:${this.toRgba(statusColor, 0.12)};`,
       submitTimeText: item.submit_time ? this.formatDateTime(item.submit_time) : '刚刚提交',
@@ -173,11 +177,16 @@ Page({
     })
 
     try {
-      const submissionRes = await TaskService.getSubmissions({
-        task_id: this.data.taskId,
+      const requestParams = {
         page: nextPage,
         page_size: this.data.pageSize
-      })
+      }
+
+      if (this.data.taskId) {
+        requestParams.task_id = this.data.taskId
+      }
+
+      const submissionRes = await TaskService.getSubmissions(requestParams)
       const records = this.data.records.concat(this.formatSubmissionList(submissionRes.list))
 
       this.setData({
@@ -200,6 +209,30 @@ Page({
   goToSubmit() {
     wx.navigateTo({
       url: `/pages/student/task-manage/submission-edit/submission-edit?task_id=${this.data.taskId}`
+    })
+  },
+
+  handleHeroAction() {
+    if (this.data.isAllRecords) {
+      this.goToTaskCenter()
+      return
+    }
+
+    this.goToSubmit()
+  },
+
+  handleEmptyAction() {
+    if (this.data.isAllRecords) {
+      this.goToTaskCenter()
+      return
+    }
+
+    this.goToSubmit()
+  },
+
+  goToTaskCenter() {
+    wx.navigateTo({
+      url: '/pages/student/task-manage/task-manage'
     })
   }
 })

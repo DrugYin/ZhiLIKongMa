@@ -42,6 +42,12 @@ Page({
         mark: '榜',
         title: '排行榜',
         desc: '查看周榜、月榜和总榜变化'
+      },
+      {
+        key: 'records',
+        mark: '记',
+        title: '提交记录',
+        desc: '统一查看所有任务的历史提交'
       }
     ],
     focusList: [
@@ -206,6 +212,11 @@ Page({
 
     if (key === 'rank') {
       this.goToRank()
+      return
+    }
+
+    if (key === 'records') {
+      this.goToSubmissionRecords()
     }
   },
 
@@ -230,6 +241,12 @@ Page({
   goToRank() {
     wx.switchTab({
       url: '/pages/student/rank/rank'
+    })
+  },
+
+  goToSubmissionRecords() {
+    wx.navigateTo({
+      url: '/pages/student/task-manage/submission-records/submission-records'
     })
   },
 
