@@ -130,7 +130,14 @@ Page({
     const feedbackImageCount = Array.isArray(item.feedback_images) ? item.feedback_images.length : 0
     const feedbackFileCount = Array.isArray(item.feedback_files) ? item.feedback_files.length : 0
     const submitNo = Number(item.submit_no || 0)
-    const scoreValue = item.score === null || item.score === undefined ? '' : `${Number(item.score)} 分`
+    const pointsValue = Number(item.points_earned || 0)
+    let pointsText = '待发放'
+
+    if (status === 'approved') {
+      pointsText = `${pointsValue} 积分`
+    } else if (status === 'rejected') {
+      pointsText = '0 积分'
+    }
 
     return {
       ...item,
@@ -144,7 +151,7 @@ Page({
       descriptionText: String(item.description || '').trim() || '本次提交未填写说明',
       materialText: `${imageCount} 张图片 / ${fileCount} 个附件`,
       feedbackText: String(item.feedback || '').trim(),
-      scoreText: scoreValue || '待评分',
+      pointsText,
       overtimeText: item.is_overtime ? '已超截止时间提交' : '按时提交',
       imageCount,
       fileCount,

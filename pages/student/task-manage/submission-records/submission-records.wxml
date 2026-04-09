@@ -62,7 +62,7 @@
           <view class="record-meta-row">
             <text class="meta-tag">{{item.materialText}}</text>
             <text class="meta-tag">{{item.overtimeText}}</text>
-            <text class="meta-tag">评分：{{item.scoreText}}</text>
+            <text class="meta-tag">获取积分：{{item.pointsText}}</text>
           </view>
 
           <text class="record-desc">{{item.descriptionText}}</text>
@@ -126,8 +126,8 @@
                 <text class="summary-value">{{popupRecord.statusText}}</text>
               </view>
               <view class="summary-item">
-                <text class="summary-label">评分结果</text>
-                <text class="summary-value">{{popupRecord.scoreText}}</text>
+                <text class="summary-label">获取积分</text>
+                <text class="summary-value">{{popupRecord.pointsText}}</text>
               </view>
               <view class="summary-item">
                 <text class="summary-label">提交材料</text>
