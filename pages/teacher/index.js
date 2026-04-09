@@ -7,7 +7,7 @@ Page({
   data: {
     userInfo: {},
     greeting: '',
-    pendingCount: 6,
+    pendingCount: 0,
     weeklyStats: {
       totalStudents: 0,
       weeklyCheckIns: 0,
@@ -16,8 +16,8 @@ Page({
     overview: {
       classCount: 0,
       taskCount: 0,
-      studentCount: 5,
-      pendingCount: 6
+      studentCount: 0,
+      pendingCount: 0
     },
     quickActions: [
       {
@@ -77,7 +77,6 @@ Page({
 
   initPage() {
     this.setGreeting()
-    this.loadUserInfo()
     this.loadPageData()
   },
 
@@ -92,136 +91,139 @@ Page({
     this.setData({ greeting })
   },
 
-  loadUserInfo() {
-    const userInfo = AuthService.getLocalUserInfo() || {}
-    this.setData({ userInfo })
-  },
-
   async loadPageData() {
-    await Promise.all([
-      this.loadPendingCount(),
-      this.loadWeeklyStats(),
-      this.loadOverview(),
-      this.loadRecentActivities()
+    const requestId = (this._loadRequestId || 0) + 1
+    this._loadRequestId = requestId
+
+    const cachedUserInfo = AuthService.getLocalUserInfo() || {}
+
+    this.setData({
+      userInfo: cachedUserInfo
+    })
+
+    const [userInfoResult, classesResult, tasksResult, submissionsResult] = await Promise.allSettled([
+      this.loadCurrentUserInfo(cachedUserInfo),
+      this.fetchAllClasses(),
+      this.fetchAllTasks(),
+      this.fetchAllTeacherSubmissions()
     ])
+
+    if (requestId !== this._loadRequestId) {
+      return
+    }
+
+    const userInfo = userInfoResult.status === 'fulfilled' ? userInfoResult.value : cachedUserInfo
+    const classes = classesResult.status === 'fulfilled' ? classesResult.value : []
+    const tasks = tasksResult.status === 'fulfilled' ? tasksResult.value : []
+    const submissions = submissionsResult.status === 'fulfilled' ? submissionsResult.value : []
+    const applications = await this.fetchAllPendingApplications(classes)
+
+    if (requestId !== this._loadRequestId) {
+      return
+    }
+
+    const pendingSubmissionCount = submissions.filter((item) => item.status === 'pending').length
+    const pendingApplicationCount = applications.length
+    const pendingCount = pendingSubmissionCount + pendingApplicationCount
+    const totalStudents = classes.reduce((sum, item) => sum + Number(item.member_count || 0), 0)
+    const weeklySubmittedStudents = this.getWeeklySubmittedStudentCount(submissions)
+    const completionRate = totalStudents > 0
+      ? Math.min(100, Math.round((weeklySubmittedStudents / totalStudents) * 100))
+      : 0
+
+    this.setData({
+      userInfo,
+      pendingCount,
+      weeklyStats: {
+        totalStudents,
+        weeklyCheckIns: weeklySubmittedStudents,
+        completionRate
+      },
+      overview: {
+        classCount: classes.length,
+        taskCount: tasks.length,
+        studentCount: totalStudents,
+        pendingCount
+      },
+      recentActivities: this.buildRecentActivities(classes, tasks, submissions, applications)
+    })
+
     this._pageReady = true
   },
 
-  loadPendingCount() {
-    return new Promise((resolve) => {
-      this.setData({ pendingCount: 6 })
-      resolve()
-    })
-  },
-
-  async loadWeeklyStats() {
+  async loadCurrentUserInfo(fallbackUserInfo = {}) {
     try {
-      const classes = await this.fetchAllClasses()
-      const totalStudents = classes.reduce((sum, item) => sum + Number(item.member_count || 0), 0)
-      const weeklyCheckIns = totalStudents > 0 ? totalStudents * 2 : 18
-      const completionRate = totalStudents > 0
-        ? Math.min(100, Math.round((weeklyCheckIns / Math.max(totalStudents * 3, 1)) * 100))
-        : 78
-
-      this.setData({
-        weeklyStats: {
-          totalStudents,
-          weeklyCheckIns,
-          completionRate
-        }
-      })
-    } catch (error) {
-      console.error('[teacher-index] loadWeeklyStats error:', error)
-      this.setData({
-        weeklyStats: {
-          totalStudents: 18,
-          weeklyCheckIns: 42,
-          completionRate: 78
-        }
-      })
-    }
-  },
-
-  async loadOverview() {
-    try {
-      const [classes, tasks] = await Promise.all([
-        this.fetchAllClasses(),
-        this.fetchAllTasks()
-      ])
-      const activeClassCount = classes.filter((item) => item.status === 'active').length
-
-      this.setData({
-        overview: {
-          classCount: classes.length,
-          taskCount: tasks.length,
-          activeClassCount,
-          pendingCount: this.data.pendingCount
-        }
-      })
-    } catch (error) {
-      console.error('[teacher-index] loadOverview error:', error)
-      this.setData({
-        overview: {
-          classCount: 4,
-          taskCount: 9,
-          activeClassCount: 3,
-          pendingCount: this.data.pendingCount
-        }
-      })
-    }
-  },
-
-  async loadRecentActivities() {
-    try {
-      const [classes, tasks] = await Promise.all([
-        this.fetchAllClasses(),
-        this.fetchAllTasks()
-      ])
-
-      const activities = []
-
-      if (tasks[0]) {
-        activities.push({
-          id: `task-${tasks[0]._id || 1}`,
-          content: `任务“${tasks[0].title || '未命名任务'}”最近有更新`,
-          time: tasks[0].update_time ? formatUtils.formatRelativeTime(tasks[0].update_time) : '刚刚'
+      const userInfo = await AuthService.getUserInfo()
+      if (userInfo) {
+        AuthService.updateLocalUserInfo({
+          ...userInfo,
+          is_registered: true
         })
+        return userInfo
       }
-
-      if (classes[0]) {
-        activities.push({
-          id: `class-${classes[0]._id || 1}`,
-          content: `班级“${classes[0].class_name || '未命名班级'}”成员信息已同步`,
-          time: classes[0].update_time ? formatUtils.formatRelativeTime(classes[0].update_time) : '10分钟前'
-        })
-      }
-
-      activities.push(
-        {
-          id: 'pending-1',
-          content: '审核中心当前有 6 条待处理记录',
-          time: '5分钟前'
-        },
-        {
-          id: 'share-1',
-          content: '建议优先处理新班级申请，再检查任务发布状态',
-          time: '今天'
-        }
-      )
-
-      this.setData({
-        recentActivities: activities.slice(0, 4)
-      })
     } catch (error) {
-      console.error('[teacher-index] loadRecentActivities error:', error)
-      this.setData({
-        recentActivities: [
-          { id: 'mock-1', content: '审核中心当前有 6 条待处理记录', time: '5分钟前' },
-          { id: 'mock-2', content: '班级管理页已同步最新成员统计', time: '15分钟前' },
-          { id: 'mock-3', content: '任务管理页可继续编辑发布内容', time: '今天' }
-        ]
-      })
+      console.error('[teacher-index] loadCurrentUserInfo error:', error)
     }
+
+    return fallbackUserInfo
+  },
+
+  async fetchAllTeacherSubmissions() {
+    const list = []
+    let page = 1
+    let hasMore = true
+
+    while (hasMore) {
+      const response = await TaskService.getSubmissions({
+        role: 'teacher',
+        page,
+        page_size: 50
+      })
+      const currentList = Array.isArray(response.list) ? response.list : []
+      list.push(...currentList)
+      hasMore = Boolean(response.has_more)
+      page += 1
+    }
+
+    return list
+  },
+
+  async fetchAllPendingApplications(classes = []) {
+    const tasks = classes
+      .filter((item) => item && item._id)
+      .map((item) => this.fetchClassPendingApplications(item._id))
+
+    if (!tasks.length) {
+      return []
+    }
+
+    const results = await Promise.allSettled(tasks)
+    return results.reduce((list, item) => {
+      if (item.status === 'fulfilled' && Array.isArray(item.value)) {
+        list.push(...item.value)
+      }
+      return list
+    }, [])
+  },
+
+  async fetchClassPendingApplications(classId) {
+    const list = []
+    let page = 1
+    let hasMore = true
+
+    while (hasMore) {
+      const response = await ClassService.getClassApplications({
+        class_id: classId,
+        page,
+        page_size: 50
+      })
+      const currentList = Array.isArray(response.list) ? response.list : []
+      list.push(...currentList)
+      hasMore = Boolean(response.has_more)
+      page += 1
+    }
+
+    return list
   },
 
   async fetchAllClasses() {
@@ -245,6 +247,124 @@ Page({
     })
 
     return Array.isArray(response.list) ? response.list : []
+  },
+
+  getWeeklySubmittedStudentCount(submissions = []) {
+    const studentOpenids = new Set(
+      submissions
+        .filter((item) => this.isCurrentWeekTime(item.submit_time))
+        .map((item) => item.student_openid)
+        .filter(Boolean)
+    )
+
+    return studentOpenids.size
+  },
+
+  buildRecentActivities(classes = [], tasks = [], submissions = [], applications = []) {
+    const activityList = []
+    const latestPendingSubmission = submissions.find((item) => item.status === 'pending')
+    const latestPendingApplication = applications
+      .slice()
+      .sort((left, right) => this.parseDate(right.create_time) - this.parseDate(left.create_time))[0]
+    const latestTask = tasks[0] || null
+    const latestClass = classes[0] || null
+
+    if (latestPendingSubmission) {
+      const submitTime = this.parseDate(latestPendingSubmission.submit_time)
+      activityList.push({
+        id: `submission-${latestPendingSubmission._id || latestPendingSubmission.task_id || 'latest'}`,
+        content: `${latestPendingSubmission.student_name || '学生'}提交了“${latestPendingSubmission.task_title || '未命名任务'}”，等待审核`,
+        timestamp: submitTime.getTime(),
+        time: formatUtils.formatRelativeTime(submitTime)
+      })
+    }
+
+    if (latestPendingApplication) {
+      const createTime = this.parseDate(latestPendingApplication.create_time)
+      activityList.push({
+        id: `application-${latestPendingApplication._id || latestPendingApplication.class_id || 'latest'}`,
+        content: `${latestPendingApplication.student_name || '学生'}申请加入班级“${latestPendingApplication.class_name || '未命名班级'}”`,
+        timestamp: createTime.getTime(),
+        time: formatUtils.formatRelativeTime(createTime)
+      })
+    }
+
+    if (latestTask) {
+      const updateTime = this.parseDate(latestTask.update_time || latestTask.create_time)
+      activityList.push({
+        id: `task-${latestTask._id || 'latest'}`,
+        content: `任务“${latestTask.title || '未命名任务'}”最近有更新`,
+        timestamp: updateTime.getTime(),
+        time: formatUtils.formatRelativeTime(updateTime)
+      })
+    }
+
+    if (latestClass) {
+      const updateTime = this.parseDate(latestClass.update_time || latestClass.create_time)
+      activityList.push({
+        id: `class-${latestClass._id || 'latest'}`,
+        content: `班级“${latestClass.class_name || '未命名班级'}”当前共有 ${Number(latestClass.member_count || 0)} 名成员`,
+        timestamp: updateTime.getTime(),
+        time: formatUtils.formatRelativeTime(updateTime)
+      })
+    }
+
+    return activityList
+      .sort((left, right) => right.timestamp - left.timestamp)
+      .slice(0, 4)
+      .map(({ timestamp, ...item }) => item)
+  },
+
+  parseDate(value) {
+    if (!value) {
+      return new Date(0)
+    }
+
+    if (value instanceof Date) {
+      return Number.isNaN(value.getTime()) ? new Date(0) : value
+    }
+
+    if (typeof value === 'number') {
+      const timestampDate = new Date(value)
+      return Number.isNaN(timestampDate.getTime()) ? new Date(0) : timestampDate
+    }
+
+    const text = String(value).trim()
+    if (!text) {
+      return new Date(0)
+    }
+
+    const primaryDate = new Date(text.includes(' ') && !text.includes('T') ? text.replace(' ', 'T') : text)
+    if (!Number.isNaN(primaryDate.getTime())) {
+      return primaryDate
+    }
+
+    const slashDate = new Date(text.replace(/-/g, '/'))
+    return Number.isNaN(slashDate.getTime()) ? new Date(0) : slashDate
+  },
+
+  getCurrentWeekRange() {
+    const start = new Date()
+    const day = start.getDay()
+    const offset = (day + 1) % 7
+    start.setHours(0, 0, 0, 0)
+    start.setDate(start.getDate() - offset)
+
+    const end = new Date(start)
+    end.setDate(end.getDate() + 7)
+
+    return { start, end }
+  },
+
+  isCurrentWeekTime(value) {
+    const date = this.parseDate(value)
+    if (Number.isNaN(date.getTime()) || date.getTime() <= 0) {
+      return false
+    }
+
+    const { start, end } = this.getCurrentWeekRange()
+    const time = date.getTime()
+    return time >= start.getTime() && time < end.getTime()
   },
 
   handleQuickAction(e) {
