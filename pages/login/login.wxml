@@ -16,9 +16,9 @@
       </view>
       <view class="agreement">
         <text>登录即表示同意</text>
-        <text class="link">《用户协议》</text>
+        <text class="link" bindtap="handleOpenUserAgreement">《用户协议》</text>
         <text>和</text>
-        <text class="link">《隐私政策》</text>
+        <text class="link" bindtap="handleOpenPrivacyPolicy">《隐私政策》</text>
       </view>
     </view>
     <form-component wx:else id="register-form" userInfo="{{userInfo}}" >
