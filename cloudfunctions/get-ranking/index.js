@@ -187,6 +187,7 @@ function buildRankList(users, currentUser, rankType, scoreMap) {
         update_time: user.update_time || user.create_time || null
       }
     })
+    .filter((item) => item.points > 0)
     .sort((left, right) => {
       if (right.points !== left.points) {
         return right.points - left.points
