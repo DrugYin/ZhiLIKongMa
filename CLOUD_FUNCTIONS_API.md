@@ -1,6 +1,6 @@
 # 云函数 API 文档
 
-本文档基于当前仓库代码同步整理，覆盖已经落地的用户系统、班级管理、任务管理与项目配置云函数，并标注前端已接入情况与仍待实现的调用入口。
+本文档基于当前仓库代码同步整理，覆盖已经落地的用户系统、班级管理、任务管理、提交审核与项目配置云函数，并标注前端已接入情况与仍待实现的调用入口。
 
 ## 通用说明
 
@@ -49,7 +49,10 @@ const { OPENID } = cloud.getWXContext();
 
 - `users`
 - `classes`
+- `class_memberships`
 - `class_join_applications`
+- `tasks`
+- `submissions`
 - `projects`
 - `system_config`
 - `operation_logs`
@@ -960,9 +963,9 @@ ClassService.removeMember(classId, memberOpenid)
 ### 当前实现概览
 
 - 教师端已接入 `/pages/teacher/task-manage/task-manage`、`/pages/teacher/task-manage/task-detail/task-detail`、`/pages/teacher/task-manage/task-edit/task-edit`
-- 学生端已接入 `/pages/student/task-manage/task-manage` 与 `/pages/student/task-manage/task-detail/task-detail`
-- 服务层已提供 `services/task.js`，统一封装任务创建、查询、详情、更新、删除
-- 当前尚未接入 `submit-task`、`get-submissions`、`review-submission`
+- 学生端已接入 `/pages/student/task-manage/task-manage`、`/pages/student/task-manage/task-detail/task-detail`、`/pages/student/task-manage/submission-edit/submission-edit`、`/pages/student/task-manage/submission-records/submission-records`
+- 教师审核页 `/pages/teacher/pending/pending` 已接入真实提交记录、审核弹层、反馈图片/附件与积分发放
+- 服务层已提供 `services/task.js`，统一封装任务创建、查询、详情、更新、删除、提交、记录查询与审核
 
 ### 1. `create-task`
 
@@ -1181,6 +1184,154 @@ ClassService.removeMember(classId, memberOpenid)
 }
 ```
 
+### 6. `submit-task`
+
+功能：学生提交任务，支持填写提交说明、上传图片和附件，并记录提交次数与是否超时。
+
+入参：
+
+```js
+{
+  task_id: 'task_id',
+  description: '已完成 3 道题，附上解题截图',
+  images: ['cloud://xxx/submission-1.png'],
+  files: [
+    {
+      file_id: 'cloud://xxx/report.pdf',
+      file_name: '作业说明.pdf',
+      file_size: 204800
+    }
+  ]
+}
+```
+
+说明：
+
+- 仅已注册学生可调用
+- `description`、`images`、`files` 至少要传一项
+- 会校验任务是否可见、是否已删除、是否已发布
+- 会按 `system_config.task_max_submissions` 与任务自身 `max_submissions` 限制提交次数
+- 超过截止时间仍可提交，但会写入 `is_overtime = true`
+
+返回示例：
+
+```js
+{
+  success: true,
+  message: '提交任务成功',
+  data: {
+    _id: 'submission_id',
+    task_id: 'task_id',
+    task_title: '算法热身训练',
+    submission_no: 1,
+    status: 'pending',
+    is_overtime: false,
+    images: ['cloud://xxx/submission-1.png'],
+    files: []
+  }
+}
+```
+
+### 7. `get-submissions`
+
+功能：获取提交记录列表，学生查看自己的提交历史，教师查看自己名下任务的提交记录。
+
+入参：
+
+```js
+{
+  role: 'teacher', // teacher 或 student，不传时默认按当前角色处理
+  task_id: 'task_id', // 可选
+  status: 'pending', // 可选
+  class_id: 'class_id', // 可选
+  page: 1,
+  page_size: 20
+}
+```
+
+说明：
+
+- 学生模式：仅返回当前学生自己的提交记录
+- 教师模式：仅返回当前教师创建任务的提交记录
+- 传 `task_id` 时会额外校验任务访问权限
+- 当前已用于学生任务详情页最近两次提交、学生总提交记录页、教师审核列表页
+
+返回示例：
+
+```js
+{
+  success: true,
+  message: '获取提交记录成功',
+  data: {
+    list: [
+      {
+        _id: 'submission_id',
+        task_id: 'task_id',
+        task_title: '算法热身训练',
+        student_name: '张三',
+        class_name: '黑羊编程 3 班',
+        status: 'pending',
+        submit_time: '2026-04-09T10:00:00.000Z',
+        points_earned: 0
+      }
+    ],
+    page: 1,
+    page_size: 20,
+    total: 1,
+    has_more: false
+  }
+}
+```
+
+### 8. `review-submission`
+
+功能：教师审核提交记录，支持通过或驳回、打分、填写处理意见，并上传反馈图片和附件。
+
+入参：
+
+```js
+{
+  submission_id: 'submission_id',
+  status: 'approved', // approved 或 rejected
+  score: 95,
+  feedback: '思路正确，注意变量命名规范',
+  points_earned: 10, // 不传时默认取任务积分；驳回时强制记为 0
+  feedback_images: ['cloud://xxx/review-1.png'],
+  feedback_files: [
+    {
+      file_id: 'cloud://xxx/comment.pdf',
+      file_name: '批注.pdf',
+      file_size: 102400
+    }
+  ]
+}
+```
+
+说明：
+
+- 仅教师可调用，且只能审核自己任务下的提交记录
+- 仅 `pending` 状态的提交记录可审核
+- 审核通过会增加学生积分；驳回时无论传什么积分，都会写入 `0`
+- 未填写处理意见时会自动补默认反馈文案
+
+返回示例：
+
+```js
+{
+  success: true,
+  message: '审核提交记录成功',
+  data: {
+    _id: 'submission_id',
+    status: 'approved',
+    score: 95,
+    feedback: '思路正确，注意变量命名规范',
+    points_earned: 10,
+    feedback_images: ['cloud://xxx/review-1.png'],
+    feedback_files: []
+  }
+}
+```
+
 ## 五、前端封装对照
 
 ### 用户模块
@@ -1198,7 +1349,7 @@ ClassService.removeMember(classId, memberOpenid)
 
 - `services/api.js` 中的 `taskApi`
 - `services/task.js` 中的 `TaskService`
-- 已落地方法：`createTask`、`getTasks`、`getTaskDetail`、`updateTask`、`deleteTask`
+- 已落地方法：`createTask`、`getTasks`、`getTaskDetail`、`updateTask`、`deleteTask`、`submitTask`、`getSubmissions`、`reviewSubmission`
 
 ### 配置模块
 
@@ -1209,7 +1360,6 @@ ClassService.removeMember(classId, memberOpenid)
 
 以下方法已经在 `services/api.js` 中预留，但仓库中还没有对应云函数实现：
 
-- 任务：`submit-task`、`review-submission`、`get-submissions`
 - 抽奖：`get-prizes`、`start-draw`、`get-draw-records`
 - 排行榜：`get-ranking`
 - 配置：`get-config`
@@ -1217,4 +1367,4 @@ ClassService.removeMember(classId, memberOpenid)
 同步建议：
 
 - 新增云函数时，优先更新本文件与 `DEVELOPMENT_PLAN.md`
-- 当前若继续推进任务/审核模块，建议优先补 `submit-task`、`get-submissions`、`review-submission`，再把审核中心从 mock 数据切到真实记录
+- 当前若继续推进任务/审核模块，建议优先补 `get-submission-detail`、云函数部署与真机联调，再补排行榜和积分明细链路
