@@ -61,7 +61,7 @@ async function getAllUsers() {
 async function getSubmissionsByRange(start, end) {
   const query = db.collection('submissions').where({
     status: 'approved',
-    review_time: _.gte(start).and(_.lt(end))
+    review_time: _.gte(start).and(_.lte(end))
   })
   const totalRes = await query.count()
   const total = totalRes.total || 0
@@ -91,25 +91,29 @@ async function getSubmissionsByRange(start, end) {
 }
 
 function getWeekRange() {
-  const start = new Date()
+  const now = new Date()
+  const start = new Date(now)
   const day = start.getDay()
   const offset = (day + 1) % 7
   start.setHours(0, 0, 0, 0)
   start.setDate(start.getDate() - offset)
 
   const end = new Date(start)
-  end.setDate(end.getDate() + 7)
+  end.setDate(end.getDate() + 6)
+  end.setHours(23, 59, 59, 999)
 
   return { start, end }
 }
 
 function getMonthRange() {
-  const start = new Date()
+  const now = new Date()
+  const start = new Date(now)
   start.setDate(1)
   start.setHours(0, 0, 0, 0)
 
   const end = new Date(start)
   end.setMonth(end.getMonth() + 1)
+  end.setMilliseconds(end.getMilliseconds() - 1)
 
   return { start, end }
 }
