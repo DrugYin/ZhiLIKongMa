@@ -15,6 +15,7 @@ Page({
     featuredTask: {
       title: '登录后查看本周任务',
       description: '系统会自动同步你本周可见任务中最新的待提交任务。',
+      taskId: '',
       deadlineText: '待同步',
       progressText: '0 / 0',
       progressPercent: 0,
@@ -257,6 +258,7 @@ Page({
       return {
         title: '登录后查看本周任务',
         description: '系统会自动同步你本周可见任务中最新的待提交任务。',
+        taskId: '',
         deadlineText: '待同步',
         progressText: '0 / 0',
         progressPercent: 0,
@@ -276,6 +278,7 @@ Page({
         description: joinedCount > 0
           ? '当前没有落在本周的任务安排，可以先去任务中心查看全部历史任务。'
           : '当前没有同步到本周任务，加入班级后这里会自动聚合最新任务。',
+        taskId: '',
         deadlineText: '本周暂无任务',
         progressText: '0 / 0',
         progressPercent: 0,
@@ -293,6 +296,7 @@ Page({
       return {
         title: '本周任务已全部提交',
         description: `你本周共有 ${weeklyTaskCount} 个任务，已经全部完成提交，记得留意后续审核反馈。`,
+        taskId: latestTask.taskId,
         deadlineText: latestTask.deadlineText,
         progressText: `${submittedCount} / ${weeklyTaskCount}`,
         progressPercent,
@@ -309,6 +313,7 @@ Page({
     return {
       title: latestTask.titleText,
       description: latestTask.descriptionText,
+      taskId: latestTask.taskId,
       deadlineText: latestTask.deadlineText,
       progressText: `${submittedCount} / ${weeklyTaskCount}`,
       progressPercent,
@@ -324,6 +329,7 @@ Page({
 
   formatWeeklyTask(item = {}) {
     return {
+      taskId: item._id || '',
       titleText: item.title || '未命名任务',
       descriptionText: String(item.description || '').trim() || '请前往任务中心查看任务详情和素材要求。',
       projectText: item.project_name || item.project_code || '未设置项目',
@@ -410,6 +416,18 @@ Page({
 
   closeNotice() {
     this.setData({ showNotice: false })
+  },
+
+  handleFeaturedTaskTap() {
+    const taskId = String(this.data.featuredTask.taskId || '').trim()
+    if (!taskId) {
+      this.goToTaskCenter()
+      return
+    }
+
+    wx.navigateTo({
+      url: `/pages/student/task-manage/task-detail/task-detail?task_id=${taskId}`
+    })
   },
 
   handleQuickAction(e) {
