@@ -126,7 +126,7 @@
       <view class="section-card">
         <view class="section-header">
           <text class="section-title">班级任务</text>
-          <text class="section-extra">业务待完善</text>
+          <text class="section-extra">{{latestTask ? '最新同步' : '暂无任务'}}</text>
         </view>
 
         <view class="task-stats">
@@ -144,18 +144,36 @@
           </view>
         </view>
 
-        <view class="task-placeholder">
-          <text class="task-placeholder-title">班级任务入口已开放</text>
-          <text class="task-placeholder-desc">
-            现在可以从这里进入学生端任务列表，查看当前班级相关任务的要求、图片和附件内容。
-          </text>
-          <view class="tip-list">
-            <text class="tip-item">1. 支持查看当前班级的任务清单与截止时间。</text>
-            <text class="tip-item">2. 支持进入任务详情查看图片、附件和基础说明。</text>
-            <text class="tip-item">3. 后续会继续接入任务提交与完成进度。</text>
+        <view wx:if="{{latestTask}}" class="task-highlight" bindtap="goToLatestTaskDetail">
+          <view class="task-highlight-head">
+            <view class="task-highlight-copy">
+              <text class="task-highlight-title">{{latestTask.title}}</text>
+              <text class="task-highlight-meta">{{latestTask.projectText}} · {{latestTask.statusText}}</text>
+            </view>
+            <text class="task-highlight-link">查看详情</text>
           </view>
-          <button class="primary-btn state-btn" bindtap="goToTaskList">查看本班任务</button>
+          <text class="task-highlight-desc">{{latestTask.description}}</text>
+          <view class="task-highlight-grid">
+            <view class="task-highlight-item">
+              <text class="task-highlight-label">任务积分</text>
+              <text class="task-highlight-value">{{latestTask.pointsText}}</text>
+            </view>
+            <view class="task-highlight-item">
+              <text class="task-highlight-label">截止时间</text>
+              <text class="task-highlight-value">{{latestTask.deadlineText}}</text>
+            </view>
+          </view>
+          <text class="task-highlight-foot">最近更新时间：{{latestTask.updateTimeText}}</text>
         </view>
+
+        <view wx:else class="task-placeholder">
+          <text class="task-placeholder-title">当前班级还没有任务</text>
+          <text class="task-placeholder-desc">
+            老师发布该班级任务后，这里会优先展示最新一条任务，方便你直接进入详情查看。
+          </text>
+        </view>
+
+        <button class="primary-btn state-btn" bindtap="goToTaskList">查看本班任务</button>
       </view>
     </block>
 

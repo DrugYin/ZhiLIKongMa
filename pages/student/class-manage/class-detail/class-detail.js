@@ -1,5 +1,6 @@
 const AuthService = require('../../../../services/auth');
 const ClassService = require('../../../../services/class');
+const TaskService = require('../../../../services/task');
 const Toast = require('../../../../utils/toast');
 const formatUtils = require('../../../../utils/format');
 
@@ -22,7 +23,8 @@ Page({
       total: 0,
       published: 0,
       pending: 0
-    }
+    },
+    latestTask: null
   },
 
   onLoad(options) {
@@ -78,7 +80,8 @@ Page({
           total: 0,
           published: 0,
           pending: 0
-        }
+        },
+        latestTask: null
       });
       wx.stopPullDownRefresh();
       return;
@@ -89,18 +92,21 @@ Page({
     }
 
     try {
-      const [classInfo, members] = await Promise.all([
+      const [classInfo, members, latestTaskResult] = await Promise.all([
         this.loadClassDetail(),
-        this.loadMembers()
+        this.loadMembers(),
+        this.loadLatestTask()
       ]);
 
       const formattedMembers = members.map((item, index) => this.formatMemberItem(item, index));
+      const taskSummary = this.buildTaskSummary(classInfo, latestTaskResult.total);
 
       this.setData({
         classInfo: this.formatClassInfo(classInfo, formattedMembers.length),
         members: formattedMembers,
         memberStats: this.buildMemberStats(formattedMembers),
-        taskSummary: this.buildTaskSummary(classInfo)
+        taskSummary,
+        latestTask: this.formatLatestTask(latestTaskResult.list[0], taskSummary)
       });
 
       this._pageReady = true;
@@ -148,6 +154,21 @@ Page({
     }
 
     return result;
+  },
+
+  async loadLatestTask() {
+    const response = await TaskService.getTasks({
+      class_id: this.data.classId,
+      page: 1,
+      page_size: 1,
+      sort_by: 'update_time',
+      sort_order: 'desc'
+    });
+
+    return {
+      list: Array.isArray(response.list) ? response.list : [],
+      total: Number(response.total || 0)
+    };
   },
 
   formatClassInfo(item = {}, memberTotal = 0) {
@@ -216,14 +237,37 @@ Page({
     };
   },
 
-  buildTaskSummary(classInfo = {}) {
-    const total = Number(classInfo.task_count || classInfo.task_total || 0);
-    const published = Number(classInfo.published_task_count || 0);
+  buildTaskSummary(classInfo = {}, taskTotal = 0) {
+    const total = Math.max(Number(taskTotal || 0), Number(classInfo.task_count || classInfo.task_total || 0));
+    const published = Number(classInfo.published_task_count || total || 0);
 
     return {
       total,
       published,
       pending: Math.max(total - published, 0)
+    };
+  },
+
+  formatLatestTask(taskInfo = {}, taskSummary = {}) {
+    if (!taskInfo || !taskInfo._id) {
+      return null;
+    }
+
+    const deadline = taskInfo.deadline
+      || (taskInfo.deadline_date && taskInfo.deadline_time
+        ? `${taskInfo.deadline_date} ${taskInfo.deadline_time}`
+        : '');
+    const updateTime = taskInfo.update_time || taskInfo.publish_time || taskInfo.create_time;
+
+    return {
+      taskId: taskInfo._id,
+      title: taskInfo.title || '未命名任务',
+      description: String(taskInfo.description || '').trim() || '请前往任务详情查看完整要求与素材说明。',
+      projectText: taskInfo.project_name || taskInfo.project_code || '未设置项目',
+      pointsText: `${Number(taskInfo.points || 0)} 分`,
+      deadlineText: deadline ? this.formatDateTime(deadline) : '未设置截止时间',
+      updateTimeText: this.formatDateTime(updateTime),
+      statusText: taskSummary.published > 0 ? '最新任务' : '任务待发布'
     };
   },
 
@@ -267,6 +311,19 @@ Page({
 
     wx.navigateTo({
       url: `/pages/student/task-manage/task-manage?${query.join('&')}`
+    });
+  },
+
+  goToLatestTaskDetail() {
+    const taskId = this.data.latestTask && this.data.latestTask.taskId;
+
+    if (!taskId) {
+      this.goToTaskList();
+      return;
+    }
+
+    wx.navigateTo({
+      url: `/pages/student/task-manage/task-detail/task-detail?task_id=${taskId}`
     });
   },
 
