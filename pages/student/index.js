@@ -1,5 +1,6 @@
 const AuthService = require('../../services/auth')
 const ClassService = require('../../services/class')
+const RankingService = require('../../services/ranking')
 const TaskService = require('../../services/task')
 const formatUtils = require('../../utils/format')
 
@@ -94,9 +95,8 @@ Page({
       this.setData({ loading: true })
     }
 
-    const userInfo = AuthService.getLocalUserInfo() || {}
+    const cachedUserInfo = AuthService.getLocalUserInfo() || {}
     const isLoggedIn = AuthService.isLoggedIn()
-    const weeklyRank = Number(userInfo.weeklyRank || 0)
 
     if (requestId !== this._initRequestId) {
       return
@@ -104,25 +104,27 @@ Page({
 
     this.setData({
       isLoggedIn,
-      userInfo,
+      userInfo: cachedUserInfo,
       heroTitle: isLoggedIn
-        ? `${userInfo.user_name || userInfo.userName || '同学'}，继续保持今天的节奏`
+        ? `${cachedUserInfo.user_name || cachedUserInfo.userName || '同学'}，继续保持今天的节奏`
         : '欢迎来到智力控码',
       heroDesc: isLoggedIn
         ? '首页会帮你聚合任务、班级和排名信息，进入学习状态会更快。'
         : '先登录即可查看任务、班级和个人成长数据，未登录时也可以先浏览整体布局。',
       summary: {
-        points: Number(userInfo.points || 0),
+        points: Number(cachedUserInfo.points || 0),
         joinedClasses: 0,
         pendingApplications: 0,
-        weeklyRankText: weeklyRank ? `第 ${weeklyRank} 名` : '未上榜'
+        weeklyRankText: isLoggedIn ? '同步中' : '未登录'
       }
     })
 
     try {
-      const [classSummary, weeklyTaskSummary] = await Promise.all([
+      const [userInfo, classSummary, weeklyTaskSummary, weeklyRankText] = await Promise.all([
+        this.loadCurrentUserInfo(cachedUserInfo, isLoggedIn),
         this.loadClassSummary(),
-        this.loadWeeklyTaskSummary()
+        this.loadWeeklyTaskSummary(),
+        this.loadWeeklyRankText(isLoggedIn)
       ])
 
       if (requestId !== this._initRequestId) {
@@ -130,13 +132,18 @@ Page({
       }
 
       this.setData({
+        userInfo,
+        heroTitle: isLoggedIn
+          ? `${userInfo.user_name || userInfo.userName || '同学'}，继续保持今天的节奏`
+          : '欢迎来到智力控码',
         notice: this.buildNoticeText(isLoggedIn, classSummary),
         showNotice: true,
         featuredTask: this.buildFeaturedTask(userInfo, classSummary, weeklyTaskSummary),
         summary: {
-          ...this.data.summary,
+          points: Number(userInfo.points || 0),
           joinedClasses: classSummary.joinedCount,
-          pendingApplications: classSummary.pendingCount
+          pendingApplications: classSummary.pendingCount,
+          weeklyRankText
         }
       })
       this._pageReady = true
@@ -152,10 +159,16 @@ Page({
           ? '当前数据同步稍慢，先查看任务中心与班级页也可以继续学习。'
           : '当前未登录，首页先展示默认学习引导。',
         showNotice: true,
-        featuredTask: this.buildFeaturedTask(userInfo, {
+        featuredTask: this.buildFeaturedTask(cachedUserInfo, {
           joinedCount: 0,
           pendingCount: 0
-        }, null)
+        }, null),
+        summary: {
+          points: Number(cachedUserInfo.points || 0),
+          joinedClasses: 0,
+          pendingApplications: 0,
+          weeklyRankText: isLoggedIn ? '同步中' : '未登录'
+        }
       })
     } finally {
       if (requestId !== this._initRequestId) {
@@ -577,5 +590,46 @@ Page({
       title: '智力控码学生首页',
       path: '/pages/student/index'
     }
-  }
+  },
+
+  async loadCurrentUserInfo(fallbackUserInfo = {}, isLoggedIn = false) {
+    if (!isLoggedIn) {
+      return fallbackUserInfo
+    }
+
+    try {
+      const userInfo = await AuthService.getUserInfo()
+      if (userInfo) {
+        AuthService.updateLocalUserInfo({
+          ...userInfo,
+          is_registered: true
+        })
+        return userInfo
+      }
+    } catch (error) {
+      console.error('[student-index] loadCurrentUserInfo error:', error)
+    }
+
+    return fallbackUserInfo
+  },
+
+  async loadWeeklyRankText(isLoggedIn) {
+    if (!isLoggedIn) {
+      return '未登录'
+    }
+
+    try {
+      const rankRes = await RankingService.getRanking({
+        rank_type: 'week'
+      })
+      const currentUser = rankRes.current_user || null
+
+      return currentUser && Number(currentUser.rank || 0) > 0
+        ? `第 ${currentUser.rank} 名`
+        : '未上榜'
+    } catch (error) {
+      console.error('[student-index] loadWeeklyRankText error:', error)
+      return '同步中'
+    }
+  },
 })

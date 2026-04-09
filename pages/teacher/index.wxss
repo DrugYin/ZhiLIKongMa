@@ -229,6 +229,14 @@
   margin-top: 8rpx;
 }
 
+.empty-activity {
+  display: block;
+  margin-top: 18rpx;
+  color: #7b8798;
+  font-size: 24rpx;
+  line-height: 1.8;
+}
+
 .footer-placeholder {
   height: 20rpx;
 }

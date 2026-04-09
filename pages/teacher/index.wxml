@@ -83,13 +83,16 @@
         <text class="section-extra" bindtap="viewAllActivities">查看全部</text>
       </view>
       <view class="activity-list">
-        <view wx:for="{{recentActivities}}" wx:key="id" class="activity-item">
-          <view class="activity-dot"></view>
-          <view class="activity-copy">
-            <text class="activity-text">{{item.content}}</text>
-            <text class="activity-time">{{item.time}}</text>
+        <view wx:if="{{recentActivities.length}}">
+          <view wx:for="{{recentActivities}}" wx:key="id" class="activity-item">
+            <view class="activity-dot"></view>
+            <view class="activity-copy">
+              <text class="activity-text">{{item.content}}</text>
+              <text class="activity-time">{{item.time}}</text>
+            </view>
           </view>
         </view>
+        <text wx:else class="empty-activity">当前还没有可展示的班级、任务或审核动态。</text>
       </view>
     </view>
 
