@@ -54,13 +54,18 @@
         <text class="section-title">每周任务</text>
         <text class="section-extra">{{featuredTask.deadlineText}}</text>
       </view>
-      <text class="focus-title">{{featuredTask.title}}</text>
-      <view class="weekly-tag-row">
-        <text class="weekly-tag">{{featuredTask.projectText}}</text>
-        <text class="weekly-tag weekly-tag-light">{{featuredTask.classText}}</text>
-        <text class="weekly-tag" style="{{featuredTask.statusStyle}}">{{featuredTask.statusText}}</text>
+      <view class="featured-task-panel" bindtap="handleFeaturedTaskTap">
+        <view class="featured-task-head">
+          <text class="focus-title">{{featuredTask.title}}</text>
+          <text class="featured-task-link">{{featuredTask.taskId ? '查看详情' : '打开任务中心'}}</text>
+        </view>
+        <view class="weekly-tag-row">
+          <text class="weekly-tag">{{featuredTask.projectText}}</text>
+          <text class="weekly-tag weekly-tag-light">{{featuredTask.classText}}</text>
+          <text class="weekly-tag" style="{{featuredTask.statusStyle}}">{{featuredTask.statusText}}</text>
+        </view>
+        <text class="focus-desc">{{featuredTask.description}}</text>
       </view>
-      <text class="focus-desc">{{featuredTask.description}}</text>
 
       <view class="weekly-summary-row">
         <view class="weekly-summary-item">
