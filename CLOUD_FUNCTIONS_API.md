@@ -1,6 +1,6 @@
 # 云函数 API 文档
 
-本文档基于当前仓库代码同步整理，覆盖已经落地的用户系统、班级管理、任务管理、提交审核与项目配置云函数，并标注前端已接入情况与仍待实现的调用入口。
+本文档基于当前仓库代码同步整理，覆盖已经落地的用户系统、班级管理、任务管理、提交审核、排行榜与项目配置云函数，并标注前端已接入情况与仍待实现的调用入口。
 
 ## 通用说明
 
@@ -11,6 +11,8 @@
 - `services/api.js`
 - `services/auth.js`
 - `services/class.js`
+- `services/ranking.js`
+- `services/task.js`
 
 ### 通用返回格式
 
@@ -1332,7 +1334,63 @@ ClassService.removeMember(classId, memberOpenid)
 }
 ```
 
-## 五、前端封装对照
+## 五、排行榜
+
+### 1. `get-ranking`
+
+功能：获取学生积分排行榜，支持周榜、月榜和总榜。
+
+入参：
+
+```js
+{
+  rank_type: 'week' // week、month、total
+}
+```
+
+说明：
+
+- 仅统计 `users.roles` 中包含 `student` 的有效用户
+- 周榜按“上周六 00:00:00 到本周五 23:59:59.999”统计审核通过后发放的积分
+- 月榜按“当前月 1 日 00:00:00 到下月 1 日前一毫秒”统计审核通过后发放的积分
+- 总榜按 `users.total_points` 排序
+- 周榜和月榜均基于 `submissions.status = approved` 且 `review_time` 落在统计周期内的数据聚合
+- 当前实现会过滤 `0` 分用户，未上榜用户在前端显示为“未上榜”
+
+返回示例：
+
+```js
+{
+  success: true,
+  message: '获取排行榜成功',
+  data: {
+    rank_type: 'week',
+    participant_count: 12,
+    current_user: {
+      _openid: 'openid_xxx',
+      name: '张三',
+      points: 30,
+      rank: 2
+    },
+    top_three: [],
+    list: []
+  }
+}
+```
+
+前端调用：
+
+```js
+RankingService.getRanking({ rank_type: 'week' })
+```
+
+前端现状：
+
+- 学生端 `/pages/student/rank/rank` 已接入真实周榜、月榜、总榜
+- 学生首页 `/pages/student/index` 已接入真实周排名摘要
+- `get-ranking` 已在云环境 `zhi-li-kong-ma-7gy2aqcr1add21a7` 完成部署
+
+## 六、前端封装对照
 
 ### 用户模块
 
@@ -1351,20 +1409,24 @@ ClassService.removeMember(classId, memberOpenid)
 - `services/task.js` 中的 `TaskService`
 - 已落地方法：`createTask`、`getTasks`、`getTaskDetail`、`updateTask`、`deleteTask`、`submitTask`、`getSubmissions`、`reviewSubmission`
 
+### 排行榜模块
+
+- `services/ranking.js` 中的 `RankingService`
+- 已落地方法：`getRanking`
+
 ### 配置模块
 
 - `services/api.js` 中的 `configApi`
 - `config/project.js` 中的 `ProjectService`
 
-## 六、当前未落地但已预留的调用入口
+## 七、当前未落地但已预留的调用入口
 
 以下方法已经在 `services/api.js` 中预留，但仓库中还没有对应云函数实现：
 
 - 抽奖：`get-prizes`、`start-draw`、`get-draw-records`
-- 排行榜：`get-ranking`
 - 配置：`get-config`
 
 同步建议：
 
 - 新增云函数时，优先更新本文件与 `DEVELOPMENT_PLAN.md`
-- 当前若继续推进任务/审核模块，建议优先补 `get-submission-detail`、云函数部署与真机联调，再补排行榜和积分明细链路
+- 当前若继续推进任务/审核与统计模块，建议优先补 `get-submission-detail`、`get-class-ranking`、`get-statistics`，再补积分明细与抽奖链路
