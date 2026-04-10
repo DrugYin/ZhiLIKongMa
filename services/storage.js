@@ -23,6 +23,53 @@ function setCache(key, data, duration) {
   }
 }
 
+function normalizeStoredCache(raw) {
+  if (raw === undefined || raw === null || raw === '') {
+    return {
+      exists: false,
+      data: null,
+      expired: false
+    };
+  }
+
+  let parsed = raw;
+
+  if (typeof raw === 'string') {
+    try {
+      parsed = JSON.parse(raw);
+    } catch (error) {
+      return {
+        exists: true,
+        data: raw,
+        expired: false
+      };
+    }
+  }
+
+  if (parsed && typeof parsed === 'object' && Object.prototype.hasOwnProperty.call(parsed, 'data')) {
+    const expire = parsed.expire;
+    if (expire && Date.now() > expire) {
+      return {
+        exists: true,
+        data: null,
+        expired: true
+      };
+    }
+
+    return {
+      exists: true,
+      data: parsed.data,
+      expired: false
+    };
+  }
+
+  return {
+    exists: true,
+    data: parsed,
+    expired: false
+  };
+}
+
 /**
  * 获取缓存
  * @param key 缓存键
@@ -34,20 +81,18 @@ function getCache(key, defaultValue) {
     defaultValue = null;
   }
   try {
-    const str = wx.getStorageSync(key);
-    if (!str) {
+    const raw = wx.getStorageSync(key);
+    const cacheInfo = normalizeStoredCache(raw);
+    if (!cacheInfo.exists) {
       return defaultValue;
     }
 
-    const item = JSON.parse(str);
-    
-    // 检查是否过期
-    if (item.expire && Date.now() > item.expire) {
+    if (cacheInfo.expired) {
       removeCache(key);
       return defaultValue;
     }
 
-    return item.data;
+    return cacheInfo.data;
   } catch (error) {
     console.error('[Cache Get Error]', key, error);
     return defaultValue;
@@ -221,6 +266,7 @@ function removeStorage(key) {
 module.exports = {
   setCache,
   getCache,
+  normalizeStoredCache,
   removeCache,
   clearCache,
   getCacheInfo,

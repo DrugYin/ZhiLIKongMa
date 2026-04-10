@@ -10,6 +10,7 @@
       <text class="hero-eyebrow">教师工作台</text>
       <text class="hero-title">{{greeting}}，{{userInfo.user_name || userInfo.name || '老师'}}</text>
       <text class="hero-desc">今天先处理审核中心待办，再查看班级与任务状态，整体节奏会更顺手。</text>
+      <text wx:if="{{degradeNotice}}" class="hero-notice">{{degradeNotice}}</text>
 
       <view class="summary-grid">
         <view class="summary-item">

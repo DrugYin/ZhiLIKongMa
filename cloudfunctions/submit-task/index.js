@@ -7,6 +7,16 @@ cloud.init({
 const db = cloud.database()
 const PAGE_SIZE = 100
 const DEFAULT_MAX_SUBMISSIONS = 3
+const TRANSACTION_RETRY_LIMIT = 3
+
+async function getSubmissionCount(taskId, openid) {
+  const res = await db.collection('submissions').where({
+    task_id: taskId,
+    student_openid: openid
+  }).count()
+
+  return res.total || 0
+}
 
 async function getCurrentUser(openid) {
   const res = await db.collection('users').where({ _openid: openid }).limit(1).get()
@@ -61,15 +71,6 @@ async function getConfigValue(configKey, defaultValue) {
   }
 
   return defaultValue
-}
-
-async function getSubmissionCount(taskId, openid) {
-  const res = await db.collection('submissions').where({
-    task_id: taskId,
-    student_openid: openid
-  }).count()
-
-  return res.total || 0
 }
 
 function normalizeString(value) {
@@ -140,6 +141,31 @@ function buildDeadline(taskInfo = {}) {
   return Number.isNaN(deadline.getTime()) ? null : deadline
 }
 
+function buildSubmissionCounterId(taskId, openid) {
+  return `submission_counter_${taskId}_${openid}`
+}
+
+function buildSubmissionId(taskId, openid, submitNo) {
+  return `submission_${taskId}_${openid}_${submitNo}`
+}
+
+function createSubmissionLimitError(maxSubmissions) {
+  const error = new Error(`当前任务最多可提交 ${maxSubmissions} 次`)
+  error.error_code = 3003
+  return error
+}
+
+function isSubmissionLimitError(error) {
+  return Number(error && error.error_code) === 3003
+}
+
+function isTransactionConflictError(error) {
+  const message = String(error && (error.message || error.errMsg || error) || '').toLowerCase()
+  return message.includes('conflict')
+    || message.includes('写冲突')
+    || (message.includes('transaction') && message.includes('abort'))
+}
+
 async function writeOperationLog(openid, action, targetId, detail, now) {
   try {
     await db.collection('operation_logs').add({
@@ -156,6 +182,129 @@ async function writeOperationLog(openid, action, targetId, detail, now) {
   } catch (error) {
     console.error('[submit-task] writeOperationLog error:', error)
   }
+}
+
+async function createSubmissionWithTransaction({
+  taskId,
+  openid,
+  user,
+  taskInfo,
+  description,
+  images,
+  files,
+  now,
+  isOvertime,
+  maxSubmissions,
+  initialSubmissionCount
+}) {
+  for (let attempt = 1; attempt <= TRANSACTION_RETRY_LIMIT; attempt += 1) {
+    let transaction = null
+
+    try {
+      transaction = await db.startTransaction()
+      const counterId = buildSubmissionCounterId(taskId, openid)
+      const counterRef = transaction.collection('submission_counters').doc(counterId)
+      let counterData = null
+
+      try {
+        const counterRes = await counterRef.get()
+        counterData = counterRes.data || null
+      } catch (error) {
+        counterData = null
+      }
+
+      const currentCount = Number(
+        counterData && counterData.count !== undefined
+          ? counterData.count
+          : initialSubmissionCount
+      )
+      if (currentCount >= maxSubmissions) {
+        throw createSubmissionLimitError(maxSubmissions)
+      }
+
+      const submitNo = currentCount + 1
+      const submissionId = buildSubmissionId(taskId, openid, submitNo)
+      const submissionData = {
+        task_id: taskId,
+        task_title: taskInfo.title || '',
+        project_code: taskInfo.project_code || '',
+        project_name: taskInfo.project_name || '',
+        student_openid: openid,
+        student_name: user.user_name || user.nick_name || '',
+        class_id: taskInfo.class_id || user.class_id || '',
+        class_name: taskInfo.class_name || user.class_name || '',
+        teacher_openid: taskInfo.teacher_openid || '',
+        teacher_name: taskInfo.teacher_name || '',
+        description,
+        images,
+        files,
+        status: 'pending',
+        score: null,
+        feedback: '',
+        feedback_images: [],
+        feedback_files: [],
+        is_overtime: isOvertime,
+        points_earned: 0,
+        submit_no: submitNo,
+        submit_time: now,
+        create_time: now,
+        update_time: now
+      }
+
+      await transaction.collection('submissions').doc(submissionId).set({
+        data: submissionData
+      })
+
+      const counterPayload = {
+        task_id: taskId,
+        student_openid: openid,
+        count: submitNo,
+        max_submissions: maxSubmissions,
+        last_submission_id: submissionId,
+        last_submit_time: now,
+        update_time: now
+      }
+
+      if (counterData) {
+        await counterRef.update({
+          data: counterPayload
+        })
+      } else {
+        await counterRef.set({
+          data: {
+            ...counterPayload,
+            create_time: now
+          }
+        })
+      }
+
+      await transaction.commit()
+
+      return {
+        _id: submissionId,
+        submitNo,
+        submissionData
+      }
+    } catch (error) {
+      if (transaction) {
+        try {
+          await transaction.rollback()
+        } catch (rollbackError) {
+          console.error('[submit-task] rollback error:', rollbackError)
+        }
+      }
+
+      if (isSubmissionLimitError(error)) {
+        throw error
+      }
+
+      if (!isTransactionConflictError(error) || attempt >= TRANSACTION_RETRY_LIMIT) {
+        throw error
+      }
+    }
+  }
+
+  throw new Error('提交人数较多，请稍后重试')
 }
 
 exports.main = async (event) => {
@@ -223,11 +372,12 @@ exports.main = async (event) => {
       }
     }
 
+    const now = new Date()
     const configLimit = Number(await getConfigValue('task_max_submissions', DEFAULT_MAX_SUBMISSIONS))
     const maxSubmissions = Number(taskInfo.max_submissions || configLimit || DEFAULT_MAX_SUBMISSIONS)
-    const submissionCount = await getSubmissionCount(taskId, OPENID)
+    const initialSubmissionCount = await getSubmissionCount(taskId, OPENID)
 
-    if (submissionCount >= maxSubmissions) {
+    if (initialSubmissionCount >= maxSubmissions) {
       return {
         success: false,
         message: `当前任务最多可提交 ${maxSubmissions} 次`,
@@ -235,45 +385,26 @@ exports.main = async (event) => {
       }
     }
 
-    const now = new Date()
     const deadline = buildDeadline(taskInfo)
     const isOvertime = Boolean(deadline && now.getTime() > deadline.getTime())
-    const submissionNo = submissionCount + 1
-    const submissionData = {
-      task_id: taskId,
-      task_title: taskInfo.title || '',
-      project_code: taskInfo.project_code || '',
-      project_name: taskInfo.project_name || '',
-      student_openid: OPENID,
-      student_name: user.user_name || user.nick_name || '',
-      class_id: taskInfo.class_id || user.class_id || '',
-      class_name: taskInfo.class_name || user.class_name || '',
-      teacher_openid: taskInfo.teacher_openid || '',
-      teacher_name: taskInfo.teacher_name || '',
+    const submitResult = await createSubmissionWithTransaction({
+      taskId,
+      openid: OPENID,
+      user,
+      taskInfo,
       description,
       images,
       files,
-      status: 'pending',
-      score: null,
-      feedback: '',
-      feedback_images: [],
-      feedback_files: [],
-      is_overtime: isOvertime,
-      points_earned: 0,
-      submit_no: submissionNo,
-      submit_time: now,
-      create_time: now,
-      update_time: now
-    }
-
-    const result = await db.collection('submissions').add({
-      data: submissionData
+      now,
+      isOvertime,
+      maxSubmissions,
+      initialSubmissionCount
     })
 
-    await writeOperationLog(OPENID, 'submit_task', result._id, {
+    await writeOperationLog(OPENID, 'submit_task', submitResult._id, {
       task_id: taskId,
       task_title: taskInfo.title || '',
-      submit_no: submissionNo,
+      submit_no: submitResult.submitNo,
       is_overtime: isOvertime
     }, now)
 
@@ -281,13 +412,21 @@ exports.main = async (event) => {
       success: true,
       message: '提交任务成功',
       data: {
-        _id: result._id,
-        ...submissionData,
-        total_submissions: submissionNo,
+        _id: submitResult._id,
+        ...submitResult.submissionData,
+        total_submissions: submitResult.submitNo,
         max_submissions: maxSubmissions
       }
     }
   } catch (error) {
+    if (isSubmissionLimitError(error)) {
+      return {
+        success: false,
+        message: error.message,
+        error_code: 3003
+      }
+    }
+
     console.error('[submit-task] Error:', error)
     return {
       success: false,

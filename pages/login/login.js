@@ -104,38 +104,64 @@ Page({
     })
   },
 
-  onRegister() {
+  async onRegister() {
     const Form = this.selectComponent('#register-form')
     let { userInfo } = Form.getFormData()
+    let shouldKeepLoading = false
     if (!this.validateForm(userInfo)) {
-      return;
+      return
     }
+
     toast.showLoading('注册中...')
-    const cloudPath = `avatars/${Date.now()}_${Math.random().toString(36).substr(2, 9)}.jpg`
-    const filePath = userInfo.avatar_url
-    uploadFile(filePath, cloudPath).then(res => {
-      console.log('上传成功', res);
-      userInfo.avatar_url = res.fileID
-      AuthService.register(userInfo).then(res => {
-        toast.hideLoading();
-        toast.showSuccess('注册成功');
-        this.onLogin()
-      }).catch(e => {
-        toast.hideLoading();
-        toast.showToast('注册失败，请重试');
-        console.error('注册失败', e);
-      })
-    })
+
+    try {
+      if (this.shouldUploadAvatar(userInfo.avatar_url)) {
+        const cloudPath = `avatars/${Date.now()}_${Math.random().toString(36).slice(2, 11)}.jpg`
+        const uploadRes = await uploadFile(userInfo.avatar_url, cloudPath)
+        userInfo.avatar_url = uploadRes.fileID
+      }
+
+      await AuthService.register(userInfo)
+      toast.hideLoading()
+      toast.showSuccess('注册成功')
+      shouldKeepLoading = true
+      this.doLogin()
+    } catch (error) {
+      console.error('注册失败', error)
+      toast.showToast(this.getRegisterErrorMessage(error))
+    } finally {
+      if (!shouldKeepLoading) {
+        toast.hideLoading()
+      }
+    }
+  },
+
+  shouldUploadAvatar(avatarUrl) {
+    const value = String(avatarUrl || '').trim()
+    return Boolean(value) && !value.startsWith('cloud://') && !value.startsWith('/')
+  },
+
+  getRegisterErrorMessage(error) {
+    const message = String(error && error.message || '').trim()
+    if (!message) {
+      return '注册失败，请重试'
+    }
+
+    if (message.includes('upload') || message.includes('上传')) {
+      return '头像上传失败，请检查网络后重试'
+    }
+
+    return message
   },
 
   validateForm(userInfo) {
     console.log('userInfo', userInfo)
     const { phoneError } = this.selectComponent('#register-form').getFormData()
     if (!userInfo.user_name || !userInfo.phone || !userInfo.school || !userInfo.grade || phoneError) {
-      toast.showToast('请完善必填信息');
-      return false;
+      toast.showToast('请完善必填信息')
+      return false
     }
-    return true;
+    return true
   },
 
   handleSkip() {

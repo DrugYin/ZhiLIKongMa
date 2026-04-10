@@ -70,6 +70,17 @@
   margin-top: 14rpx;
 }
 
+.hero-notice {
+  display: block;
+  margin-top: 12rpx;
+  padding: 14rpx 18rpx;
+  border-radius: 20rpx;
+  color: #8a6400;
+  font-size: 22rpx;
+  line-height: 1.6;
+  background: rgba(248, 182, 54, 0.16);
+}
+
 .summary-grid,
 .quick-grid,
 .stats-row {

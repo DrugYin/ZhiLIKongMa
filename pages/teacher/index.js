@@ -3,6 +3,9 @@ const ClassService = require('../../services/class')
 const TaskService = require('../../services/task')
 const formatUtils = require('../../utils/format')
 
+const MAX_PAGES = 10
+const MAX_PAGE_NOTICE = `数据较多，仅展示最近 ${MAX_PAGES} 页`
+
 Page({
   data: {
     userInfo: {},
@@ -39,7 +42,8 @@ Page({
         desc: '维护任务内容与发布状态'
       }
     ],
-    recentActivities: []
+    recentActivities: [],
+    degradeNotice: ''
   },
 
   onLoad() {
@@ -115,13 +119,17 @@ Page({
     const userInfo = userInfoResult.status === 'fulfilled' ? userInfoResult.value : cachedUserInfo
     const classes = classesResult.status === 'fulfilled' ? classesResult.value : []
     const tasks = tasksResult.status === 'fulfilled' ? tasksResult.value : []
-    const submissions = submissionsResult.status === 'fulfilled' ? submissionsResult.value : []
-    const applications = await this.fetchAllPendingApplications(classes)
+    const submissionsResultData = submissionsResult.status === 'fulfilled'
+      ? submissionsResult.value
+      : { list: [], truncated: false }
+    const applicationsResult = await this.fetchAllPendingApplications(classes)
 
     if (requestId !== this._loadRequestId) {
       return
     }
 
+    const submissions = submissionsResultData.list
+    const applications = applicationsResult.list
     const pendingSubmissionCount = submissions.filter((item) => item.status === 'pending').length
     const pendingApplicationCount = applications.length
     const pendingCount = pendingSubmissionCount + pendingApplicationCount
@@ -130,10 +138,15 @@ Page({
     const completionRate = totalStudents > 0
       ? Math.min(100, Math.round((weeklySubmittedStudents / totalStudents) * 100))
       : 0
+    const degradeNotice = this.buildDegradeNotice({
+      submissionsTruncated: submissionsResultData.truncated,
+      applicationsTruncated: applicationsResult.truncated
+    })
 
     this.setData({
       userInfo,
       pendingCount,
+      degradeNotice,
       weeklyStats: {
         totalStudents,
         weeklyCheckIns: weeklySubmittedStudents,
@@ -173,7 +186,7 @@ Page({
     let page = 1
     let hasMore = true
 
-    while (hasMore) {
+    while (hasMore && page <= MAX_PAGES) {
       const response = await TaskService.getSubmissions({
         role: 'teacher',
         page,
@@ -185,7 +198,15 @@ Page({
       page += 1
     }
 
-    return list
+    const truncated = hasMore
+    if (truncated) {
+      console.warn('[teacher-index] teacher submissions reached max pages limit:', MAX_PAGES)
+    }
+
+    return {
+      list,
+      truncated
+    }
   },
 
   async fetchAllPendingApplications(classes = []) {
@@ -194,16 +215,25 @@ Page({
       .map((item) => this.fetchClassPendingApplications(item._id))
 
     if (!tasks.length) {
-      return []
+      return {
+        list: [],
+        truncated: false
+      }
     }
 
     const results = await Promise.allSettled(tasks)
-    return results.reduce((list, item) => {
-      if (item.status === 'fulfilled' && Array.isArray(item.value)) {
-        list.push(...item.value)
+    return results.reduce((result, item) => {
+      if (item.status === 'fulfilled' && item.value) {
+        if (Array.isArray(item.value.list)) {
+          result.list.push(...item.value.list)
+        }
+        result.truncated = result.truncated || Boolean(item.value.truncated)
       }
-      return list
-    }, [])
+      return result
+    }, {
+      list: [],
+      truncated: false
+    })
   },
 
   async fetchClassPendingApplications(classId) {
@@ -211,7 +241,7 @@ Page({
     let page = 1
     let hasMore = true
 
-    while (hasMore) {
+    while (hasMore && page <= MAX_PAGES) {
       const response = await ClassService.getClassApplications({
         class_id: classId,
         page,
@@ -223,7 +253,15 @@ Page({
       page += 1
     }
 
-    return list
+    const truncated = hasMore
+    if (truncated) {
+      console.warn('[teacher-index] class applications reached max pages limit:', classId, MAX_PAGES)
+    }
+
+    return {
+      list,
+      truncated
+    }
   },
 
   async fetchAllClasses() {
@@ -247,6 +285,24 @@ Page({
     })
 
     return Array.isArray(response.list) ? response.list : []
+  },
+
+  buildDegradeNotice({ submissionsTruncated, applicationsTruncated }) {
+    const labels = []
+
+    if (submissionsTruncated) {
+      labels.push('提交记录')
+    }
+
+    if (applicationsTruncated) {
+      labels.push('入班申请')
+    }
+
+    if (!labels.length) {
+      return ''
+    }
+
+    return `${MAX_PAGE_NOTICE}的${labels.join('和')}。`
   },
 
   getWeeklySubmittedStudentCount(submissions = []) {
