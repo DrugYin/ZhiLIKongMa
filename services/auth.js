@@ -3,7 +3,13 @@
  */
 
 const { userApi } = require('./api');
-const { setStorageSync, getStorageSync, removeStorage } = require('./storage');
+const {
+  removeStorage,
+  setUserInfo,
+  getUserInfo: getCachedUserInfo,
+  setOpenid,
+  getOpenid: getCachedOpenid
+} = require('./storage');
 const { CACHE_KEYS } = require('../utils/constant');
 
 /**
@@ -14,7 +20,7 @@ class AuthService {
    * 获取当前用户 openid
    */
   static getOpenid() {
-    return getStorageSync(CACHE_KEYS.OPENID) || '';
+    return getCachedOpenid() || '';
   }
 
   /**
@@ -29,23 +35,7 @@ class AuthService {
    * 获取本地用户信息
    */
   static getLocalUserInfo() {
-    const raw = getStorageSync(CACHE_KEYS.USER_INFO);
-    if (!raw) return null;
-
-    try {
-      const parsed = typeof raw === 'string' ? JSON.parse(raw) : raw;
-
-      if (parsed && typeof parsed === 'object' && 'data' in parsed) {
-        if (parsed.expire && Date.now() > parsed.expire) {
-          return null;
-        }
-        return parsed.data || null;
-      }
-
-      return parsed;
-    } catch {
-      return null;
-    }
+    return getCachedUserInfo() || null;
   }
 
   /**
@@ -90,7 +80,7 @@ class AuthService {
       throw new Error(loginRes.message || '登录失败');
     }
     const openid = loginRes.data.openid;
-    setStorageSync(CACHE_KEYS.OPENID, openid);
+    setOpenid(openid);
 
     // 2. 查询用户信息
     const userInfo = await this.getUserInfo();
@@ -117,7 +107,7 @@ class AuthService {
     }
 
     const userInfo = res.data;
-    setStorageSync(CACHE_KEYS.USER_INFO, JSON.stringify(userInfo));
+    setUserInfo(userInfo);
     return userInfo;
   }
 
@@ -132,7 +122,7 @@ class AuthService {
       let userInfo = await this.getUserInfo();
       if (userInfo) {
         userInfo.current_role = role;
-        setStorageSync(CACHE_KEYS.USER_INFO, JSON.stringify(userInfo));
+        setUserInfo(userInfo);
       }
       return true;
     }
@@ -144,7 +134,7 @@ class AuthService {
    * 更新本地用户信息
    */
   static updateLocalUserInfo(userInfo) {
-    setStorageSync(CACHE_KEYS.USER_INFO, JSON.stringify(userInfo));
+    setUserInfo(userInfo);
   }
 
   /**
