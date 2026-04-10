@@ -1,7 +1,7 @@
 const cloud = require('wx-server-sdk');
-const { getCurrentUser } = require('../_shared/auth');
-const { getAllMembershipsByStudent, getClassesByIds } = require('../_shared/membership');
-const { success, failure } = require('../_shared/response');
+const { getCurrentUser } = require('/opt/auth');
+const { getAllMembershipsByStudent, getClassesByIds } = require('/opt/membership');
+const { success, failure } = require('/opt/response');
 
 cloud.init({
   env: cloud.DYNAMIC_CURRENT_ENV

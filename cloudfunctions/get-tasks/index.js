@@ -1,8 +1,8 @@
 const cloud = require('wx-server-sdk');
-const { getCurrentUser, verifyTeacherRole } = require('../_shared/auth');
-const { chunkList, getAllMembershipsByStudent, buildJoinedClassIds } = require('../_shared/membership');
-const { canStudentAccessTask } = require('../_shared/task-access');
-const { success, failure } = require('../_shared/response');
+const { getCurrentUser, verifyTeacherRole } = require('/opt/auth');
+const { chunkList, getAllMembershipsByStudent, buildJoinedClassIds } = require('/opt/membership');
+const { canStudentAccessTask } = require('/opt/task-access');
+const { success, failure } = require('/opt/response');
 
 cloud.init({
   env: cloud.DYNAMIC_CURRENT_ENV
