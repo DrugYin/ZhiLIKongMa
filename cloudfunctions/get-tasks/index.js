@@ -7,6 +7,7 @@ cloud.init({
 const db = cloud.database();
 const _ = db.command;
 const PAGE_SIZE = 100;
+const QUERY_BATCH_SIZE = 20;
 const TASK_TYPES = new Set(['class', 'public']);
 const TASK_VISIBILITIES = new Set(['class_only', 'public']);
 const TASK_STATUSES = new Set(['draft', 'published', 'closed']);
@@ -55,6 +56,16 @@ async function getAllMembershipsByStudent(openid) {
   return list.reduce((result, item) => result.concat(item.data || []), []);
 }
 
+function chunkList(list, chunkSize) {
+  const result = [];
+
+  for (let index = 0; index < list.length; index += chunkSize) {
+    result.push(list.slice(index, index + chunkSize));
+  }
+
+  return result;
+}
+
 function normalizeString(value) {
   return String(value || '').trim();
 }
@@ -101,28 +112,208 @@ function canStudentAccessTask(task, joinedClassIds) {
     && joinedClassIds.includes(task.class_id);
 }
 
-async function getAllTasksByQuery(queryData, sortField, sortOrder) {
-  const query = db.collection('tasks').where(queryData);
-  const totalRes = await query.count();
-  const total = totalRes.total || 0;
-  const requests = [];
+function buildStudentQueryConfigs(taskType, visibility, classId, joinedClassIds = []) {
+  const shouldIncludePublicTasks = (!taskType || taskType === 'public')
+    && (!visibility || visibility === 'public');
+  const shouldIncludePublicClassTasks = (!taskType || taskType === 'class')
+    && (!visibility || visibility === 'public');
+  const shouldIncludeClassOnlyTasks = (!taskType || taskType === 'class')
+    && (!visibility || visibility === 'class_only');
+  const queryConfigs = [];
 
-  for (let skip = 0; skip < total; skip += PAGE_SIZE) {
-    requests.push(
-      query
-        .orderBy(sortField, sortOrder)
-        .skip(skip)
-        .limit(PAGE_SIZE)
-        .get()
-    );
+  if (shouldIncludePublicTasks) {
+    queryConfigs.push({
+      type: 'public_task',
+      queryData: {
+        is_deleted: _.neq(true),
+        status: 'published',
+        task_type: 'public',
+        visibility: 'public',
+        ...(classId ? { class_id: classId } : {})
+      }
+    });
   }
 
-  if (!requests.length) {
-    return [];
+  if (shouldIncludePublicClassTasks) {
+    queryConfigs.push({
+      type: 'public_class_task',
+      queryData: {
+        is_deleted: _.neq(true),
+        status: 'published',
+        task_type: 'class',
+        visibility: 'public',
+        ...(classId ? { class_id: classId } : {})
+      }
+    });
   }
 
-  const result = await Promise.all(requests);
-  return result.reduce((list, item) => list.concat(item.data || []), []);
+  if (shouldIncludeClassOnlyTasks) {
+    const visibleClassIds = classId
+      ? joinedClassIds.filter((item) => item === classId)
+      : joinedClassIds;
+
+    chunkList(visibleClassIds, QUERY_BATCH_SIZE).forEach((batchIds, index) => {
+      if (!batchIds.length) {
+        return;
+      }
+
+      queryConfigs.push({
+        type: `class_only_task_${index + 1}`,
+        queryData: {
+          is_deleted: _.neq(true),
+          status: 'published',
+          task_type: 'class',
+          visibility: 'class_only',
+          class_id: _.in(batchIds)
+        }
+      });
+    });
+  }
+
+  return queryConfigs;
+}
+
+async function fetchQueryCount(queryData) {
+  const totalRes = await db.collection('tasks').where(queryData).count();
+  return totalRes.total || 0;
+}
+
+function normalizeComparableValue(value) {
+  if (value instanceof Date) {
+    return value.getTime();
+  }
+
+  if (typeof value === 'number') {
+    return value;
+  }
+
+  if (typeof value === 'string') {
+    const timestamp = new Date(value).getTime();
+    return Number.isNaN(timestamp) ? value : timestamp;
+  }
+
+  if (!value) {
+    return 0;
+  }
+
+  const timestamp = new Date(value).getTime();
+  return Number.isNaN(timestamp) ? String(value) : timestamp;
+}
+
+function compareTaskItem(left, right, sortField, sortOrder) {
+  const leftValue = normalizeComparableValue(left && left[sortField]);
+  const rightValue = normalizeComparableValue(right && right[sortField]);
+
+  if (leftValue !== rightValue) {
+    if (sortOrder === 'asc') {
+      return leftValue < rightValue ? -1 : 1;
+    }
+
+    return leftValue > rightValue ? -1 : 1;
+  }
+
+  const leftCreateTime = normalizeComparableValue(left && left.create_time);
+  const rightCreateTime = normalizeComparableValue(right && right.create_time);
+  if (leftCreateTime !== rightCreateTime) {
+    return rightCreateTime - leftCreateTime;
+  }
+
+  return String(left && left._id || '').localeCompare(String(right && right._id || ''));
+}
+
+async function buildTaskQueryState(queryData, count) {
+  return {
+    queryData,
+    count,
+    query: db.collection('tasks').where(queryData),
+    skip: 0,
+    buffer: [],
+    index: 0,
+    exhausted: count <= 0
+  };
+}
+
+async function ensureTaskBuffer(state, sortField, sortOrder, pageSize) {
+  if (!state || state.exhausted || state.index < state.buffer.length) {
+    return;
+  }
+
+  const listRes = await state.query
+    .orderBy(sortField, sortOrder)
+    .skip(state.skip)
+    .limit(pageSize)
+    .get();
+
+  state.buffer = listRes.data || [];
+  state.index = 0;
+  state.skip += state.buffer.length;
+  state.exhausted = state.buffer.length < pageSize || state.skip >= state.count;
+}
+
+async function getStudentTaskPage(queryConfigs, sortField, sortOrder, page, pageSize) {
+  if (!queryConfigs.length) {
+    return {
+      list: [],
+      total: 0,
+      hasMore: false
+    };
+  }
+
+  const counts = await Promise.all(queryConfigs.map((item) => fetchQueryCount(item.queryData)));
+  const total = counts.reduce((sum, count) => sum + count, 0);
+
+  if (!total) {
+    return {
+      list: [],
+      total: 0,
+      hasMore: false
+    };
+  }
+
+  const states = await Promise.all(
+    queryConfigs.map((item, index) => buildTaskQueryState(item.queryData, counts[index]))
+  );
+  const start = (page - 1) * pageSize;
+  const list = [];
+  const seenTaskIds = new Set();
+  let mergedIndex = 0;
+
+  while (list.length < pageSize) {
+    await Promise.all(states.map((state) => ensureTaskBuffer(state, sortField, sortOrder, pageSize)));
+
+    const candidates = states
+      .filter((state) => state.index < state.buffer.length)
+      .map((state) => ({
+        state,
+        item: state.buffer[state.index]
+      }));
+
+    if (!candidates.length) {
+      break;
+    }
+
+    candidates.sort((left, right) => compareTaskItem(left.item, right.item, sortField, sortOrder));
+    const current = candidates[0];
+    current.state.index += 1;
+
+    if (!current.item || seenTaskIds.has(current.item._id)) {
+      continue;
+    }
+
+    seenTaskIds.add(current.item._id);
+
+    if (mergedIndex >= start) {
+      list.push(current.item);
+    }
+
+    mergedIndex += 1;
+  }
+
+  return {
+    list,
+    total,
+    hasMore: page * pageSize < total
+  };
 }
 
 exports.main = async (event) => {
@@ -207,28 +398,15 @@ exports.main = async (event) => {
       joinedClassIds.push(user.class_id);
     }
 
-    const queryData = {
-      is_deleted: _.neq(true),
-      status: 'published'
-    };
-
-    if (taskType) {
-      queryData.task_type = taskType;
-    }
-
-    if (visibility) {
-      queryData.visibility = visibility;
-    }
-
-    if (classId) {
-      queryData.class_id = classId;
-    }
-
-    const allTasks = await getAllTasksByQuery(queryData, sortField, sortOrder);
-    const visibleTasks = allTasks.filter((item) => canStudentAccessTask(item, joinedClassIds));
-    const total = visibleTasks.length;
-    const start = (page - 1) * pageSize;
-    const list = visibleTasks.slice(start, start + pageSize);
+    const studentQueryConfigs = buildStudentQueryConfigs(taskType, visibility, classId, joinedClassIds);
+    const studentTaskResult = await getStudentTaskPage(
+      studentQueryConfigs,
+      sortField,
+      sortOrder,
+      page,
+      pageSize
+    );
+    const list = studentTaskResult.list.filter((item) => canStudentAccessTask(item, joinedClassIds));
 
     return {
       success: true,
@@ -237,8 +415,8 @@ exports.main = async (event) => {
         list,
         page,
         page_size: pageSize,
-        total,
-        has_more: start + pageSize < total
+        total: studentTaskResult.total,
+        has_more: studentTaskResult.hasMore
       }
     };
   } catch (error) {

@@ -9,6 +9,7 @@ const _ = db.command;
 const DEFAULT_SORT_FIELD = 'create_time';
 const DEFAULT_SORT_ORDER = 'desc';
 const PAGE_SIZE = 100;
+const CLASS_BATCH_SIZE = 20;
 const ALLOWED_SORT_FIELDS = new Set([
   'create_time',
   'update_time',
@@ -50,6 +51,31 @@ async function getAllMembershipsByStudent(openid) {
       }).get()
     );
   }
+
+  if (!tasks.length) {
+    return [];
+  }
+
+  const list = await Promise.all(tasks);
+  return list.reduce((result, item) => result.concat(item.data || []), []);
+}
+
+function chunkList(list, chunkSize) {
+  const result = [];
+
+  for (let index = 0; index < list.length; index += chunkSize) {
+    result.push(list.slice(index, index + chunkSize));
+  }
+
+  return result;
+}
+
+async function getClassesByIds(classIds = []) {
+  const tasks = chunkList(classIds, CLASS_BATCH_SIZE).map((batchIds) => (
+    db.collection('classes').where({
+      _id: _.in(batchIds)
+    }).get()
+  ));
 
   if (!tasks.length) {
     return [];
@@ -138,20 +164,27 @@ exports.main = async (event) => {
       };
     }
 
-    const classList = [];
-
-    for (const classId of classIds) {
-      const classRes = await db.collection('classes').doc(classId).get();
-      const classInfo = classRes.data || null;
-      if (!classInfo || classInfo.status === 'deleted') {
-        continue;
+    const classInfoList = await getClassesByIds(classIds);
+    const classMap = classInfoList.reduce((result, item) => {
+      if (!item || !item._id) {
+        return result;
       }
 
-      classList.push({
+      result[item._id] = item;
+      return result;
+    }, {});
+    const classList = classIds.reduce((result, classId) => {
+      const classInfo = classMap[classId];
+      if (!classInfo || classInfo.status === 'deleted') {
+        return result;
+      }
+
+      result.push({
         ...classInfo,
         join_class_time: membershipMap[classId].join_class_time || null
       });
-    }
+      return result;
+    }, []);
 
     classList.sort((left, right) => {
       const leftTime = new Date(left.join_class_time || left.create_time || 0).getTime();
