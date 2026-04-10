@@ -64,7 +64,7 @@ Page({
         title: '登录提醒',
         content: '登录前请确认你已阅读并同意《用户协议》和《隐私政策》。点击“同意并登录”后将继续微信登录。',
         cancelText: '暂不同意',
-        confirmText: '同意并登录',
+        confirmText: '同意登录',
         confirmColor: '#1f7ae0'
       })
 
