@@ -1,4 +1,8 @@
 const cloud = require('wx-server-sdk')
+const { getCurrentUser } = require('../_shared/auth')
+const { getAllMembershipsByStudent, buildJoinedClassIds } = require('../_shared/membership')
+const { canStudentAccessTask } = require('../_shared/task-access')
+const { failure, success } = require('../_shared/response')
 
 cloud.init({
   env: cloud.DYNAMIC_CURRENT_ENV
@@ -16,36 +20,6 @@ async function getSubmissionCount(taskId, openid) {
   }).count()
 
   return res.total || 0
-}
-
-async function getCurrentUser(openid) {
-  const res = await db.collection('users').where({ _openid: openid }).limit(1).get()
-  return res.data[0] || null
-}
-
-async function getAllMembershipsByStudent(openid) {
-  const totalRes = await db.collection('class_memberships').where({
-    student_openid: openid
-  }).count()
-  const total = totalRes.total || 0
-  const requests = []
-
-  for (let skip = 0; skip < total; skip += PAGE_SIZE) {
-    requests.push(
-      db.collection('class_memberships').where({
-        student_openid: openid
-      }).skip(skip).limit(PAGE_SIZE).field({
-        class_id: true
-      }).get()
-    )
-  }
-
-  if (!requests.length) {
-    return []
-  }
-
-  const list = await Promise.all(requests)
-  return list.reduce((result, item) => result.concat(item.data || []), [])
 }
 
 async function getTaskById(taskId) {
@@ -103,24 +77,6 @@ function normalizeFiles(files) {
     })
     return result
   }, [])
-}
-
-function canStudentAccessTask(task, joinedClassIds) {
-  if (!task || task.is_deleted || task.status !== 'published') {
-    return false
-  }
-
-  if (task.task_type === 'public') {
-    return true
-  }
-
-  if (task.task_type === 'class' && task.visibility === 'public') {
-    return true
-  }
-
-  return task.task_type === 'class'
-    && task.visibility === 'class_only'
-    && joinedClassIds.includes(task.class_id)
 }
 
 function buildDeadline(taskInfo = {}) {
@@ -331,21 +287,13 @@ exports.main = async (event) => {
       }
     }
 
-    const user = await getCurrentUser(OPENID)
+    const user = await getCurrentUser(db, OPENID)
     if (!user) {
-      return {
-        success: false,
-        message: '请先完成注册',
-        error_code: 401
-      }
+      return failure('请先完成注册', 401)
     }
 
     if (!Array.isArray(user.roles) || !user.roles.includes('student')) {
-      return {
-        success: false,
-        message: '仅学生可以提交任务',
-        error_code: 403
-      }
+      return failure('仅学生可以提交任务', 403)
     }
 
     const taskInfo = await getTaskById(taskId)
@@ -357,12 +305,10 @@ exports.main = async (event) => {
       }
     }
 
-    const memberships = await getAllMembershipsByStudent(OPENID)
-    const joinedClassIds = memberships.map((item) => item.class_id).filter(Boolean)
-
-    if (user.class_id && !joinedClassIds.includes(user.class_id)) {
-      joinedClassIds.push(user.class_id)
-    }
+    const memberships = await getAllMembershipsByStudent(db, OPENID, {
+      class_id: true
+    }, PAGE_SIZE)
+    const joinedClassIds = buildJoinedClassIds(user, memberships)
 
     if (!canStudentAccessTask(taskInfo, joinedClassIds)) {
       return {
@@ -408,31 +354,20 @@ exports.main = async (event) => {
       is_overtime: isOvertime
     }, now)
 
-    return {
-      success: true,
-      message: '提交任务成功',
-      data: {
-        _id: submitResult._id,
-        ...submitResult.submissionData,
-        total_submissions: submitResult.submitNo,
-        max_submissions: maxSubmissions
-      }
-    }
+    return success('提交任务成功', {
+      _id: submitResult._id,
+      ...submitResult.submissionData,
+      total_submissions: submitResult.submitNo,
+      max_submissions: maxSubmissions
+    })
   } catch (error) {
     if (isSubmissionLimitError(error)) {
-      return {
-        success: false,
-        message: error.message,
-        error_code: 3003
-      }
+      return failure(error.message, 3003)
     }
 
     console.error('[submit-task] Error:', error)
-    return {
-      success: false,
-      message: '提交任务失败',
-      error: error.message,
-      error_code: 500
-    }
+    return failure('提交任务失败', 500, {
+      error: error.message
+    })
   }
 }
