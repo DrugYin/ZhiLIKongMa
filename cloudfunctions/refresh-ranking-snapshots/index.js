@@ -1,5 +1,4 @@
 const cloud = require('wx-server-sdk')
-const { getCurrentUser } = require('../_shared/auth')
 const { success, failure } = require('../_shared/response')
 
 cloud.init({
@@ -9,16 +8,7 @@ cloud.init({
 const db = cloud.database()
 const _ = db.command
 const PAGE_SIZE = 100
-const ALLOWED_RANK_TYPES = new Set(['week', 'month', 'total'])
-
-function normalizeString(value) {
-  return String(value || '').trim()
-}
-
-function normalizeRankType(value) {
-  const rankType = normalizeString(value)
-  return ALLOWED_RANK_TYPES.has(rankType) ? rankType : 'week'
-}
+const RANK_TYPES = ['week', 'month', 'total']
 
 async function getAllUsers() {
   const totalRes = await db.collection('users').count()
@@ -125,7 +115,7 @@ function buildPeriodRange(rankType) {
 
 function buildScoreMap(submissions = []) {
   return submissions.reduce((result, item) => {
-    const openid = normalizeString(item.student_openid)
+    const openid = String(item.student_openid || '').trim()
     if (!openid) {
       return result
     }
@@ -166,7 +156,7 @@ function buildTrendText(rankType, taskCount, points) {
   return rankType === 'month' ? '本月继续加油' : '本周继续冲刺'
 }
 
-function buildRankList(users, currentUser, rankType, scoreMap) {
+function buildRankList(users, rankType, scoreMap) {
   return users
     .filter(isStudent)
     .map((user) => {
@@ -183,7 +173,6 @@ function buildRankList(users, currentUser, rankType, scoreMap) {
         points,
         task_count: rankType === 'total' ? 0 : Number(scoreInfo.taskCount || 0),
         total_points: Number(user.total_points || user.points || 0),
-        is_current_user: currentUser && user._openid === currentUser._openid,
         trend_text: buildTrendText(rankType, Number(scoreInfo.taskCount || 0), points),
         update_time: user.update_time || user.create_time || null
       }
@@ -208,70 +197,46 @@ function buildRankList(users, currentUser, rankType, scoreMap) {
     }))
 }
 
-function markCurrentUser(list = [], currentOpenid = '') {
-  return list.map((item) => ({
-    ...item,
-    is_current_user: Boolean(currentOpenid) && item._openid === currentOpenid
-  }))
-}
-
-async function getRankingSnapshot(rankType) {
-  try {
-    const res = await db.collection('ranking_snapshots').doc(rankType).get()
-    return res.data || null
-  } catch (error) {
-    return null
+async function saveSnapshot(rankType, rankingList, generatedAt) {
+  const snapshotData = {
+    rank_type: rankType,
+    participant_count: rankingList.length,
+    top_three: rankingList.slice(0, 3),
+    list: rankingList,
+    generated_at: generatedAt,
+    update_time: generatedAt
   }
+
+  await db.collection('ranking_snapshots').doc(rankType).set({
+    data: snapshotData
+  })
 }
 
-exports.main = async (event) => {
+exports.main = async () => {
   try {
-    const { OPENID } = cloud.getWXContext()
-    const currentUser = await getCurrentUser(db, OPENID)
-
-    if (!currentUser) {
-      return failure('请先完成注册', 401)
-    }
-
-    const rankType = normalizeRankType(event.rank_type)
-    const snapshot = await getRankingSnapshot(rankType)
-
-    if (snapshot && Array.isArray(snapshot.list)) {
-      const rankingList = markCurrentUser(snapshot.list, currentUser._openid)
-      const currentUserCard = rankingList.find((item) => item.is_current_user) || null
-
-      return success('获取排行榜成功', {
-        rank_type: rankType,
-        participant_count: Number(snapshot.participant_count || rankingList.length || 0),
-        current_user: currentUserCard,
-        top_three: rankingList.slice(0, 3),
-        list: rankingList,
-        snapshot_time: snapshot.generated_at || null
-      })
-    }
-
+    const generatedAt = new Date()
     const users = await getAllUsers()
-    let scoreMap = {}
 
-    if (rankType !== 'total') {
-      const { start, end } = buildPeriodRange(rankType)
-      const submissions = await getSubmissionsByRange(start, end)
-      scoreMap = buildScoreMap(submissions)
+    for (const rankType of RANK_TYPES) {
+      let scoreMap = {}
+
+      if (rankType !== 'total') {
+        const { start, end } = buildPeriodRange(rankType)
+        const submissions = await getSubmissionsByRange(start, end)
+        scoreMap = buildScoreMap(submissions)
+      }
+
+      const rankingList = buildRankList(users, rankType, scoreMap)
+      await saveSnapshot(rankType, rankingList, generatedAt)
     }
 
-    const rankingList = buildRankList(users, currentUser, rankType, scoreMap)
-    const currentUserCard = rankingList.find((item) => item.is_current_user) || null
-
-    return success('获取排行榜成功', {
-      rank_type: rankType,
-      participant_count: rankingList.length,
-      current_user: currentUserCard,
-      top_three: rankingList.slice(0, 3),
-      list: rankingList
+    return success('排行榜快照刷新成功', {
+      rank_types: RANK_TYPES,
+      generated_at: generatedAt
     })
   } catch (error) {
-    console.error('[get-ranking] Error:', error)
-    return failure('获取排行榜失败', 500, {
+    console.error('[refresh-ranking-snapshots] Error:', error)
+    return failure('排行榜快照刷新失败', 500, {
       error: error.message
     })
   }

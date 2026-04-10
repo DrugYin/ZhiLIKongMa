@@ -1,4 +1,8 @@
 const cloud = require('wx-server-sdk')
+const { getCurrentUser, verifyTeacherRole } = require('../_shared/auth')
+const { getAllMembershipsByStudent, buildJoinedClassIds } = require('../_shared/membership')
+const { canStudentAccessTask } = require('../_shared/task-access')
+const { success, failure } = require('../_shared/response')
 
 cloud.init({
   env: cloud.DYNAMIC_CURRENT_ENV
@@ -6,16 +10,6 @@ cloud.init({
 
 const db = cloud.database()
 const PAGE_SIZE = 100
-
-async function getCurrentUser(openid) {
-  const res = await db.collection('users').where({ _openid: openid }).limit(1).get()
-  return res.data[0] || null
-}
-
-async function verifyTeacherRole(openid) {
-  const user = await getCurrentUser(openid)
-  return user && Array.isArray(user.roles) && user.roles.includes('teacher') ? user : null
-}
 
 async function getTaskById(taskId) {
   try {
@@ -26,64 +20,17 @@ async function getTaskById(taskId) {
   }
 }
 
-async function getAllMembershipsByStudent(openid) {
-  const totalRes = await db.collection('class_memberships').where({
-    student_openid: openid
-  }).count()
-  const total = totalRes.total || 0
-  const requests = []
-
-  for (let skip = 0; skip < total; skip += PAGE_SIZE) {
-    requests.push(
-      db.collection('class_memberships').where({
-        student_openid: openid
-      }).skip(skip).limit(PAGE_SIZE).field({
-        class_id: true
-      }).get()
-    )
-  }
-
-  if (!requests.length) {
-    return []
-  }
-
-  const list = await Promise.all(requests)
-  return list.reduce((result, item) => result.concat(item.data || []), [])
-}
-
 function normalizeString(value) {
   return String(value || '').trim()
-}
-
-function canStudentAccessTask(task, joinedClassIds) {
-  if (!task || task.is_deleted || task.status !== 'published') {
-    return false
-  }
-
-  if (task.task_type === 'public') {
-    return true
-  }
-
-  if (task.task_type === 'class' && task.visibility === 'public') {
-    return true
-  }
-
-  return task.task_type === 'class'
-    && task.visibility === 'class_only'
-    && joinedClassIds.includes(task.class_id)
 }
 
 exports.main = async (event) => {
   try {
     const { OPENID } = cloud.getWXContext()
-    const user = await getCurrentUser(OPENID)
+    const user = await getCurrentUser(db, OPENID)
 
     if (!user) {
-      return {
-        success: false,
-        message: '请先完成注册',
-        error_code: 401
-      }
+      return failure('请先完成注册', 401)
     }
 
     const taskId = normalizeString(event.task_id)
@@ -95,13 +42,9 @@ exports.main = async (event) => {
     const queryData = {}
 
     if (role === 'teacher') {
-      const teacher = await verifyTeacherRole(OPENID)
+      const teacher = await verifyTeacherRole(db, OPENID)
       if (!teacher) {
-        return {
-          success: false,
-          message: '仅教师可以查看教师提交记录',
-          error_code: 403
-        }
+        return failure('仅教师可以查看教师提交记录', 403)
       }
 
       queryData.teacher_openid = OPENID
@@ -122,26 +65,16 @@ exports.main = async (event) => {
 
       if (role === 'teacher') {
         if (taskInfo.teacher_openid !== OPENID) {
-          return {
-            success: false,
-            message: '无权查看该任务的提交记录',
-            error_code: 403
-          }
+          return failure('无权查看该任务的提交记录', 403)
         }
       } else {
-        const memberships = await getAllMembershipsByStudent(OPENID)
-        const joinedClassIds = memberships.map((item) => item.class_id).filter(Boolean)
-
-        if (user.class_id && !joinedClassIds.includes(user.class_id)) {
-          joinedClassIds.push(user.class_id)
-        }
+        const memberships = await getAllMembershipsByStudent(db, OPENID, {
+          class_id: true
+        }, PAGE_SIZE)
+        const joinedClassIds = buildJoinedClassIds(user, memberships)
 
         if (!canStudentAccessTask(taskInfo, joinedClassIds) && taskInfo.teacher_openid !== OPENID) {
-          return {
-            success: false,
-            message: '无权查看该任务的提交记录',
-            error_code: 403
-          }
+          return failure('无权查看该任务的提交记录', 403)
         }
       }
 
@@ -164,24 +97,17 @@ exports.main = async (event) => {
       .limit(pageSize)
       .get()
 
-    return {
-      success: true,
-      message: '获取提交记录成功',
-      data: {
-        list: listRes.data || [],
-        page,
-        page_size: pageSize,
-        total: totalRes.total || 0,
-        has_more: page * pageSize < (totalRes.total || 0)
-      }
-    }
+    return success('获取提交记录成功', {
+      list: listRes.data || [],
+      page,
+      page_size: pageSize,
+      total: totalRes.total || 0,
+      has_more: page * pageSize < (totalRes.total || 0)
+    })
   } catch (error) {
     console.error('[get-submissions] Error:', error)
-    return {
-      success: false,
-      message: '获取提交记录失败',
-      error: error.message,
-      error_code: 500
-    }
+    return failure('获取提交记录失败', 500, {
+      error: error.message
+    })
   }
 }

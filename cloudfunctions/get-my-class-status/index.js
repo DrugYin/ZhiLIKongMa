@@ -1,56 +1,15 @@
 const cloud = require('wx-server-sdk');
+const { getCurrentUser } = require('../_shared/auth');
+const { getAllMembershipsByStudent, getClassesByIds } = require('../_shared/membership');
+const { success, failure } = require('../_shared/response');
 
 cloud.init({
   env: cloud.DYNAMIC_CURRENT_ENV
 });
 
 const db = cloud.database();
+const _ = db.command;
 const PAGE_SIZE = 100;
-
-async function getCurrentUser(openid) {
-  const res = await db.collection('users').where({ _openid: openid }).limit(1).get();
-  return res.data[0] || null;
-}
-
-async function getClassById(classId) {
-  if (!classId) {
-    return null;
-  }
-
-  try {
-    const res = await db.collection('classes').doc(classId).get();
-    return res.data || null;
-  } catch (error) {
-    return null;
-  }
-}
-
-async function getAllMembershipsByStudent(openid) {
-  const totalRes = await db.collection('class_memberships').where({
-    student_openid: openid
-  }).count();
-  const total = totalRes.total || 0;
-  const tasks = [];
-
-  for (let skip = 0; skip < total; skip += PAGE_SIZE) {
-    tasks.push(
-      db.collection('class_memberships').where({
-        student_openid: openid
-      }).skip(skip).limit(PAGE_SIZE).field({
-        _id: true,
-        class_id: true,
-        join_class_time: true
-      }).get()
-    );
-  }
-
-  if (!tasks.length) {
-    return [];
-  }
-
-  const list = await Promise.all(tasks);
-  return list.reduce((result, item) => result.concat(item.data || []), []);
-}
 
 async function getAllPendingApplications(openid) {
   const totalRes = await db.collection('class_join_applications').where({
@@ -78,7 +37,11 @@ async function getAllPendingApplications(openid) {
 }
 
 async function buildJoinedClasses(user, openid) {
-  const memberships = await getAllMembershipsByStudent(openid);
+  const memberships = await getAllMembershipsByStudent(db, openid, {
+    _id: true,
+    class_id: true,
+    join_class_time: true
+  }, PAGE_SIZE);
   const membershipMap = memberships.reduce((result, item) => {
     if (!item.class_id || result[item.class_id]) {
       return result;
@@ -101,10 +64,17 @@ async function buildJoinedClasses(user, openid) {
   }
 
   const classIds = Object.keys(membershipMap);
+  const classInfoList = await getClassesByIds(db, _, classIds);
+  const classMap = classInfoList.reduce((result, item) => {
+    if (item && item._id) {
+      result[item._id] = item;
+    }
+    return result;
+  }, {});
   const joinedClasses = [];
 
   for (const classId of classIds) {
-    const classInfo = await getClassById(classId);
+    const classInfo = classMap[classId] || null;
     if (!classInfo || classInfo.status === 'deleted') {
       continue;
     }
@@ -138,10 +108,21 @@ async function buildJoinedClasses(user, openid) {
 
 async function buildPendingApplications(openid) {
   const applications = await getAllPendingApplications(openid);
+  const classInfoList = await getClassesByIds(
+    db,
+    _,
+    applications.map((item) => item.class_id).filter(Boolean)
+  );
+  const classMap = classInfoList.reduce((result, item) => {
+    if (item && item._id) {
+      result[item._id] = item;
+    }
+    return result;
+  }, {});
   const pendingList = [];
 
   for (const item of applications) {
-    const classInfo = await getClassById(item.class_id);
+    const classInfo = classMap[item.class_id] || null;
     if (!classInfo || classInfo.status === 'deleted') {
       continue;
     }
@@ -178,13 +159,11 @@ async function buildPendingApplications(openid) {
 exports.main = async () => {
   try {
     const { OPENID } = cloud.getWXContext();
-    const user = await getCurrentUser(OPENID);
+    const user = await getCurrentUser(db, OPENID);
 
     if (!user) {
       return {
-        success: true,
-        is_registered: false,
-        data: {
+        ...success('获取班级状态成功', {
           status: 'guest',
           joined_class: null,
           joined_classes: [],
@@ -192,7 +171,8 @@ exports.main = async () => {
           pending_application: null,
           pending_applications: [],
           pending_application_count: 0
-        }
+        }),
+        is_registered: false
       };
     }
 
@@ -206,9 +186,7 @@ exports.main = async () => {
       : (pendingApplications.length ? 'pending' : 'none');
 
     return {
-      success: true,
-      is_registered: true,
-      data: {
+      ...success('获取班级状态成功', {
         status,
         joined_class: joinedClasses[0] || null,
         joined_classes: joinedClasses,
@@ -216,15 +194,13 @@ exports.main = async () => {
         pending_application: pendingApplications[0] || null,
         pending_applications: pendingApplications,
         pending_application_count: pendingApplications.length
-      }
+      }),
+      is_registered: true
     };
   } catch (error) {
     console.error('[get-my-class-status] Error:', error);
-    return {
-      success: false,
-      message: '获取班级状态失败',
-      error: error.message,
-      error_code: 500
-    };
+    return failure('获取班级状态失败', 500, {
+      error: error.message
+    });
   }
 };
