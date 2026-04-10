@@ -27,6 +27,7 @@ Page({
   data: {
     isLogin: false,
     isFirstLogin: false,
+    hasConfirmedAgreement: false,
     userInfo: {
       user_name: '',
       avatar_url: '',
@@ -44,23 +45,62 @@ Page({
   onLoad(options) {
   },
 
-  onLogin() {
-    toast.showLoading('登录中...');
+  async onLogin() {
+    const hasConfirmedAgreement = await this.ensureAgreementConfirmed()
+    if (!hasConfirmedAgreement) {
+      return
+    }
+
+    this.doLogin()
+  },
+
+  async ensureAgreementConfirmed() {
+    if (this.data.hasConfirmedAgreement) {
+      return true
+    }
+
+    try {
+      const confirmed = await toast.showModal({
+        title: '登录提醒',
+        content: '登录前请确认你已阅读并同意《用户协议》和《隐私政策》。点击“同意并登录”后将继续微信登录。',
+        cancelText: '暂不同意',
+        confirmText: '同意并登录',
+        confirmColor: '#1f7ae0'
+      })
+
+      if (confirmed) {
+        this.setData({ hasConfirmedAgreement: true })
+      }
+
+      return confirmed
+    } catch (error) {
+      console.error('协议确认弹窗打开失败:', error)
+      toast.showToast('暂时无法打开协议确认，请稍后重试')
+      return false
+    }
+  },
+
+  doLogin() {
+    toast.showLoading('登录中...')
     AuthService.wxLogin().then(res => {
       if (res.is_registered) {
-        toast.hideLoading();
+        toast.hideLoading()
         AuthService.updateLocalUserInfo(res.user_info)
-        toast.showSuccess('登录成功');
+        toast.showSuccess('登录成功')
         setTimeout(() => {
-          wx.navigateBack();
-        }, 1000);
+          wx.navigateBack()
+        }, 1000)
       } else {
         this.setData({
           isFirstLogin: true,
-        });
-        toast.hideLoading();
-        toast.showToast('首次登录，请完善信息');
+        })
+        toast.hideLoading()
+        toast.showToast('首次登录，请完善信息')
       }
+    }).catch((error) => {
+      toast.hideLoading()
+      toast.showToast('登录失败，请稍后重试')
+      console.error('登录失败:', error)
     })
   },
 
