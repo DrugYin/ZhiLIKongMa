@@ -9,6 +9,7 @@
 }
 
 .content {
+  width: 100%;
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -24,7 +25,7 @@
   width: 100%;
   min-height: 920rpx;
   box-sizing: border-box;
-  padding: 84rpx 44rpx 72rpx;
+  padding: 84rpx 80rpx 72rpx;
   border-radius: 32rpx;
   background: rgba(255, 255, 255, 0.96);
   box-shadow: 0 20rpx 50rpx rgba(24, 62, 107, 0.08);

@@ -15,7 +15,7 @@
         <text>暂不登录，浏览主页</text>
       </view>
       <view class="agreement">
-        <text>登录即表示同意</text>
+        <text>点击查看</text>
         <text class="link" bindtap="handleOpenUserAgreement">《用户协议》</text>
         <text>和</text>
         <text class="link" bindtap="handleOpenPrivacyPolicy">《隐私政策》</text>
