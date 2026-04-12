@@ -9,6 +9,7 @@ const db = cloud.database()
 const _ = db.command
 const PAGE_SIZE = 100
 const RANK_TYPES = ['week', 'month', 'total']
+const CHINA_UTC_OFFSET_HOURS = 8
 
 async function getAllUsers() {
   const totalRes = await db.collection('users').count()
@@ -77,30 +78,33 @@ async function getSubmissionsByRange(start, end) {
   return list.reduce((result, item) => result.concat(item.data || []), [])
 }
 
-function getWeekRange() {
-  const now = new Date()
-  const start = new Date(now)
-  const day = start.getDay()
-  const offset = (day + 1) % 7
-  start.setHours(0, 0, 0, 0)
-  start.setDate(start.getDate() - offset)
+function getChinaNow() {
+  return new Date(Date.now() + CHINA_UTC_OFFSET_HOURS * 60 * 60 * 1000)
+}
 
-  const end = new Date(start)
-  end.setDate(end.getDate() + 6)
-  end.setHours(23, 59, 59, 999)
+function createChinaDate(year, monthIndex, day, hour = 0, minute = 0, second = 0, millisecond = 0) {
+  return new Date(Date.UTC(year, monthIndex, day, hour - CHINA_UTC_OFFSET_HOURS, minute, second, millisecond))
+}
+
+function getWeekRange() {
+  const now = getChinaNow()
+  const year = now.getUTCFullYear()
+  const monthIndex = now.getUTCMonth()
+  const currentDate = now.getUTCDate()
+  const day = now.getUTCDay()
+  const offset = (day + 1) % 7
+  const start = createChinaDate(year, monthIndex, currentDate - offset, 0, 0, 0, 0)
+  const end = createChinaDate(year, monthIndex, currentDate - offset + 6, 23, 59, 59, 999)
 
   return { start, end }
 }
 
 function getMonthRange() {
-  const now = new Date()
-  const start = new Date(now)
-  start.setDate(1)
-  start.setHours(0, 0, 0, 0)
-
-  const end = new Date(start)
-  end.setMonth(end.getMonth() + 1)
-  end.setMilliseconds(end.getMilliseconds() - 1)
+  const now = getChinaNow()
+  const year = now.getUTCFullYear()
+  const monthIndex = now.getUTCMonth()
+  const start = createChinaDate(year, monthIndex, 1, 0, 0, 0, 0)
+  const end = new Date(createChinaDate(year, monthIndex + 1, 1, 0, 0, 0, 0).getTime() - 1)
 
   return { start, end }
 }

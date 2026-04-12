@@ -2,6 +2,7 @@ const projectService = require('../../../config/project')
 const TaskService = require('../../../services/task')
 const Toast = require('../../../utils/toast')
 const formatUtils = require('../../../utils/format')
+const taskDeadline = require('../../../utils/task-deadline')
 
 const DEFAULT_PROJECT_OPTIONS = [
   { value: 'all', label: '全部项目' }
@@ -217,8 +218,6 @@ Page({
     const taskType = item.task_type || 'public'
     const visibility = taskType === 'public' ? 'public' : (item.visibility || 'class_only')
     const status = item.status || 'draft'
-    const deadline = item.deadline || item.deadline_date
-
     return {
       ...item,
       titleText: item.title || '未命名任务',
@@ -234,7 +233,7 @@ Page({
       difficultyText: DIFFICULTY_TEXT[difficulty] || '未设置难度',
       difficultyStyle: `color:${DIFFICULTY_COLOR[difficulty] || '#6f7f91'};background:${this.toRgba(DIFFICULTY_COLOR[difficulty] || '#6f7f91', 0.12)};`,
       pointsText: `${points} 分`,
-      deadlineText: deadline ? this.formatDateTime(deadline) : '未设置截止时间',
+      deadlineText: taskDeadline.formatTaskDeadline(item),
       publishTimeText: item.publish_time ? this.formatDateTime(item.publish_time) : '待发布',
       updateTimeText: item.update_time ? this.formatDateTime(item.update_time) : '待更新',
       imageCountText: `${Array.isArray(item.images) ? item.images.length : 0} 张图片`,
@@ -323,6 +322,11 @@ Page({
   getSortableValue(item, sortBy) {
     if (sortBy === 'difficulty' || sortBy === 'points') {
       return Number(item[sortBy] || 0)
+    }
+
+    if (sortBy === 'deadline') {
+      const deadlineDate = taskDeadline.getTaskDeadlineDate(item)
+      return deadlineDate ? deadlineDate.getTime() : 0
     }
 
     const value = item[sortBy]

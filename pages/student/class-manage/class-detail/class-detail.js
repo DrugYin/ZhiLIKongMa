@@ -3,6 +3,7 @@ const ClassService = require('../../../../services/class');
 const TaskService = require('../../../../services/task');
 const Toast = require('../../../../utils/toast');
 const formatUtils = require('../../../../utils/format');
+const taskDeadline = require('../../../../utils/task-deadline');
 
 Page({
   data: {
@@ -253,10 +254,6 @@ Page({
       return null;
     }
 
-    const deadline = taskInfo.deadline
-      || (taskInfo.deadline_date && taskInfo.deadline_time
-        ? `${taskInfo.deadline_date} ${taskInfo.deadline_time}`
-        : '');
     const updateTime = taskInfo.update_time || taskInfo.publish_time || taskInfo.create_time;
 
     return {
@@ -265,7 +262,7 @@ Page({
       description: String(taskInfo.description || '').trim() || '请前往任务详情查看完整要求与素材说明。',
       projectText: taskInfo.project_name || taskInfo.project_code || '未设置项目',
       pointsText: `${Number(taskInfo.points || 0)} 分`,
-      deadlineText: deadline ? this.formatDateTime(deadline) : '未设置截止时间',
+      deadlineText: taskDeadline.formatTaskDeadline(taskInfo),
       updateTimeText: this.formatDateTime(updateTime),
       statusText: taskSummary.published > 0 ? '最新任务' : '任务待发布'
     };
