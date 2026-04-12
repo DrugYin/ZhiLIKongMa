@@ -2,6 +2,7 @@ const AuthService = require('../../services/auth')
 const ClassService = require('../../services/class')
 const TaskService = require('../../services/task')
 const formatUtils = require('../../utils/format')
+const Toast = require('../../utils/toast')
 
 const MAX_PAGES = 10
 const MAX_PAGE_NOTICE = `数据较多，仅展示最近 ${MAX_PAGES} 页`
@@ -81,7 +82,10 @@ Page({
 
   initPage() {
     this.setGreeting()
-    this.loadPageData()
+    Toast.showLoading()
+    this.loadPageData().then(() => {
+      Toast.hideLoading()
+    })
   },
 
   setGreeting() {

@@ -196,7 +196,7 @@ exports.main = async (event) => {
 
     const now = new Date()
     const reviewFeedback = feedback || (status === 'approved'
-      ? '审核通过，继续保持。'
+      ? '完成的很好，继续保持！'
       : '当前提交未通过，请补充说明或附件后再次提交。')
     const pointsEarned = status === 'rejected'
       ? 0
