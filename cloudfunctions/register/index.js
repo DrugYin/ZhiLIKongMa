@@ -11,6 +11,12 @@ cloud.init({
 
 const db = cloud.database()
 const _ = db.command
+const DEFAULT_AVATAR_URL = '/assets/default-avatar.png'
+
+function normalizeAvatarUrl(avatarUrl) {
+  const value = String(avatarUrl || '').trim()
+  return value || DEFAULT_AVATAR_URL
+}
 
 exports.main = async (event, context) => {
   try {
@@ -63,11 +69,12 @@ exports.main = async (event, context) => {
 
     // 4. 创建用户记录
     const now = new Date()
+    const normalizedAvatarUrl = normalizeAvatarUrl(avatar_url)
     const userData = {
       _openid: OPENID,
       user_name: user_name,
       nick_name: nick_name || '',
-      avatar_url: avatar_url || '',
+      avatar_url: normalizedAvatarUrl,
       phone: phone,
       school: school || '',
       grade: grade || '',
@@ -125,7 +132,7 @@ exports.main = async (event, context) => {
       data: {
         _id: result._id,
         user_name: user_name,
-        avatar_url: avatar_url,
+        avatar_url: normalizedAvatarUrl,
         roles: ['student'],
         current_role: 'student',
         points: registerPoints
