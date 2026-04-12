@@ -160,7 +160,7 @@ function buildDeadline(deadlineDate, deadlineTime) {
   return {
     deadline_date: deadlineDate,
     deadline_time: deadlineTime,
-    deadline
+    deadline: `${deadlineDate} ${deadlineTime}`
   };
 }
 

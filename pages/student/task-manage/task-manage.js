@@ -3,6 +3,7 @@ const TaskService = require('../../../services/task')
 const ClassService = require('../../../services/class')
 const Toast = require('../../../utils/toast')
 const formatUtils = require('../../../utils/format')
+const taskDeadline = require('../../../utils/task-deadline')
 
 const TASK_TYPE_TEXT = {
   public: '公开任务',
@@ -199,7 +200,6 @@ Page({
     const points = Number(item.points || 0)
     const taskType = item.task_type || 'public'
     const visibility = taskType === 'public' ? 'public' : (item.visibility || 'class_only')
-    const deadline = item.deadline || item.deadline_date
     const isMyTask = taskType === 'class' && joinedClassIds.includes(item.class_id)
     const isPublicTask = taskType === 'public' || visibility === 'public'
 
@@ -216,14 +216,14 @@ Page({
       difficultyText: DIFFICULTY_TEXT[difficulty] || '未设置难度',
       difficultyStyle: `color:${DIFFICULTY_COLOR[difficulty] || '#6f7f91'};background:${this.toRgba(DIFFICULTY_COLOR[difficulty] || '#6f7f91', 0.12)};`,
       pointsText: `${points} 分`,
-      deadlineText: deadline ? this.formatDateTime(deadline) : '未设置截止时间',
+      deadlineText: taskDeadline.formatTaskDeadline(item),
       publishTimeText: item.publish_time ? this.formatDateTime(item.publish_time) : '待发布',
       imageCountText: `${Array.isArray(item.images) ? item.images.length : 0} 张图片`,
       fileCountText: `${Array.isArray(item.files) ? item.files.length : 0} 个附件`,
       scopeText: isMyTask ? '我的班级任务' : (taskType === 'class' ? '公开班级任务' : '公开任务'),
       isMyTask,
       isPublicTask,
-      deadlineSoon: this.isDeadlineSoon(deadline)
+      deadlineSoon: this.isDeadlineSoon(item)
     }
   },
 
@@ -264,17 +264,13 @@ Page({
     return '当前还没有可查看的任务'
   },
 
-  isDeadlineSoon(deadline) {
-    if (!deadline) {
+  isDeadlineSoon(task) {
+    const deadlineDate = taskDeadline.getTaskDeadlineDate(task)
+    if (!deadlineDate) {
       return false
     }
 
-    const deadlineTime = new Date(deadline).getTime()
-    if (Number.isNaN(deadlineTime)) {
-      return false
-    }
-
-    const diff = deadlineTime - Date.now()
+    const diff = deadlineDate.getTime() - Date.now()
     return diff > 0 && diff <= 1000 * 60 * 60 * 24 * 3
   },
 

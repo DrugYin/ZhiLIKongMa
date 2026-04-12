@@ -3,6 +3,7 @@ const { uploadFile } = require('../../../../services/api')
 const Toast = require('../../../../utils/toast')
 const formatUtils = require('../../../../utils/format')
 const fileResource = require('../../../../utils/file-resource')
+const taskDeadline = require('../../../../utils/task-deadline')
 const {
   IMAGE_MAX_COUNT,
   IMAGE_MAX_SIZE,
@@ -131,9 +132,7 @@ Page({
         ? (item.class_name || '未设置班级')
         : '公开任务',
       teacherText: item.teacher_name || '待老师补充',
-      deadlineText: item.deadline || item.deadline_date
-        ? this.formatDateTime(item.deadline || `${item.deadline_date} ${item.deadline_time || '00:00'}`)
-        : '未设置截止时间',
+      deadlineText: taskDeadline.formatTaskDeadline(item),
       pointsText: `${Number(item.points || 0)} 分`
     }
   },

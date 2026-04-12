@@ -3,6 +3,7 @@ const ClassService = require('../../services/class')
 const RankingService = require('../../services/ranking')
 const TaskService = require('../../services/task')
 const formatUtils = require('../../utils/format')
+const taskDeadline = require('../../utils/task-deadline')
 
 Page({
   data: {
@@ -430,8 +431,7 @@ Page({
   },
 
   getTaskDeadlineText(item = {}) {
-    const deadline = this.parseTaskDate(item.deadline)
-      || this.parseTaskDate(this.buildTaskDeadlineValue(item))
+    const deadline = taskDeadline.getTaskDeadlineDate(item)
 
     if (!deadline) {
       return '未设置截止时间'
@@ -446,8 +446,7 @@ Page({
       this.parseTaskDate(item.publish_time),
       this.parseTaskDate(item.create_time),
       this.parseTaskDate(item.update_time),
-      this.parseTaskDate(item.deadline),
-      this.parseTaskDate(this.buildTaskDeadlineValue(item))
+      taskDeadline.getTaskDeadlineDate(item)
     ].filter(Boolean)
 
     return candidateDates.some((date) => this.isDateInRange(date, start, end))
@@ -462,15 +461,7 @@ Page({
     return this.parseTaskDate(item.publish_time)
       || this.parseTaskDate(item.create_time)
       || this.parseTaskDate(item.update_time)
-      || this.parseTaskDate(item.deadline)
-      || this.parseTaskDate(this.buildTaskDeadlineValue(item))
-  },
-
-  buildTaskDeadlineValue(item = {}) {
-    if (item.deadline_date && item.deadline_time) {
-      return `${item.deadline_date} ${item.deadline_time}`
-    }
-    return ''
+      || taskDeadline.getTaskDeadlineDate(item)
   },
 
   parseTaskDate(value) {

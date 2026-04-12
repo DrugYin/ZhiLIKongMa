@@ -108,21 +108,40 @@ function parseLocalDateTime(dateText, timeText) {
   return deadline
 }
 
-function buildDeadline(taskInfo = {}) {
-  if (taskInfo.deadline) {
-    const deadline = new Date(taskInfo.deadline)
-    if (!Number.isNaN(deadline.getTime())) {
-      return deadline
-    }
-  }
-
-  const deadlineDate = normalizeString(taskInfo.deadline_date)
-  const deadlineTime = normalizeString(taskInfo.deadline_time)
-  if (!deadlineDate || !deadlineTime) {
+function parseStoredDeadlineValue(value) {
+  if (!value) {
     return null
   }
 
-  return parseLocalDateTime(deadlineDate, deadlineTime)
+  if (value instanceof Date) {
+    return Number.isNaN(value.getTime()) ? null : value
+  }
+
+  const text = normalizeString(value)
+  if (!text) {
+    return null
+  }
+
+  const localDateTimeMatch = /^(\d{4})-(\d{2})-(\d{2})[ T](\d{2}):(\d{2})(?::(\d{2}))?$/.exec(text)
+  if (localDateTimeMatch && !/[zZ]|[+-]\d{2}:\d{2}$/.test(text)) {
+    return parseLocalDateTime(
+      `${localDateTimeMatch[1]}-${localDateTimeMatch[2]}-${localDateTimeMatch[3]}`,
+      `${localDateTimeMatch[4]}:${localDateTimeMatch[5]}`
+    )
+  }
+
+  const deadline = new Date(text)
+  return Number.isNaN(deadline.getTime()) ? null : deadline
+}
+
+function buildDeadline(taskInfo = {}) {
+  const deadlineDate = normalizeString(taskInfo.deadline_date)
+  const deadlineTime = normalizeString(taskInfo.deadline_time)
+  if (deadlineDate && deadlineTime) {
+    return parseLocalDateTime(deadlineDate, deadlineTime)
+  }
+
+  return parseStoredDeadlineValue(taskInfo.deadline)
 }
 
 function buildSubmissionCounterId(taskId, openid) {
