@@ -9,7 +9,7 @@
       <text class="app-name">智力控码</text>
       <text class="login-desc">登录后可提交成绩、查看个人记录</text>
       <button class="login-btn" type="primary" bind:tap="onLogin">
-        微信一键登录
+        立即登录
       </button>
       <view class="skip-btn" bind:tap="handleSkip">
         <text>暂不登录，浏览主页</text>
