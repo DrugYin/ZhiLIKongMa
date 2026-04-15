@@ -238,6 +238,7 @@ Page({
       while (hasMore) {
         const response = await ClassService.getClassApplications({
           class_id: classInfo._id,
+          status: 'all',
           page,
           page_size: 50
         })
@@ -297,6 +298,8 @@ Page({
   formatApplicationRecord(item = {}, classInfo = {}) {
     const displayName = item.student_name || item.student_user_name || item.student_nick_name || '未命名学生'
     const createTime = item.create_time || item.update_time || null
+    const status = item.status || 'pending'
+    const reviewRemark = String(item.review_remark || '').trim()
 
     return {
       ...item,
@@ -311,13 +314,13 @@ Page({
       taskId: '',
       taskPoints: 0,
       projectText: classInfo.project_name || classInfo.project_code || '未设置项目',
-      status: 'pending',
-      statusText: '待审核',
+      status,
+      statusText: STATUS_TEXT_MAP[status] || '待审核',
       descriptionText: String(item.apply_reason || '').trim() || '未填写申请理由',
       summary: `${displayName} 申请加入该班级`,
-      feedbackText: '',
+      feedbackText: reviewRemark,
       submittedAt: createTime ? this.formatDateTime(createTime) : '刚刚提交',
-      reviewedAt: '待审核',
+      reviewedAt: item.review_time ? this.formatDateTime(item.review_time) : '待审核',
       attachmentText: '无需提交材料',
       scoreText: '不适用',
       pointsText: '不适用',
@@ -358,9 +361,9 @@ Page({
         total: records.length,
         pending: records.filter((item) => item.status === 'pending').length,
         taskPending: submissionRecords.filter((item) => item.status === 'pending').length,
-        joinPending: applicationRecords.length,
-        approved: submissionRecords.filter((item) => item.status === 'approved').length,
-        rejected: submissionRecords.filter((item) => item.status === 'rejected').length
+        joinPending: applicationRecords.filter((item) => item.status === 'pending').length,
+        approved: records.filter((item) => item.status === 'approved').length,
+        rejected: records.filter((item) => item.status === 'rejected').length
       }
     })
   },
