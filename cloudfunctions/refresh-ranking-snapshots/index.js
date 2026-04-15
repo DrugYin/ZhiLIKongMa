@@ -86,16 +86,30 @@ function createChinaDate(year, monthIndex, day, hour = 0, minute = 0, second = 0
   return new Date(Date.UTC(year, monthIndex, day, hour - CHINA_UTC_OFFSET_HOURS, minute, second, millisecond))
 }
 
+function formatChinaDateTime(date) {
+  const chinaDate = new Date(date.getTime() + CHINA_UTC_OFFSET_HOURS * 60 * 60 * 1000)
+  const year = chinaDate.getUTCFullYear()
+  const month = `${chinaDate.getUTCMonth() + 1}`.padStart(2, '0')
+  const day = `${chinaDate.getUTCDate()}`.padStart(2, '0')
+  const hour = `${chinaDate.getUTCHours()}`.padStart(2, '0')
+  const minute = `${chinaDate.getUTCMinutes()}`.padStart(2, '0')
+  const second = `${chinaDate.getUTCSeconds()}`.padStart(2, '0')
+  const millisecond = `${chinaDate.getUTCMilliseconds()}`.padStart(3, '0')
+  return `${year}-${month}-${day} ${hour}:${minute}:${second}.${millisecond}`
+}
+
 function getWeekRange() {
   const now = getChinaNow()
   const year = now.getUTCFullYear()
   const monthIndex = now.getUTCMonth()
   const currentDate = now.getUTCDate()
   const day = now.getUTCDay()
+  // 周六作为周的第一天: 周六 00:00:00 到周五 23:59:59.999
   const offset = (day + 1) % 7
   const start = createChinaDate(year, monthIndex, currentDate - offset, 0, 0, 0, 0)
   const end = createChinaDate(year, monthIndex, currentDate - offset + 6, 23, 59, 59, 999)
-
+  console.log('[refresh-ranking-snapshots] WeekRange CST:', formatChinaDateTime(start), '-', formatChinaDateTime(end))
+  console.log('[refresh-ranking-snapshots] WeekRange UTC:', start.toISOString(), '-', end.toISOString())
   return { start, end }
 }
 
@@ -105,7 +119,8 @@ function getMonthRange() {
   const monthIndex = now.getUTCMonth()
   const start = createChinaDate(year, monthIndex, 1, 0, 0, 0, 0)
   const end = new Date(createChinaDate(year, monthIndex + 1, 1, 0, 0, 0, 0).getTime() - 1)
-
+  console.log('[refresh-ranking-snapshots] MonthRange CST:', formatChinaDateTime(start), '-', formatChinaDateTime(end))
+  console.log('[refresh-ranking-snapshots] MonthRange UTC:', start.toISOString(), '-', end.toISOString())
   return { start, end }
 }
 
