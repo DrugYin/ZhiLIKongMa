@@ -338,18 +338,17 @@ Page({
     return Number.isNaN(time) ? String(value) : time
   },
 
-  onDropdownChange(e) {
-    const { field } = e.currentTarget.dataset
-    const { value } = e.detail
+  onFilterSelect(e) {
+    const { field, value } = e.currentTarget.dataset
+    const currentGroup = this.data[field] || {}
+
+    if (!field || value === undefined || currentGroup.value === value) {
+      return
+    }
 
     this.setData({
       [`${field}.value`]: value
     }, () => {
-      if (field === 'sorted') {
-        this.loadTasks({ silent: true })
-        return
-      }
-
       this.applyFilters()
     })
   },
