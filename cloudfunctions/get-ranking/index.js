@@ -102,6 +102,7 @@ function getWeekRange() {
   const monthIndex = now.getUTCMonth()
   const currentDate = now.getUTCDate()
   const day = now.getUTCDay()
+  // 周六作为周的第一天: 周六 00:00:00 到周五 23:59:59.999
   const offset = (day + 1) % 7
   const start = createChinaDate(year, monthIndex, currentDate - offset, 0, 0, 0, 0)
   const end = createChinaDate(year, monthIndex, currentDate - offset + 6, 23, 59, 59, 999)
