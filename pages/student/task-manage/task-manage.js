@@ -1,9 +1,37 @@
 const AuthService = require('../../../services/auth')
+const projectService = require('../../../config/project')
 const TaskService = require('../../../services/task')
 const ClassService = require('../../../services/class')
 const Toast = require('../../../utils/toast')
 const formatUtils = require('../../../utils/format')
 const taskDeadline = require('../../../utils/task-deadline')
+
+const DEFAULT_PROJECT_OPTIONS = [
+  { value: 'all', label: '全部项目' }
+]
+
+const DEFAULT_TASK_TYPE_OPTIONS = [
+  { value: 'all', label: '全部类型' },
+  { value: 'public', label: '公开任务' },
+  { value: 'class', label: '班级任务' }
+]
+
+const DEFAULT_CLASS_OPTIONS = [
+  { value: 'all', label: '全部班级' }
+]
+
+const DEFAULT_VISIBILITY_OPTIONS = [
+  { value: 'all', label: '全部范围' },
+  { value: 'public', label: '公开可见' },
+  { value: 'class_only', label: '仅班级成员' }
+]
+
+const DEFAULT_SORT_OPTIONS = [
+  { value: 'publish_time desc', label: '最近发布' },
+  { value: 'deadline asc', label: '截止时间' },
+  { value: 'points desc', label: '积分优先' },
+  { value: 'difficulty desc', label: '难度优先' }
+]
 
 const TASK_TYPE_TEXT = {
   public: '公开任务',
@@ -50,6 +78,26 @@ Page({
     joinedClassIds: [],
     tasks: [],
     displayTasks: [],
+    projects: {
+      value: 'all',
+      options: DEFAULT_PROJECT_OPTIONS
+    },
+    taskTypes: {
+      value: 'all',
+      options: DEFAULT_TASK_TYPE_OPTIONS
+    },
+    classes: {
+      value: 'all',
+      options: DEFAULT_CLASS_OPTIONS
+    },
+    visibility: {
+      value: 'all',
+      options: DEFAULT_VISIBILITY_OPTIONS
+    },
+    sorted: {
+      value: 'publish_time desc',
+      options: DEFAULT_SORT_OPTIONS
+    },
     stats: {
       total: 0,
       myClassCount: 0,
@@ -72,6 +120,13 @@ Page({
         ? '这里会聚合当前班级相关任务，你可以在“所有任务”和“我的任务”之间快速切换。'
         : '公开任务和你已加入班级的任务都会出现在这里，后续提交业务也会在这里继续闭环。'
     })
+
+    if (filterClassId) {
+      this.setData({
+        'taskTypes.value': 'class',
+        'classes.value': filterClassId
+      })
+    }
 
     this.initPage()
   },
@@ -102,6 +157,7 @@ Page({
         joinedClassIds: [],
         tasks: [],
         displayTasks: [],
+        'classes.options': DEFAULT_CLASS_OPTIONS,
         stats: {
           total: 0,
           myClassCount: 0,
@@ -118,16 +174,24 @@ Page({
     }
 
     try {
-      const classStatus = await this.loadClassStatus()
+      const [projectOptions, classStatus] = await Promise.all([
+        this.loadProjectOptions(),
+        this.loadClassStatus()
+      ])
       const tasks = await this.loadTasks(classStatus.joinedClassIds)
+      const classOptions = this.buildClassOptions(classStatus.joinedClasses)
+      const nextClassValue = this.getAvailableClassFilterValue(classOptions)
 
       this.setData({
         isRegistered: classStatus.isRegistered,
         joinedClasses: classStatus.joinedClasses,
         joinedClassIds: classStatus.joinedClassIds,
-        tasks
+        tasks,
+        'projects.options': DEFAULT_PROJECT_OPTIONS.concat(projectOptions),
+        'classes.options': classOptions,
+        'classes.value': nextClassValue
       })
-      this.applyTabFilter()
+      this.applyFilters()
       this._pageReady = true
     } catch (error) {
       console.error('[student-task-manage] initPage error:', error)
@@ -142,6 +206,15 @@ Page({
       }
 
       wx.stopPullDownRefresh()
+    }
+  },
+
+  async loadProjectOptions() {
+    try {
+      return await projectService.getProjectOptions()
+    } catch (error) {
+      console.error('[student-task-manage] loadProjectOptions error:', error)
+      return []
     }
   },
 
@@ -195,6 +268,27 @@ Page({
     return result.map((item) => this.formatTaskItem(item, joinedClassIds))
   },
 
+  buildClassOptions(joinedClasses = []) {
+    const options = joinedClasses
+      .filter((item) => item && item._id)
+      .map((item) => ({
+        value: item._id,
+        label: item.className || item.class_name || '未命名班级'
+      }))
+
+    return DEFAULT_CLASS_OPTIONS.concat(options)
+  },
+
+  getAvailableClassFilterValue(classOptions = []) {
+    if (this.data.filterClassId) {
+      const hasCurrentClass = classOptions.some((item) => item.value === this.data.filterClassId)
+      return hasCurrentClass ? this.data.filterClassId : 'all'
+    }
+
+    const currentValue = this.data.classes.value
+    return classOptions.some((item) => item.value === currentValue) ? currentValue : 'all'
+  },
+
   formatTaskItem(item = {}, joinedClassIds = []) {
     const difficulty = Number(item.difficulty || 0)
     const points = Number(item.points || 0)
@@ -227,16 +321,66 @@ Page({
     }
   },
 
-  applyTabFilter() {
-    const currentTab = this.data.currentTab
-    const displayTasks = this.data.tasks.filter((item) => (
-      currentTab === 'mine' ? item.isMyTask : true
-    ))
+  parseSortValue(value) {
+    const [sortBy = 'publish_time', sortOrder = 'desc'] = String(value || '').split(' ')
+    return {
+      sortBy,
+      sortOrder
+    }
+  },
+
+  applyFilters() {
+    const {
+      currentTab,
+      tasks,
+      projects,
+      taskTypes,
+      classes,
+      visibility,
+      sorted
+    } = this.data
+    const projectCode = projects.value
+    const taskTypeValue = taskTypes.value
+    const classValue = classes.value
+    const visibilityValue = visibility.value
+    const { sortBy, sortOrder } = this.parseSortValue(sorted.value)
+
+    let displayTasks = tasks.slice()
+
+    if (currentTab === 'mine') {
+      displayTasks = displayTasks.filter((item) => item.isMyTask)
+    }
+
+    if (projectCode !== 'all') {
+      displayTasks = displayTasks.filter((item) => item.project_code === projectCode)
+    }
+
+    if (taskTypeValue !== 'all') {
+      displayTasks = displayTasks.filter((item) => item.task_type === taskTypeValue)
+    }
+
+    if (taskTypeValue === 'class' && classValue !== 'all') {
+      displayTasks = displayTasks.filter((item) => String(item.class_id || '') === String(classValue))
+    }
+
+    if (visibilityValue !== 'all') {
+      displayTasks = displayTasks.filter((item) => {
+        const itemVisibility = item.task_type === 'public' ? 'public' : (item.visibility || 'class_only')
+        return itemVisibility === visibilityValue
+      })
+    }
+
+    displayTasks.sort((left, right) => this.compareTaskItem(left, right, sortBy, sortOrder))
 
     this.setData({
       displayTasks,
       stats: this.buildStats(displayTasks),
-      emptyText: this.getEmptyText(currentTab)
+      emptyText: this.getEmptyText(currentTab, {
+        projectCode,
+        taskTypeValue,
+        classValue,
+        visibilityValue
+      })
     })
   },
 
@@ -249,7 +393,48 @@ Page({
     }
   },
 
-  getEmptyText(tab) {
+  compareTaskItem(left, right, sortBy, sortOrder) {
+    const direction = sortOrder === 'asc' ? 1 : -1
+    const leftValue = this.getSortableValue(left, sortBy)
+    const rightValue = this.getSortableValue(right, sortBy)
+
+    if (leftValue === rightValue) {
+      return 0
+    }
+
+    return leftValue > rightValue ? direction : -direction
+  },
+
+  getSortableValue(item, sortBy) {
+    if (sortBy === 'difficulty' || sortBy === 'points') {
+      return Number(item[sortBy] || 0)
+    }
+
+    if (sortBy === 'deadline') {
+      const deadlineDate = taskDeadline.getTaskDeadlineDate(item)
+      return deadlineDate ? deadlineDate.getTime() : 0
+    }
+
+    const value = item[sortBy]
+    if (!value) {
+      return 0
+    }
+
+    const time = new Date(value).getTime()
+    return Number.isNaN(time) ? String(value) : time
+  },
+
+  getEmptyText(tab, filters = {}) {
+    const hasFilter =
+      filters.projectCode !== 'all' ||
+      filters.taskTypeValue !== 'all' ||
+      filters.classValue !== 'all' ||
+      filters.visibilityValue !== 'all'
+
+    if (hasFilter) {
+      return '当前筛选条件下暂无任务'
+    }
+
     if (tab === 'mine') {
       if (this.data.filterClassId) {
         return '当前班级下还没有你可查看的班级任务'
@@ -299,7 +484,28 @@ Page({
     this.setData({
       currentTab: e.detail.value
     }, () => {
-      this.applyTabFilter()
+      this.applyFilters()
+    })
+  },
+
+  onFilterSelect(e) {
+    const { field, value } = e.currentTarget.dataset
+    const currentGroup = this.data[field] || {}
+
+    if (!field || value === undefined || currentGroup.value === value) {
+      return
+    }
+
+    const nextData = {
+      [`${field}.value`]: value
+    }
+
+    if (field === 'taskTypes' && value !== 'class' && !this.data.filterClassId) {
+      nextData['classes.value'] = 'all'
+    }
+
+    this.setData(nextData, () => {
+      this.applyFilters()
     })
   },
 
