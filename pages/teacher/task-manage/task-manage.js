@@ -1,4 +1,5 @@
 const projectService = require('../../../config/project')
+const ClassService = require('../../../services/class')
 const TaskService = require('../../../services/task')
 const Toast = require('../../../utils/toast')
 const formatUtils = require('../../../utils/format')
@@ -12,6 +13,10 @@ const DEFAULT_TASK_TYPE_OPTIONS = [
   { value: 'all', label: '全部类型' },
   { value: 'public', label: '公开任务' },
   { value: 'class', label: '班级任务' }
+]
+
+const DEFAULT_CLASS_OPTIONS = [
+  { value: 'all', label: '全部班级' }
 ]
 
 const DEFAULT_VISIBILITY_OPTIONS = [
@@ -93,6 +98,10 @@ Page({
       value: 'all',
       options: DEFAULT_TASK_TYPE_OPTIONS
     },
+    classes: {
+      value: 'all',
+      options: DEFAULT_CLASS_OPTIONS
+    },
     visibility: {
       value: 'all',
       options: DEFAULT_VISIBILITY_OPTIONS
@@ -119,7 +128,12 @@ Page({
     }
 
     if (this._pageReady) {
-      this.loadTasks({ silent: true })
+      Promise.all([
+        this.loadFilterClasses({ silent: true }),
+        this.loadTasks({ silent: true })
+      ]).catch((error) => {
+        console.error('[task-manage] onShow refresh error:', error)
+      })
     }
   },
 
@@ -131,6 +145,7 @@ Page({
     try {
       await Promise.all([
         this.loadProjects(),
+        this.loadFilterClasses({ silent: true }),
         this.loadTasks()
       ])
       this._pageReady = true
@@ -154,6 +169,64 @@ Page({
       console.error('[task-manage] loadProjects error:', error)
       Toast.showToast('项目列表加载失败')
     }
+  },
+
+  async loadFilterClasses({ silent = false } = {}) {
+    if (!silent) {
+      Toast.showLoading('班级筛选加载中...')
+    }
+
+    try {
+      const options = await this.fetchClassOptions()
+      const currentValue = this.data.classes.value
+      const hasCurrentValue = options.some((item) => item.value === currentValue)
+
+      this.setData({
+        'classes.options': DEFAULT_CLASS_OPTIONS.concat(options),
+        'classes.value': hasCurrentValue ? currentValue : 'all'
+      })
+    } catch (error) {
+      console.error('[task-manage] loadFilterClasses error:', error)
+      Toast.showToast(error.message || '班级筛选加载失败')
+    } finally {
+      if (!silent) {
+        Toast.hideLoading()
+      }
+    }
+  },
+
+  async fetchClassOptions() {
+    let page = 1
+    let hasMore = true
+    const options = []
+    const maxPages = 5
+
+    while (hasMore && page <= maxPages) {
+      const response = await ClassService.getClasses({
+        role: 'teacher',
+        page,
+        page_size: 50,
+        sort_by: 'update_time',
+        sort_order: 'desc'
+      })
+
+      const list = Array.isArray(response.list) ? response.list : []
+      list.forEach((item) => {
+        if (!item || !item._id) {
+          return
+        }
+
+        options.push({
+          value: item._id,
+          label: item.class_name || '未命名班级'
+        })
+      })
+
+      hasMore = Boolean(response.has_more)
+      page += 1
+    }
+
+    return options
   },
 
   async loadTasks({ silent = false } = {}) {
@@ -263,9 +336,10 @@ Page({
   },
 
   applyFilters() {
-    const { tasks, projects, taskTypes, visibility, status, sorted } = this.data
+    const { tasks, projects, taskTypes, classes, visibility, status, sorted } = this.data
     const projectCode = projects.value
     const taskTypeValue = taskTypes.value
+    const classValue = classes.value
     const visibilityValue = visibility.value
     const statusValue = status.value
     const { sortBy, sortOrder } = this.parseSortValue(sorted.value)
@@ -278,6 +352,10 @@ Page({
 
     if (taskTypeValue !== 'all') {
       displayTasks = displayTasks.filter((item) => item.task_type === taskTypeValue)
+    }
+
+    if (taskTypeValue === 'class' && classValue !== 'all') {
+      displayTasks = displayTasks.filter((item) => String(item.class_id || '') === String(classValue))
     }
 
     if (visibilityValue !== 'all') {
@@ -301,7 +379,7 @@ Page({
         publicCount: displayTasks.filter((item) => item.task_type === 'public').length,
         classCount: displayTasks.filter((item) => item.task_type === 'class').length
       },
-      emptyText: projectCode === 'all' && taskTypeValue === 'all' && visibilityValue === 'all' && statusValue === 'all'
+      emptyText: projectCode === 'all' && taskTypeValue === 'all' && classValue === 'all' && visibilityValue === 'all' && statusValue === 'all'
         ? '还没有任务，等编辑页接入后就可以从这里开始发布'
         : '当前筛选条件下暂无任务'
     })
@@ -346,9 +424,15 @@ Page({
       return
     }
 
-    this.setData({
+    const nextData = {
       [`${field}.value`]: value
-    }, () => {
+    }
+
+    if (field === 'taskTypes' && value !== 'class') {
+      nextData['classes.value'] = 'all'
+    }
+
+    this.setData(nextData, () => {
       this.applyFilters()
     })
   },
