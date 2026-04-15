@@ -21,12 +21,6 @@
   backdrop-filter: blur(18rpx);
 }
 
-.dropdown-wrapper {
-  padding: 0 24rpx 20rpx;
-  background: rgba(255, 255, 255, 0.92);
-  box-shadow: 0 20rpx 40rpx rgba(31, 78, 121, 0.08);
-}
-
 .content {
   flex: 1;
   min-height: 0;
@@ -34,6 +28,7 @@
   padding: 0rpx 24rpx calc(110rpx + env(safe-area-inset-bottom));
 }
 
+.filter-card,
 .summary-card,
 .task-card,
 .state-card {
@@ -44,6 +39,7 @@
   box-shadow: 0 24rpx 60rpx rgba(24, 62, 107, 0.08);
 }
 
+.filter-card,
 .summary-card,
 .task-card {
   padding: 28rpx;
@@ -84,6 +80,37 @@
   color: #7a8797;
   font-size: 24rpx;
   line-height: 1.8;
+}
+
+.filter-group + .filter-group {
+  margin-top: 22rpx;
+}
+
+.filter-label {
+  display: block;
+  color: #7b8798;
+  font-size: 22rpx;
+}
+
+.filter-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16rpx;
+  margin-top: 16rpx;
+}
+
+.filter-pill {
+  padding: 10rpx 22rpx;
+  border-radius: 999rpx;
+  background: #f4f7fb;
+  color: #5f7387;
+  font-size: 24rpx;
+}
+
+.filter-pill-active {
+  background: rgba(31, 122, 224, 0.12);
+  color: #1f7ae0;
+  font-weight: 600;
 }
 
 .summary-grid {

@@ -3,6 +3,7 @@ const ClassService = require('../../../../services/class')
 const Toast = require('../../../../utils/toast')
 const formatUtils = require('../../../../utils/format')
 const fileResource = require('../../../../utils/file-resource')
+const taskDeadline = require('../../../../utils/task-deadline')
 
 const TASK_STATUS_TEXT = {
   draft: '草稿',
@@ -213,9 +214,7 @@ Page({
       difficultyText: DIFFICULTY_TEXT[difficulty] || '未设置难度',
       difficultyStyle: `color:${DIFFICULTY_COLOR[difficulty] || '#6f7f91'};background:${this.toRgba(DIFFICULTY_COLOR[difficulty] || '#6f7f91', 0.12)};`,
       pointsText: `${Number(item.points || 0)} 分`,
-      deadlineText: item.deadline || item.deadline_date
-        ? this.formatDateTime(item.deadline || `${item.deadline_date} ${item.deadline_time || '00:00'}`)
-        : '未设置截止时间',
+      deadlineText: taskDeadline.formatTaskDeadline(item),
       publishTimeText: item.publish_time ? this.formatDateTime(item.publish_time) : '待发布',
       updateTimeText: item.update_time ? this.formatDateTime(item.update_time) : '待更新',
       createTimeText: item.create_time ? this.formatDateTime(item.create_time) : '待创建',

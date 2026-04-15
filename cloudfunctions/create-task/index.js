@@ -106,6 +106,35 @@ function normalizeStatus(value) {
   return TASK_STATUSES.has(status) ? status : 'draft';
 }
 
+function parseLocalDateTime(dateText, timeText) {
+  const dateMatch = /^(\d{4})-(\d{2})-(\d{2})$/.exec(dateText);
+  const timeMatch = /^(\d{2}):(\d{2})$/.exec(timeText);
+
+  if (!dateMatch || !timeMatch) {
+    return null;
+  }
+
+  const year = Number(dateMatch[1]);
+  const month = Number(dateMatch[2]);
+  const day = Number(dateMatch[3]);
+  const hour = Number(timeMatch[1]);
+  const minute = Number(timeMatch[2]);
+  const deadline = new Date(year, month - 1, day, hour, minute, 0, 0);
+
+  if (
+    Number.isNaN(deadline.getTime())
+    || deadline.getFullYear() !== year
+    || deadline.getMonth() !== month - 1
+    || deadline.getDate() !== day
+    || deadline.getHours() !== hour
+    || deadline.getMinutes() !== minute
+  ) {
+    return null;
+  }
+
+  return deadline;
+}
+
 function buildDeadline(deadlineDate, deadlineTime) {
   if (!deadlineDate && !deadlineTime) {
     return {
@@ -119,15 +148,15 @@ function buildDeadline(deadlineDate, deadlineTime) {
     return null;
   }
 
-  const deadline = new Date(`${deadlineDate} ${deadlineTime}`);
-  if (Number.isNaN(deadline.getTime())) {
+  const deadline = parseLocalDateTime(deadlineDate, deadlineTime);
+  if (!deadline) {
     return null;
   }
 
   return {
     deadline_date: deadlineDate,
     deadline_time: deadlineTime,
-    deadline
+    deadline: `${deadlineDate} ${deadlineTime}`
   };
 }
 

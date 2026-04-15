@@ -3,6 +3,7 @@ const AuthService = require('../../services/auth')
 const toast = require('../../utils/toast')
 const { uploadFile } = require('../../services/api')
 const { GRADE_OPTIONS } = require('../../utils/constant')
+const DEFAULT_AVATAR_URL = '/assets/default-avatar.png'
 
 const USER_AGREEMENT_TEXT = [
   '欢迎使用智力控码小程序。',
@@ -112,6 +113,11 @@ Page({
       return
     }
 
+    userInfo = {
+      ...userInfo,
+      avatar_url: this.normalizeAvatarUrl(userInfo.avatar_url)
+    }
+
     toast.showLoading('注册中...')
 
     try {
@@ -139,6 +145,11 @@ Page({
   shouldUploadAvatar(avatarUrl) {
     const value = String(avatarUrl || '').trim()
     return Boolean(value) && !value.startsWith('cloud://') && !value.startsWith('/')
+  },
+
+  normalizeAvatarUrl(avatarUrl) {
+    const value = String(avatarUrl || '').trim()
+    return value || DEFAULT_AVATAR_URL
   },
 
   getRegisterErrorMessage(error) {

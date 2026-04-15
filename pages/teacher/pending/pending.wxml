@@ -8,14 +8,14 @@
   <scroll-view class="content" scroll-y enhanced>
     <view wx:if="{{loading}}" class="section-card">
       <text class="empty-title">审核记录加载中</text>
-      <text class="empty-desc">正在同步学生提交和当前审核状态。</text>
+      <text class="empty-desc">正在同步学生提交、入班申请和当前审核状态。</text>
     </view>
 
     <block wx:else>
     <view class="hero-card">
       <text class="hero-eyebrow">审核中心</text>
-      <text class="hero-title">先处理学生任务提交，再回到任务管理页继续维护。</text>
-      <text class="hero-desc">这里展示当前教师名下任务的真实提交记录，审核结果会即时回写到学生侧状态。</text>
+      <text class="hero-title">先处理任务提交和入班申请，再回到任务管理页继续维护。</text>
+      <text class="hero-desc">这里会集中展示当前教师名下的任务审核记录和班级加入申请，处理结果会即时回写到学生侧状态。</text>
 
       <view class="summary-grid">
         <view class="summary-item">
@@ -23,7 +23,15 @@
           <text class="summary-value">{{stats.total}}</text>
         </view>
         <view class="summary-item">
-          <text class="summary-label">待审核</text>
+          <text class="summary-label">待审提交</text>
+          <text class="summary-value">{{stats.taskPending}}</text>
+        </view>
+        <view class="summary-item">
+          <text class="summary-label">待审申请</text>
+          <text class="summary-value">{{stats.joinPending}}</text>
+        </view>
+        <view class="summary-item">
+          <text class="summary-label">全部待审核</text>
           <text class="summary-value">{{stats.pending}}</text>
         </view>
         <view class="summary-item">
@@ -41,6 +49,21 @@
       <view class="section-header">
         <text class="section-title">筛选条件</text>
         <text class="section-extra">快速定位</text>
+      </view>
+
+      <view class="filter-group">
+        <text class="filter-label">审核类型</text>
+        <view class="filter-row">
+          <view
+            wx:for="{{typeOptions}}"
+            wx:key="value"
+            class="filter-pill {{typeFilter === item.value ? 'filter-pill-active' : ''}}"
+            data-value="{{item.value}}"
+            bindtap="onTypeFilterChange"
+          >
+            {{item.label}}
+          </view>
+        </view>
       </view>
 
       <view class="filter-group">
@@ -81,49 +104,129 @@
       </view>
 
       <view wx:if="{{displayRecords.length}}" class="review-list">
-        <view wx:for="{{displayRecords}}" wx:key="id" class="review-card" data-id="{{item.id}}" bindtap="openRecordPopup">
-          <view class="review-top">
-            <view class="review-copy">
-              <text class="review-name">{{item.studentName}}</text>
-              <text class="review-meta">{{item.className}} · {{item.projectText}}</text>
+        <block wx:for="{{displayRecords}}" wx:key="recordKey">
+          <view wx:if="{{item.recordType === 'submission'}}" class="review-card" data-id="{{item.id}}" bindtap="openRecordPopup">
+            <view class="review-top">
+              <view class="review-copy">
+                <text class="review-name">{{item.studentName}}</text>
+                <text class="review-meta">{{item.className}} · {{item.projectText}}</text>
+              </view>
+              <view class="review-tag-group">
+                <text class="type-tag">{{item.typeText}}</text>
+                <text class="status-tag status-{{item.status}}">{{item.statusText}}</text>
+              </view>
             </view>
-            <text class="status-tag status-{{item.status}}">{{item.statusText}}</text>
+
+            <text class="review-task-title">{{item.taskTitle}}</text>
+            <text class="review-desc">{{item.summary}}</text>
+
+            <view wx:if="{{item.feedbackText && item.status !== 'pending'}}" class="review-feedback">
+              <text class="review-feedback-label">处理意见</text>
+              <text class="review-feedback-text">{{item.feedbackText}}</text>
+            </view>
+
+            <view class="meta-grid">
+              <view class="meta-item">
+                <text class="meta-label">提交时间</text>
+                <text class="meta-value">{{item.submittedAt}}</text>
+              </view>
+              <view class="meta-item">
+                <text class="meta-label">材料概览</text>
+                <text class="meta-value">{{item.attachmentText}}</text>
+              </view>
+              <view class="meta-item">
+                <text class="meta-label">审核评分</text>
+                <text class="meta-value">{{item.scoreText}}</text>
+              </view>
+              <view class="meta-item">
+                <text class="meta-label">积分结果</text>
+                <text class="meta-value">{{item.pointsText}} · {{item.overtimeText}}</text>
+              </view>
+            </view>
+
+            <text class="review-link">{{item.status === 'pending' ? '点击查看详情并审核' : '点击查看完整审核信息'}}</text>
           </view>
 
-          <text class="review-task-title">{{item.taskTitle}}</text>
-          <text class="review-desc">{{item.summary}}</text>
+          <view wx:else class="review-card application-review-card">
+            <view class="review-top">
+              <view class="review-copy">
+                <text class="review-name">{{item.studentName}}</text>
+                <text class="review-meta">{{item.className}} · {{item.projectText}}</text>
+              </view>
+              <view class="review-tag-group">
+                <text class="type-tag type-tag-application">{{item.typeText}}</text>
+                <text class="status-tag status-{{item.status}}">{{item.statusText}}</text>
+              </view>
+            </view>
 
-          <view wx:if="{{item.feedbackText && item.status !== 'pending'}}" class="review-feedback">
-            <text class="review-feedback-label">处理意见</text>
-            <text class="review-feedback-text">{{item.feedbackText}}</text>
+            <text class="review-task-title">{{item.taskTitle}}</text>
+            <text class="review-desc">{{item.summary}}</text>
+
+            <view class="application-info-grid">
+              <view class="meta-item">
+                <text class="meta-label">年级信息</text>
+                <text class="meta-value">{{item.gradeText}}</text>
+              </view>
+              <view class="meta-item">
+                <text class="meta-label">联系电话</text>
+                <text class="meta-value">{{item.phoneText}}</text>
+              </view>
+            </view>
+
+            <view class="review-feedback application-reason-box">
+              <text class="review-feedback-label">申请理由</text>
+              <text class="review-feedback-text">{{item.descriptionText}}</text>
+            </view>
+
+            <view wx:if="{{item.feedbackText && item.status !== 'pending'}}" class="review-feedback application-review-feedback">
+              <text class="review-feedback-label">处理意见</text>
+              <text class="review-feedback-text">{{item.feedbackText}}</text>
+            </view>
+
+            <view class="meta-grid">
+              <view class="meta-item">
+                <text class="meta-label">提交时间</text>
+                <text class="meta-value">{{item.submittedAt}}</text>
+              </view>
+              <view class="meta-item">
+                <text class="meta-label">{{item.status === 'pending' ? '相对时间' : '处理时间'}}</text>
+                <text class="meta-value">{{item.status === 'pending' ? item.relativeTimeText : item.reviewedAt}}</text>
+              </view>
+            </view>
+
+            <view wx:if="{{item.status === 'pending'}}" class="action-row application-action-row">
+              <button
+                class="danger-btn"
+                data-application-id="{{item.rawId}}"
+                data-action="reject"
+                data-student-name="{{item.studentName}}"
+                catchtap="onReviewClassApplication"
+                disabled="{{reviewingApplicationId}}"
+                loading="{{reviewingApplicationId === item.rawId && reviewAction === 'reject'}}"
+              >
+                拒绝
+              </button>
+              <button
+                class="primary-btn"
+                data-application-id="{{item.rawId}}"
+                data-action="approve"
+                data-student-name="{{item.studentName}}"
+                catchtap="onReviewClassApplication"
+                disabled="{{reviewingApplicationId}}"
+                loading="{{reviewingApplicationId === item.rawId && reviewAction === 'approve'}}"
+              >
+                通过
+              </button>
+            </view>
+
+            <text wx:else class="review-link">{{item.status === 'approved' ? '该申请已通过' : '该申请已拒绝'}}</text>
           </view>
-
-          <view class="meta-grid">
-            <view class="meta-item">
-              <text class="meta-label">提交时间</text>
-              <text class="meta-value">{{item.submittedAt}}</text>
-            </view>
-            <view class="meta-item">
-              <text class="meta-label">材料概览</text>
-              <text class="meta-value">{{item.attachmentText}}</text>
-            </view>
-            <view class="meta-item">
-              <text class="meta-label">审核评分</text>
-              <text class="meta-value">{{item.scoreText}}</text>
-            </view>
-            <view class="meta-item">
-              <text class="meta-label">积分结果</text>
-              <text class="meta-value">{{item.pointsText}} · {{item.overtimeText}}</text>
-            </view>
-          </view>
-
-          <text class="review-link">{{item.status === 'pending' ? '点击查看详情并审核' : '点击查看完整审核信息'}}</text>
-        </view>
+        </block>
       </view>
 
       <view wx:else class="empty-card">
         <text class="empty-title">当前筛选下没有记录</text>
-        <text class="empty-desc">可以切换审核状态或班级条件，继续查看其它待办。</text>
+        <text class="empty-desc">可以切换审核类型、状态或班级条件，继续查看其它待办。</text>
       </view>
     </view>
 
