@@ -49,6 +49,93 @@
         </view>
       </view>
 
+      <view class="filter-card">
+        <view class="filter-header">
+          <text class="filter-title">筛选条件</text>
+          <text class="filter-desc">按项目、类型、范围和排序快速定位任务</text>
+        </view>
+
+        <view class="filter-group">
+          <text class="filter-label">所属项目</text>
+          <view class="filter-row">
+            <view
+              wx:for="{{projects.options}}"
+              wx:key="value"
+              class="filter-pill {{projects.value === item.value ? 'filter-pill-active' : ''}}"
+              data-field="projects"
+              data-value="{{item.value}}"
+              bindtap="onFilterSelect"
+            >
+              {{item.label}}
+            </view>
+          </view>
+        </view>
+
+        <view class="filter-group">
+          <text class="filter-label">任务类型</text>
+          <view class="filter-row">
+            <view
+              wx:for="{{taskTypes.options}}"
+              wx:key="value"
+              class="filter-pill {{taskTypes.value === item.value ? 'filter-pill-active' : ''}}"
+              data-field="taskTypes"
+              data-value="{{item.value}}"
+              bindtap="onFilterSelect"
+            >
+              {{item.label}}
+            </view>
+          </view>
+        </view>
+
+        <view wx:if="{{taskTypes.value === 'class' && !filterClassId}}" class="filter-group">
+          <text class="filter-label">所属班级</text>
+          <view class="filter-row">
+            <view
+              wx:for="{{classes.options}}"
+              wx:key="value"
+              class="filter-pill {{classes.value === item.value ? 'filter-pill-active' : ''}}"
+              data-field="classes"
+              data-value="{{item.value}}"
+              bindtap="onFilterSelect"
+            >
+              {{item.label}}
+            </view>
+          </view>
+        </view>
+
+        <view class="filter-group">
+          <text class="filter-label">可见范围</text>
+          <view class="filter-row">
+            <view
+              wx:for="{{visibility.options}}"
+              wx:key="value"
+              class="filter-pill {{visibility.value === item.value ? 'filter-pill-active' : ''}}"
+              data-field="visibility"
+              data-value="{{item.value}}"
+              bindtap="onFilterSelect"
+            >
+              {{item.label}}
+            </view>
+          </view>
+        </view>
+
+        <view class="filter-group">
+          <text class="filter-label">排序方式</text>
+          <view class="filter-row">
+            <view
+              wx:for="{{sorted.options}}"
+              wx:key="value"
+              class="filter-pill {{sorted.value === item.value ? 'filter-pill-active' : ''}}"
+              data-field="sorted"
+              data-value="{{item.value}}"
+              bindtap="onFilterSelect"
+            >
+              {{item.label}}
+            </view>
+          </view>
+        </view>
+      </view>
+
       <view wx:if="{{displayTasks.length}}" class="task-list">
         <view
           wx:for="{{displayTasks}}"
