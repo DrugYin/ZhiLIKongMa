@@ -46,7 +46,7 @@ const REVIEW_ACTION_TEXT = {
   approved: {
     title: '确认通过',
     success: '已通过',
-    feedback: '审核通过，继续保持。'
+    feedback: '作业完成的很好，继续保持！'
   },
   rejected: {
     title: '确认驳回',
