@@ -12,6 +12,31 @@
     </view>
 
     <block wx:elif="{{tasks.length}}">
+      <view class="summary-card">
+        <view class="summary-header">
+          <text class="summary-title">任务概览</text>
+          <text class="summary-desc">支持按项目、类型、范围和状态快速筛选</text>
+        </view>
+        <view class="summary-grid">
+          <view class="summary-item">
+            <text class="summary-label">任务总数</text>
+            <text class="summary-value">{{stats.total}}</text>
+          </view>
+          <view class="summary-item">
+            <text class="summary-label">已发布</text>
+            <text class="summary-value">{{stats.published}}</text>
+          </view>
+          <view class="summary-item">
+            <text class="summary-label">公开任务</text>
+            <text class="summary-value">{{stats.publicCount}}</text>
+          </view>
+          <view class="summary-item">
+            <text class="summary-label">班级任务</text>
+            <text class="summary-value">{{stats.classCount}}</text>
+          </view>
+        </view>
+      </view>
+      
       <view class="filter-card">
         <view class="summary-header">
           <text class="summary-title">筛选条件</text>
@@ -95,31 +120,6 @@
             >
               {{item.label}}
             </view>
-          </view>
-        </view>
-      </view>
-
-      <view class="summary-card">
-        <view class="summary-header">
-          <text class="summary-title">任务概览</text>
-          <text class="summary-desc">支持按项目、类型、范围和状态快速筛选</text>
-        </view>
-        <view class="summary-grid">
-          <view class="summary-item">
-            <text class="summary-label">任务总数</text>
-            <text class="summary-value">{{stats.total}}</text>
-          </view>
-          <view class="summary-item">
-            <text class="summary-label">已发布</text>
-            <text class="summary-value">{{stats.published}}</text>
-          </view>
-          <view class="summary-item">
-            <text class="summary-label">公开任务</text>
-            <text class="summary-value">{{stats.publicCount}}</text>
-          </view>
-          <view class="summary-item">
-            <text class="summary-label">班级任务</text>
-            <text class="summary-value">{{stats.classCount}}</text>
           </view>
         </view>
       </view>
