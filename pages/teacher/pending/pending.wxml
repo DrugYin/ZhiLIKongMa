@@ -27,7 +27,7 @@
           <text class="summary-value">{{stats.taskPending}}</text>
         </view>
         <view class="summary-item">
-          <text class="summary-label">入班申请</text>
+          <text class="summary-label">待审申请</text>
           <text class="summary-value">{{stats.joinPending}}</text>
         </view>
         <view class="summary-item">
@@ -178,18 +178,23 @@
               <text class="review-feedback-text">{{item.descriptionText}}</text>
             </view>
 
+            <view wx:if="{{item.feedbackText && item.status !== 'pending'}}" class="review-feedback application-review-feedback">
+              <text class="review-feedback-label">处理意见</text>
+              <text class="review-feedback-text">{{item.feedbackText}}</text>
+            </view>
+
             <view class="meta-grid">
               <view class="meta-item">
                 <text class="meta-label">提交时间</text>
                 <text class="meta-value">{{item.submittedAt}}</text>
               </view>
               <view class="meta-item">
-                <text class="meta-label">相对时间</text>
-                <text class="meta-value">{{item.relativeTimeText}}</text>
+                <text class="meta-label">{{item.status === 'pending' ? '相对时间' : '处理时间'}}</text>
+                <text class="meta-value">{{item.status === 'pending' ? item.relativeTimeText : item.reviewedAt}}</text>
               </view>
             </view>
 
-            <view class="action-row application-action-row">
+            <view wx:if="{{item.status === 'pending'}}" class="action-row application-action-row">
               <button
                 class="danger-btn"
                 data-application-id="{{item.rawId}}"
@@ -213,6 +218,8 @@
                 通过
               </button>
             </view>
+
+            <text wx:else class="review-link">{{item.status === 'approved' ? '该申请已通过' : '该申请已拒绝'}}</text>
           </view>
         </block>
       </view>

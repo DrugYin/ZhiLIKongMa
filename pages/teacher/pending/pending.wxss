@@ -555,6 +555,10 @@
   margin-top: 18rpx;
 }
 
+.application-review-feedback {
+  margin-top: 14rpx;
+}
+
 .application-action-row {
   margin-top: 18rpx;
 }

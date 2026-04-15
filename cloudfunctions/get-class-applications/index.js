@@ -12,10 +12,16 @@ async function getCurrentUser(openid) {
   return res.data[0] || null;
 }
 
+function normalizeStatus(value) {
+  const status = String(value || '').trim();
+  return ['pending', 'approved', 'rejected'].includes(status) ? status : '';
+}
+
 exports.main = async (event) => {
   try {
     const { OPENID } = cloud.getWXContext();
     const classId = String(event.class_id || '').trim();
+    const statusFilter = String(event.status || 'pending').trim();
     const page = Math.max(Number(event.page || 1), 1);
     const pageSize = Math.min(Math.max(Number(event.page_size || 20), 1), 50);
 
@@ -54,10 +60,16 @@ exports.main = async (event) => {
       };
     }
 
-    const query = db.collection('class_join_applications').where({
-      class_id: classId,
-      status: 'pending'
-    });
+    const normalizedStatus = normalizeStatus(statusFilter);
+    const queryCondition = {
+      class_id: classId
+    };
+
+    if (statusFilter !== 'all') {
+      queryCondition.status = normalizedStatus || 'pending';
+    }
+
+    const query = db.collection('class_join_applications').where(queryCondition);
 
     const totalRes = await query.count();
     const listRes = await query
@@ -73,6 +85,9 @@ exports.main = async (event) => {
         student_name: true,
         apply_reason: true,
         status: true,
+        review_remark: true,
+        review_by: true,
+        review_time: true,
         create_time: true,
         update_time: true
       })
