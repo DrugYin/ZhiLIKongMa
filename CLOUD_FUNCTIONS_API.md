@@ -56,6 +56,7 @@ const { OPENID } = cloud.getWXContext();
 - `tasks`
 - `submissions`
 - `projects`
+- `ranking_snapshots`
 - `system_config`
 - `operation_logs`
 
@@ -966,7 +967,9 @@ ClassService.removeMember(classId, memberOpenid)
 
 - 教师端已接入 `/pages/teacher/task-manage/task-manage`、`/pages/teacher/task-manage/task-detail/task-detail`、`/pages/teacher/task-manage/task-edit/task-edit`
 - 学生端已接入 `/pages/student/task-manage/task-manage`、`/pages/student/task-manage/task-detail/task-detail`、`/pages/student/task-manage/submission-edit/submission-edit`、`/pages/student/task-manage/submission-records/submission-records`
-- 教师审核页 `/pages/teacher/pending/pending` 已接入真实提交记录、审核弹层、反馈图片/附件与积分发放
+- 教师审核页 `/pages/teacher/pending/pending` 已接入真实提交记录、入班申请双待办、审核弹层、反馈图片/附件与积分发放
+- 教师任务页已支持项目/类型/班级/可见范围/状态多维筛选；学生任务中心已支持项目/类型/班级/可见范围筛选与排序
+- 截止时间展示统一由 `utils/task-deadline.js` 处理，已覆盖任务列表、详情、提交页与排行榜相关时间判断
 - 服务层已提供 `services/task.js`，统一封装任务创建、查询、详情、更新、删除、提交、记录查询与审核
 
 ### 1. `create-task`
@@ -1336,6 +1339,12 @@ ClassService.removeMember(classId, memberOpenid)
 
 ## 五、排行榜
 
+### 当前实现概览
+
+- 学生端排行榜页面 `/pages/student/rank/rank` 已接入周榜、月榜、总榜切换，展示前三名、当前用户卡片与上榜列表
+- `get-ranking` 云函数会优先读取 `ranking_snapshots` 快照，快照不存在时回退实时计算
+- `refresh-ranking-snapshots` 已实现周榜/月榜/总榜批量刷新，适合作为手动维护或定时任务入口
+
 ### 1. `get-ranking`
 
 功能：获取学生积分排行榜，支持周榜、月榜和总榜。
@@ -1354,6 +1363,7 @@ ClassService.removeMember(classId, memberOpenid)
 - 周榜按“上周六 00:00:00 到本周五 23:59:59.999”统计审核通过后发放的积分
 - 月榜按“当前月 1 日 00:00:00 到下月 1 日前一毫秒”统计审核通过后发放的积分
 - 总榜按 `users.total_points` 排序
+- 优先读取 `ranking_snapshots/{rank_type}` 快照，缺失时自动回退实时计算
 - 周榜和月榜均基于 `submissions.status = approved` 且 `review_time` 落在统计周期内的数据聚合
 - 当前实现会过滤 `0` 分用户，未上榜用户在前端显示为“未上榜”
 
@@ -1390,6 +1400,37 @@ RankingService.getRanking({ rank_type: 'week' })
 - 学生首页 `/pages/student/index` 已接入真实周排名摘要
 - `get-ranking` 已在云环境 `zhi-li-kong-ma-7gy2aqcr1add21a7` 完成部署
 
+---
+
+### 2. `refresh-ranking-snapshots`
+
+功能：刷新周榜、月榜、总榜三类排行榜快照，写入 `ranking_snapshots` 集合，供 `get-ranking` 优先读取。
+
+入参：无
+
+返回示例：
+
+```js
+{
+  success: true,
+  message: '排行榜快照刷新成功',
+  data: {
+    rank_types: ['week', 'month', 'total'],
+    generated_at: '2026-04-15T07:00:00.000Z'
+  }
+}
+```
+
+适用场景：
+
+- 云开发控制台手动触发排行榜重建
+- 后续接入定时触发器，定时刷新排行榜缓存
+
+前端现状：
+
+- 当前前端无直接调用入口
+- `get-ranking` 已自动消费快照结果
+
 ## 六、前端封装对照
 
 ### 用户模块
@@ -1413,6 +1454,7 @@ RankingService.getRanking({ rank_type: 'week' })
 
 - `services/ranking.js` 中的 `RankingService`
 - 已落地方法：`getRanking`
+- 运维函数：`refresh-ranking-snapshots` 已实现，但当前未通过前端服务层暴露
 
 ### 配置模块
 
@@ -1430,3 +1472,10 @@ RankingService.getRanking({ rank_type: 'week' })
 
 - 新增云函数时，优先更新本文件与 `DEVELOPMENT_PLAN.md`
 - 当前若继续推进任务/审核与统计模块，建议优先补 `get-submission-detail`、`get-class-ranking`、`get-statistics`，再补积分明细与抽奖链路
+
+---
+
+**文档版本**: v3.7.0
+**最后更新**: 2026-04-15
+**编写者**: 开发团队
+**更新说明**: 同步任务筛选与截止时间说明、审核页双待办、排行榜快照函数与最新集合结构
