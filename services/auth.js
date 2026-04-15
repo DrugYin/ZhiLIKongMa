@@ -167,8 +167,8 @@ class AuthService {
    */
   static navigateToLogin(redirectUrl) {
     const url = redirectUrl
-      ? `/pages/login/index?redirect=${encodeURIComponent(redirectUrl)}`
-      : '/pages/login/index';
+      ? `/pages/login/login?redirect=${encodeURIComponent(redirectUrl)}`
+      : '/pages/login/login';
     wx.navigateTo({ url });
   }
 }

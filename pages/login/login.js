@@ -166,7 +166,6 @@ Page({
   },
 
   validateForm(userInfo) {
-    console.log('userInfo', userInfo)
     const { phoneError } = this.selectComponent('#register-form').getFormData()
     if (!userInfo.user_name || !userInfo.phone || !userInfo.school || !userInfo.grade || phoneError) {
       toast.showToast('请完善必填信息')
