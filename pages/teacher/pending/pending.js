@@ -1,4 +1,5 @@
 const TaskService = require('../../../services/task')
+const ClassService = require('../../../services/class')
 const { uploadFile } = require('../../../services/api')
 const Toast = require('../../../utils/toast')
 const formatUtils = require('../../../utils/format')
@@ -60,8 +61,14 @@ Page({
     processingId: '',
     popupVisible: false,
     popupLoading: false,
+    typeFilter: 'all',
     statusFilter: 'all',
     classFilter: 'all',
+    typeOptions: [
+      { value: 'all', label: '全部待办' },
+      { value: 'submission', label: '任务提交' },
+      { value: 'application', label: '入班申请' }
+    ],
     statusOptions: [
       { value: 'all', label: '全部' },
       { value: 'pending', label: '待审核' },
@@ -75,6 +82,8 @@ Page({
     stats: {
       total: 0,
       pending: 0,
+      taskPending: 0,
+      joinPending: 0,
       approved: 0,
       rejected: 0
     },
@@ -101,7 +110,9 @@ Page({
       score: '',
       points: '',
       feedback: ''
-    }
+    },
+    reviewingApplicationId: '',
+    reviewAction: ''
   },
 
   onLoad() {
@@ -134,7 +145,13 @@ Page({
     })
 
     try {
-      const records = await this.loadAllSubmissions()
+      const [submissionRecords, applicationRecords] = await Promise.all([
+        this.loadAllSubmissions(),
+        this.loadAllClassApplications()
+      ])
+      const records = submissionRecords
+        .concat(applicationRecords)
+        .sort((left, right) => Number(right.sortTimestamp || 0) - Number(left.sortTimestamp || 0))
       const classes = Array.from(new Set(records.map((item) => item.className).filter(Boolean)))
 
       this.setData({
@@ -186,6 +203,55 @@ Page({
     return result
   },
 
+  async loadTeacherClasses() {
+    const result = []
+    let page = 1
+    let hasMore = true
+
+    while (hasMore) {
+      const response = await ClassService.getClasses({
+        role: 'teacher',
+        page,
+        page_size: 50,
+        sort_by: 'update_time',
+        sort_order: 'desc'
+      })
+      const list = Array.isArray(response.list) ? response.list : []
+
+      result.push(...list)
+      hasMore = Boolean(response.has_more)
+      page += 1
+    }
+
+    return result
+  },
+
+  async loadAllClassApplications() {
+    const classes = await this.loadTeacherClasses()
+    const result = []
+
+    for (let index = 0; index < classes.length; index += 1) {
+      const classInfo = classes[index]
+      let page = 1
+      let hasMore = true
+
+      while (hasMore) {
+        const response = await ClassService.getClassApplications({
+          class_id: classInfo._id,
+          page,
+          page_size: 50
+        })
+        const list = Array.isArray(response.list) ? response.list : []
+
+        result.push(...list.map((item) => this.formatApplicationRecord(item, classInfo)))
+        hasMore = Boolean(response.has_more)
+        page += 1
+      }
+    }
+
+    return result
+  },
+
   formatRecord(item = {}) {
     const status = item.status || 'pending'
     const imageCount = Array.isArray(item.images) ? item.images.length : 0
@@ -198,6 +264,9 @@ Page({
     return {
       ...item,
       id: item._id,
+      rawId: item._id,
+      recordKey: `submission-${item._id}`,
+      recordType: 'submission',
       studentName: item.student_name || '未命名学生',
       className: item.class_name || '未分班',
       taskTitle: item.task_title || '未命名任务',
@@ -215,24 +284,72 @@ Page({
       scoreText: item.score === null || item.score === undefined ? '待评分' : `${Number(item.score)} 分`,
       pointsText: `${Number(item.points_earned || 0)} 分`,
       overtimeText: item.is_overtime ? '超时提交' : '按时提交',
+      typeText: '任务提交',
       imageCount,
       fileCount,
       feedbackImageCount,
       feedbackFileCount,
-      feedbackAttachmentText: `${feedbackImageCount} 张图片 · ${feedbackFileCount} 个附件`
+      feedbackAttachmentText: `${feedbackImageCount} 张图片 · ${feedbackFileCount} 个附件`,
+      sortTimestamp: new Date(item.submit_time || item.update_time || item.create_time || 0).getTime()
+    }
+  },
+
+  formatApplicationRecord(item = {}, classInfo = {}) {
+    const displayName = item.student_name || item.student_user_name || item.student_nick_name || '未命名学生'
+    const createTime = item.create_time || item.update_time || null
+
+    return {
+      ...item,
+      id: item._id,
+      rawId: item._id,
+      recordKey: `application-${item._id}`,
+      recordType: 'application',
+      studentName: displayName,
+      className: item.class_name || classInfo.class_name || '未命名班级',
+      classId: item.class_id || classInfo._id || '',
+      taskTitle: '班级加入申请',
+      taskId: '',
+      taskPoints: 0,
+      projectText: classInfo.project_name || classInfo.project_code || '未设置项目',
+      status: 'pending',
+      statusText: '待审核',
+      descriptionText: String(item.apply_reason || '').trim() || '未填写申请理由',
+      summary: `${displayName} 申请加入该班级`,
+      feedbackText: '',
+      submittedAt: createTime ? this.formatDateTime(createTime) : '刚刚提交',
+      reviewedAt: '待审核',
+      attachmentText: '无需提交材料',
+      scoreText: '不适用',
+      pointsText: '不适用',
+      overtimeText: '',
+      typeText: '入班申请',
+      imageCount: 0,
+      fileCount: 0,
+      feedbackImageCount: 0,
+      feedbackFileCount: 0,
+      feedbackAttachmentText: '0 张图片 · 0 个附件',
+      avatar: item.student_avatar || '/assets/default-avatar.png',
+      gradeText: item.student_grade || '未填写年级',
+      phoneText: formatUtils.formatPhone(item.student_phone) || '未填写电话',
+      createTimeText: createTime ? this.formatDateTime(createTime) : '刚刚提交',
+      relativeTimeText: createTime ? formatUtils.formatRelativeTime(createTime) : '刚刚',
+      sortTimestamp: new Date(createTime || 0).getTime()
     }
   },
 
   applyFilters() {
-    const { records, statusFilter, classFilter } = this.data
+    const { records, typeFilter, statusFilter, classFilter } = this.data
+    const submissionRecords = records.filter((item) => item.recordType === 'submission')
+    const applicationRecords = records.filter((item) => item.recordType === 'application')
     const displayRecords = records.filter((item) => {
+      const matchedType = typeFilter === 'all' ? true : item.recordType === typeFilter
       const matchedStatus = statusFilter === 'all'
         ? true
         : statusFilter === 'processed'
           ? item.status !== 'pending'
           : item.status === statusFilter
       const matchedClass = classFilter === 'all' ? true : item.className === classFilter
-      return matchedStatus && matchedClass
+      return matchedType && matchedStatus && matchedClass
     })
 
     this.setData({
@@ -240,8 +357,10 @@ Page({
       stats: {
         total: records.length,
         pending: records.filter((item) => item.status === 'pending').length,
-        approved: records.filter((item) => item.status === 'approved').length,
-        rejected: records.filter((item) => item.status === 'rejected').length
+        taskPending: submissionRecords.filter((item) => item.status === 'pending').length,
+        joinPending: applicationRecords.length,
+        approved: submissionRecords.filter((item) => item.status === 'approved').length,
+        rejected: submissionRecords.filter((item) => item.status === 'rejected').length
       }
     })
   },
@@ -266,6 +385,18 @@ Page({
     )
   },
 
+  onTypeFilterChange(e) {
+    const { value } = e.currentTarget.dataset
+    this.setData(
+      {
+        typeFilter: value
+      },
+      () => {
+        this.applyFilters()
+      }
+    )
+  },
+
   onClassFilterChange(e) {
     const { value } = e.currentTarget.dataset
     this.setData(
@@ -282,7 +413,7 @@ Page({
     const { id } = e.currentTarget.dataset
     const record = this.data.records.find((item) => item.id === id)
 
-    if (!record) {
+    if (!record || record.recordType !== 'submission') {
       return
     }
 
@@ -837,6 +968,46 @@ Page({
 
   handleReject() {
     this.handleReviewAction('rejected')
+  },
+
+  async onReviewClassApplication(e) {
+    const { applicationId, action, studentName } = e.currentTarget.dataset
+
+    if (!applicationId || !['approve', 'reject'].includes(action) || this.data.reviewingApplicationId) {
+      return
+    }
+
+    const actionText = action === 'approve' ? '通过' : '拒绝'
+    const confirmed = await Toast.confirm(`确认${actionText}“${studentName || '该学生'}”的入班申请吗？`)
+
+    if (!confirmed) {
+      return
+    }
+
+    this.setData({
+      reviewingApplicationId: applicationId,
+      reviewAction: action
+    })
+    Toast.showLoading(`正在${actionText}申请...`)
+
+    try {
+      await ClassService.handleApplication({
+        application_id: applicationId,
+        action
+      })
+      Toast.hideLoading()
+      await Toast.showSuccess(`${actionText}成功`)
+      await this.initPage({ silent: true })
+    } catch (error) {
+      console.error('[teacher-pending] onReviewClassApplication error:', error)
+      Toast.hideLoading()
+      Toast.showToast(error.message || `${actionText}申请失败`)
+    } finally {
+      this.setData({
+        reviewingApplicationId: '',
+        reviewAction: ''
+      })
+    }
   },
 
   goToTaskManage() {

@@ -74,7 +74,8 @@
 
 .summary-grid,
 .meta-grid,
-.action-row {
+.action-row,
+.review-tag-group {
   display: flex;
 }
 
@@ -174,6 +175,13 @@
   gap: 16rpx;
 }
 
+.review-tag-group {
+  flex-shrink: 0;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 10rpx;
+}
+
 .review-copy {
   flex: 1;
   min-width: 0;
@@ -234,6 +242,21 @@
   border-radius: 999rpx;
   font-size: 22rpx;
   font-weight: 600;
+}
+
+.type-tag {
+  flex-shrink: 0;
+  padding: 8rpx 18rpx;
+  border-radius: 999rpx;
+  font-size: 22rpx;
+  font-weight: 600;
+  color: #1f4f78;
+  background: #e7f1fb;
+}
+
+.type-tag-application {
+  color: #0c7f58;
+  background: rgba(12, 127, 88, 0.1);
 }
 
 .status-pending {
@@ -514,6 +537,26 @@
 
 .popup-file-delete {
   color: #d84a55;
+}
+
+.application-review-card {
+  padding: 0;
+}
+
+.application-info-grid {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 16rpx 0;
+  margin-top: 18rpx;
+}
+
+.application-reason-box {
+  margin-top: 18rpx;
+}
+
+.application-action-row {
+  margin-top: 18rpx;
 }
 
 .popup-action-row {
