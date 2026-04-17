@@ -134,17 +134,29 @@ function normalizeProfileResponse(profileRes) {
 
 async function getCurrentIdentity() {
   const identity = auth.getUserInfo() || {}
+  const uid = identity.uid || identity.user_id || identity.sub || ''
   let profile = null
 
   try {
-    const profileRes = await auth.getEndUserInfo()
+    const profileRes = uid
+      ? await auth.getEndUserInfo(uid)
+      : await auth.getEndUserInfo()
     profile = normalizeProfileResponse(profileRes)
   } catch (error) {
     console.warn('[admin-auth-check] getEndUserInfo failed:', error.message)
   }
 
+  if (uid && !getProfilePhone(profile) && typeof auth.queryUserInfo === 'function') {
+    try {
+      const queryRes = await auth.queryUserInfo({ uid })
+      profile = normalizeProfileResponse(queryRes) || profile
+    } catch (error) {
+      console.warn('[admin-auth-check] queryUserInfo failed:', error.message)
+    }
+  }
+
   return {
-    uid: identity.uid || getProfileUid(profile),
+    uid: uid || getProfileUid(profile),
     phone: getProfilePhone(profile),
     profile
   }
