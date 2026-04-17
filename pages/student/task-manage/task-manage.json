@@ -1,5 +1,4 @@
 {
-  "disableScroll": true,
   "usingComponents": {
     "custom-navbar": "/components/custom-navbar/index",
     "t-tab-bar": "tdesign-miniprogram/tab-bar/tab-bar",

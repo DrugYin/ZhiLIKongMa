@@ -79,9 +79,11 @@ Page({
       Toast.showLoading('任务详情加载中...')
     }
 
-    this.setData({
-      loading: true
-    })
+    if (!silent && !refreshing) {
+      this.setData({
+        loading: true
+      })
+    }
 
     try {
       const [taskInfo, submissionSummary] = await Promise.all([

@@ -66,10 +66,12 @@ Page({
       Toast.showLoading('提交记录加载中...')
     }
 
-    this.setData({
-      loading: true,
-      page: 1
-    })
+    if (!silent && !refreshing) {
+      this.setData({
+        loading: true,
+        page: 1
+      })
+    }
 
     try {
       const requestParams = {

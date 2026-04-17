@@ -144,10 +144,12 @@ Page({
   async initPage({ refreshing = false, silent = false } = {}) {
     const isLoggedIn = AuthService.isLoggedIn()
 
-    this.setData({
-      loading: true,
-      isLoggedIn
-    })
+    if (!refreshing && !silent) {
+      this.setData({
+        loading: true,
+        isLoggedIn
+      })
+    }
 
     if (!isLoggedIn) {
       this.setData({
