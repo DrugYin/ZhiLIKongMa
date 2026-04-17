@@ -1,5 +1,6 @@
 {
   "description": "智力控码小程序",
+  "miniprogramRoot": "miniprogram/",
   "cloudfunctionRoot": "cloudfunctions/",
   "setting": {
     "es6": true,
