@@ -83,9 +83,11 @@ Page({
       Toast.showLoading('任务详情加载中...')
     }
 
-    this.setData({
-      loading: true
-    })
+    if(!silent) {
+      this.setData({
+        loading: true
+      })
+    }
 
     try {
       const rawTaskInfo = await TaskService.getTaskDetail(this.data.taskId)

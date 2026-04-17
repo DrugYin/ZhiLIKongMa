@@ -12,7 +12,6 @@
     "pages/login/login",
     "pages/teacher/index",
     "pages/student/setting/setting",
-    "pages/student/training/training",
     "pages/student/rank/rank",
     "pages/teacher/pending/pending",
     "pages/teacher/class-manage/class-manage",
