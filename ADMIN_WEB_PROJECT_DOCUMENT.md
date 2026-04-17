@@ -177,29 +177,19 @@ cloudfunctions/
 
 ```js
 {
+  _openid: "小程序 openid",
+  phone: "13800000000",
   roles: ["student", "teacher", "admin"],
   admin_role: "super_admin",
-  admin_status: "active"
-}
-```
-
-也可以新增独立集合 `admin_users`：
-
-```js
-{
-  _openid: "openid",
-  phone: "13800000000",
-  name: "管理员",
-  role: "super_admin",
-  status: "active",
-  create_time: Date,
-  update_time: Date
+  admin_status: "active",
+  admin_auth_uid: "后台 Web Auth UID，首次后台登录后自动写入",
+  admin_permissions: ["dashboard:read", "config:read"]
 }
 ```
 
 ### 5.3 推荐方案
 
-第一阶段推荐使用 `users.roles` 扩展 `admin` 角色，原因是当前系统已经使用统一 `users` 表，改动小、可复用现有用户数据。
+第一阶段推荐使用 `users.roles` 扩展 `admin` 角色，并使用 `users.admin_auth_uid` 绑定后台 Web 登录身份。原因是当前系统已经使用统一 `users` 表，改动小、可复用现有用户数据，同时不需要维护独立管理员集合。
 
 ### 5.4 权限校验流程
 
@@ -210,7 +200,9 @@ Web 登录
   |
 调用 admin-auth-check
   |
-云函数根据 openid 查询 users
+云函数根据 Web Auth uid 查询 users.admin_auth_uid
+  |
+未绑定时根据 Web Auth 手机号匹配 users.phone 并自动绑定
   |
 校验 roles 是否包含 admin
   |
