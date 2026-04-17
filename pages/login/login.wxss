@@ -77,10 +77,29 @@
 
 .agreement {
   margin-top: 40rpx;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
   font-size: 24rpx;
   line-height: 1.8;
   color: #7a8797;
-  text-align: center;
+  text-align: left;
+}
+
+.agreement-checkbox-group {
+  flex: none;
+  margin-top: 2rpx;
+  margin-right: 12rpx;
+  line-height: 1;
+}
+
+.agreement-checkbox {
+  transform: scale(0.72);
+  transform-origin: left top;
+}
+
+.agreement-text {
+  flex: none;
 }
 
 .link {
