@@ -1,6 +1,6 @@
 /**
  * 管理员权限校验云函数
- * 功能：校验当前 CloudBase Web Auth 用户是否拥有后台访问权限
+ * 功能：校验当前 CloudBase Web Auth 用户是否绑定到 users 表中的管理员账号
  */
 
 const cloud = require('wx-server-sdk')
@@ -29,35 +29,62 @@ const DEFAULT_PERMISSIONS = [
   'logs:read'
 ]
 
-function normalizeUser(user, source) {
+function hasAdminRole(user) {
+  return Array.isArray(user.roles) && user.roles.includes('admin')
+}
+
+function isDisabled(user) {
+  return user.status === 'disabled' || user.admin_status === 'disabled'
+}
+
+function normalizePhone(phone) {
+  if (!phone) {
+    return ''
+  }
+
+  const digits = String(phone).replace(/\D/g, '')
+  if (digits.length === 13 && digits.startsWith('86')) {
+    return digits.slice(2)
+  }
+
+  return digits
+}
+
+function getPhoneCandidates(phone) {
+  const normalized = normalizePhone(phone)
+  const candidates = new Set()
+
+  if (phone) {
+    candidates.add(String(phone))
+  }
+
+  if (normalized) {
+    candidates.add(normalized)
+    candidates.add(`+86 ${normalized}`)
+    candidates.add(`+86${normalized}`)
+  }
+
+  return Array.from(candidates)
+}
+
+function normalizeUser(user) {
   return {
     _id: user._id,
-    uid: user.uid || user.auth_uid,
-    openid: user._openid || user.openid,
-    email: user.email,
+    openid: user._openid,
     phone: user.phone,
-    user_name: user.user_name || user.username || user.nick_name || user.nickname || '管理员',
+    user_name: user.user_name || user.nick_name || user.nickname || '管理员',
     nick_name: user.nick_name || user.nickname,
-    roles: user.roles || ['admin'],
-    role: user.role || 'admin',
-    status: user.status || 'active',
-    permissions: user.permissions || DEFAULT_PERMISSIONS,
-    source
+    roles: user.roles || [],
+    admin_role: user.admin_role || 'admin',
+    admin_status: user.admin_status || user.status || 'active',
+    admin_auth_uid: user.admin_auth_uid,
+    permissions: user.admin_permissions || user.permissions || DEFAULT_PERMISSIONS,
+    source: 'users'
   }
 }
 
-function getLookupValues(identity, profile) {
-  const profileUser = profile || {}
-  const metadata = profileUser.user_metadata || {}
-
-  return {
-    uid: identity.uid || profileUser.id,
-    openid: identity.openId,
-    customUserId: identity.customUserId,
-    email: profileUser.email,
-    phone: profileUser.phone,
-    username: metadata.username || metadata.name
-  }
+function getProfilePhone(profile) {
+  return profile?.phone || profile?.phone_number || profile?.phoneNumber || ''
 }
 
 async function getCurrentIdentity() {
@@ -71,90 +98,125 @@ async function getCurrentIdentity() {
     console.warn('[admin-auth-check] getEndUserInfo failed:', error.message)
   }
 
-  return getLookupValues(identity, profile)
-}
-
-async function getAdminFromAdminUsers(identity) {
-  const conditions = []
-
-  if (identity.uid) {
-    conditions.push({ uid: identity.uid })
-    conditions.push({ auth_uid: identity.uid })
-  }
-
-  if (identity.openid) {
-    conditions.push({ _openid: identity.openid })
-    conditions.push({ openid: identity.openid })
-  }
-
-  if (identity.customUserId) {
-    conditions.push({ custom_user_id: identity.customUserId })
-  }
-
-  if (identity.email) {
-    conditions.push({ email: identity.email })
-  }
-
-  if (identity.phone) {
-    conditions.push({ phone: identity.phone })
-  }
-
-  if (identity.username) {
-    conditions.push({ username: identity.username })
-    conditions.push({ user_name: identity.username })
-  }
-
-  if (!conditions.length) {
-    return null
-  }
-
-  try {
-    const res = await db.collection('admin_users')
-      .where(_.or(conditions))
-      .limit(1)
-      .get()
-
-    return res.data[0] || null
-  } catch (error) {
-    console.warn('[admin-auth-check] query admin_users failed:', error.message)
-    return null
+  return {
+    uid: identity.uid || profile?.id || '',
+    phone: getProfilePhone(profile),
+    profile
   }
 }
 
-async function getAdminFromUsers(identity) {
-  const conditions = []
+async function getUserByAdminAuthUid(uid) {
+  const res = await db.collection('users')
+    .where({
+      admin_auth_uid: uid
+    })
+    .limit(2)
+    .get()
 
-  if (identity.openid) {
-    conditions.push({ _openid: identity.openid })
+  if (res.data.length > 1) {
+    throw new Error('多个用户绑定了同一个后台登录账号，请检查 users.admin_auth_uid')
   }
 
-  if (identity.uid) {
-    conditions.push({ uid: identity.uid })
-    conditions.push({ auth_uid: identity.uid })
-  }
+  return res.data[0] || null
+}
 
-  if (!conditions.length) {
-    return null
+async function getBindableAdminByPhone(phone) {
+  const phoneCandidates = getPhoneCandidates(phone)
+
+  if (!phoneCandidates.length) {
+    return {
+      user: null,
+      message: '当前后台登录账号没有手机号，无法自动绑定 users 用户'
+    }
   }
 
   const res = await db.collection('users')
-    .where(_.or(conditions))
-    .limit(1)
+    .where({
+      phone: _.in(phoneCandidates)
+    })
+    .limit(10)
     .get()
 
-  const user = res.data[0]
-  if (!user || !Array.isArray(user.roles) || !user.roles.includes('admin')) {
-    return null
+  const adminUsers = res.data.filter(hasAdminRole)
+
+  if (!adminUsers.length) {
+    return {
+      user: null,
+      message: '当前手机号没有对应的后台管理员用户，请先在 users.roles 中加入 admin'
+    }
   }
 
-  return user
+  if (adminUsers.length > 1) {
+    return {
+      user: null,
+      message: '当前手机号匹配到多个管理员用户，请先清理 users.phone 重复数据'
+    }
+  }
+
+  return {
+    user: adminUsers[0],
+    message: ''
+  }
+}
+
+async function bindAdminAuthUid(user, uid) {
+  if (user.admin_auth_uid && user.admin_auth_uid !== uid) {
+    return {
+      success: false,
+      message: '该管理员用户已绑定其他后台登录账号'
+    }
+  }
+
+  if (user.admin_auth_uid === uid) {
+    return {
+      success: true
+    }
+  }
+
+  await db.collection('users')
+    .doc(user._id)
+    .update({
+      data: {
+        admin_auth_uid: uid,
+        admin_auth_bind_time: new Date(),
+        update_time: new Date()
+      }
+    })
+
+  user.admin_auth_uid = uid
+
+  return {
+    success: true
+  }
+}
+
+function assertAdminUser(user) {
+  if (!user || !hasAdminRole(user)) {
+    return {
+      success: false,
+      message: '当前账号没有后台管理员权限',
+      error_code: 403
+    }
+  }
+
+  if (isDisabled(user)) {
+    return {
+      success: false,
+      message: '当前管理员账号已被禁用',
+      error_code: 403
+    }
+  }
+
+  return {
+    success: true
+  }
 }
 
 exports.main = async () => {
   try {
     const identity = await getCurrentIdentity()
 
-    if (!identity.uid && !identity.openid && !identity.customUserId) {
+    if (!identity.uid) {
       return {
         success: false,
         message: '请先登录',
@@ -162,34 +224,47 @@ exports.main = async () => {
       }
     }
 
-    const adminFromAdminUsers = await getAdminFromAdminUsers(identity)
-    const adminUser = adminFromAdminUsers || await getAdminFromUsers(identity)
-    const source = adminFromAdminUsers ? 'admin_users' : 'users'
+    let user = await getUserByAdminAuthUid(identity.uid)
+    let bindMessage = ''
 
-    if (!adminUser) {
-      return {
-        success: false,
-        message: '当前账号没有后台管理员权限',
-        error_code: 403
+    if (!user) {
+      const bindable = await getBindableAdminByPhone(identity.phone)
+      user = bindable.user
+      bindMessage = bindable.message
+
+      if (user) {
+        const pendingAdminCheck = assertAdminUser(user)
+        if (!pendingAdminCheck.success) {
+          return pendingAdminCheck
+        }
+
+        const bindResult = await bindAdminAuthUid(user, identity.uid)
+        if (!bindResult.success) {
+          return {
+            success: false,
+            message: bindResult.message,
+            error_code: 403
+          }
+        }
       }
     }
 
-    if (adminUser.status === 'disabled') {
+    const adminCheck = assertAdminUser(user)
+    if (!adminCheck.success) {
       return {
-        success: false,
-        message: '当前管理员账号已被禁用',
-        error_code: 403
+        ...adminCheck,
+        message: bindMessage || adminCheck.message
       }
     }
 
-    const user = normalizeUser(adminUser, source)
+    const adminUser = normalizeUser(user)
 
     return {
       success: true,
       message: '管理员校验成功',
       data: {
-        user,
-        permissions: user.permissions
+        user: adminUser,
+        permissions: adminUser.permissions
       }
     }
   } catch (error) {

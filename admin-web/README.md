@@ -68,16 +68,18 @@ admin-web/dist/
 
 ## 管理员初始化
 
-当前基础登录已接入 `admin-auth-check` 云函数。管理员权限建议优先写入独立集合 `admin_users`：
+当前基础登录已接入 `admin-auth-check` 云函数。管理员仍然统一维护在 `users` 集合中，权限由 `roles` 字段控制：
 
 ```json
 {
-  "uid": "CloudBase Web Auth 用户 UID",
-  "email": "admin@example.com",
+  "_openid": "小程序 openid",
+  "phone": "13800000000",
   "user_name": "管理员",
-  "role": "super_admin",
-  "status": "active",
-  "permissions": [
+  "roles": ["student", "teacher", "admin"],
+  "admin_role": "super_admin",
+  "admin_status": "active",
+  "admin_auth_uid": "首次后台登录后自动写入",
+  "admin_permissions": [
     "dashboard:read",
     "config:read",
     "config:write",
@@ -91,7 +93,7 @@ admin-web/dist/
 }
 ```
 
-为兼容小程序现有用户体系，`admin-auth-check` 也会识别 `users.roles` 中包含 `admin` 的用户。
+首次登录后台时，`admin-auth-check` 会先用当前 CloudBase Web Auth 的 `uid` 查找 `users.admin_auth_uid`。如果还没有绑定，则使用当前 Web Auth 账号的手机号匹配 `users.phone`，匹配到且 `roles` 包含 `admin` 时自动写入 `admin_auth_uid`。后续登录将直接使用 `admin_auth_uid` 精确校验。
 
 ## 部署建议
 
