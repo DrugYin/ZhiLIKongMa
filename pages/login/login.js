@@ -46,39 +46,20 @@ Page({
   onLoad(options) {
   },
 
-  async onLogin() {
-    const hasConfirmedAgreement = await this.ensureAgreementConfirmed()
-    if (!hasConfirmedAgreement) {
+  onLogin() {
+    if (!this.data.hasConfirmedAgreement) {
+      toast.showToast('请先阅读并同意《用户协议》和《隐私政策》')
       return
     }
 
     this.doLogin()
   },
 
-  async ensureAgreementConfirmed() {
-    if (this.data.hasConfirmedAgreement) {
-      return true
-    }
-
-    try {
-      const confirmed = await toast.showModal({
-        title: '登录提醒',
-        content: '登录前请确认你已阅读并同意《用户协议》和《隐私政策》。点击“同意并登录”后将继续微信登录。',
-        cancelText: '暂不同意',
-        confirmText: '同意登录',
-        confirmColor: '#1f7ae0'
-      })
-
-      if (confirmed) {
-        this.setData({ hasConfirmedAgreement: true })
-      }
-
-      return confirmed
-    } catch (error) {
-      console.error('协议确认弹窗打开失败:', error)
-      toast.showToast('暂时无法打开协议确认，请稍后重试')
-      return false
-    }
+  handleAgreementChange(event) {
+    const checkedValues = event.detail.value || []
+    this.setData({
+      hasConfirmedAgreement: checkedValues.includes('confirmed')
+    })
   },
 
   doLogin() {
