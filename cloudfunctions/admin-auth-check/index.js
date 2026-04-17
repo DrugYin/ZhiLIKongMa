@@ -84,7 +84,52 @@ function normalizeUser(user) {
 }
 
 function getProfilePhone(profile) {
-  return profile?.phone || profile?.phone_number || profile?.phoneNumber || ''
+  return profile?.phone
+    || profile?.phone_number
+    || profile?.phoneNumber
+    || profile?.user?.phone
+    || profile?.user?.phone_number
+    || ''
+}
+
+function getProfileUid(profile) {
+  return profile?.id
+    || profile?.uid
+    || profile?.user_id
+    || profile?.sub
+    || profile?.user?.id
+    || profile?.user?.uid
+    || profile?.user?.user_id
+    || profile?.user?.sub
+    || ''
+}
+
+function normalizeProfileResponse(profileRes) {
+  if (!profileRes) {
+    return null
+  }
+
+  if (profileRes.userInfo) {
+    return profileRes.userInfo
+  }
+
+  if (profileRes.user) {
+    return profileRes.user
+  }
+
+  if (profileRes.data?.userInfo) {
+    return profileRes.data.userInfo
+  }
+
+  if (profileRes.data?.user) {
+    return profileRes.data.user
+  }
+
+  if (profileRes.data && typeof profileRes.data === 'object') {
+    return profileRes.data
+  }
+
+  return profileRes
 }
 
 async function getCurrentIdentity() {
@@ -93,13 +138,13 @@ async function getCurrentIdentity() {
 
   try {
     const profileRes = await auth.getEndUserInfo()
-    profile = profileRes.userInfo || null
+    profile = normalizeProfileResponse(profileRes)
   } catch (error) {
     console.warn('[admin-auth-check] getEndUserInfo failed:', error.message)
   }
 
   return {
-    uid: identity.uid || profile?.id || '',
+    uid: identity.uid || getProfileUid(profile),
     phone: getProfilePhone(profile),
     profile
   }
