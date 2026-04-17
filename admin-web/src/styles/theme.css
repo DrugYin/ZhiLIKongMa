@@ -180,6 +180,28 @@ body {
   margin-top: 20px;
 }
 
+.login-form {
+  margin-top: 22px;
+}
+
+.login-form .t-button {
+  margin-top: 8px;
+}
+
+.login-check {
+  width: 100%;
+  margin-top: 16px;
+  padding: 0;
+  border: 0;
+  color: var(--admin-primary);
+  background: transparent;
+  cursor: pointer;
+}
+
+.login-check:hover {
+  text-decoration: underline;
+}
+
 @media (max-width: 900px) {
   .admin-shell {
     display: block;

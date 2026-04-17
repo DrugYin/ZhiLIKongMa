@@ -28,6 +28,16 @@ cp .env.example .env.local
 
 Windows PowerShell 可手动复制 `.env.example` 为 `.env.local`。
 
+基础登录需要在 `.env.local` 中补充 CloudBase Web Auth 访问密钥：
+
+```text
+VITE_CLOUDBASE_ENV_ID=zhi-li-kong-ma-7gy2aqcr1add21a7
+VITE_CLOUDBASE_REGION=ap-shanghai
+VITE_CLOUDBASE_ACCESS_KEY=你的 Web 访问密钥
+```
+
+同时需要在 CloudBase 身份认证中启用用户名/密码登录方式。
+
 ## 构建
 
 ```bash
@@ -55,6 +65,33 @@ admin-web/dist/
 - `admin-get-submissions`
 - `admin-get-operation-logs`
 - `admin-refresh-ranking`
+
+## 管理员初始化
+
+当前基础登录已接入 `admin-auth-check` 云函数。管理员权限建议优先写入独立集合 `admin_users`：
+
+```json
+{
+  "uid": "CloudBase Web Auth 用户 UID",
+  "email": "admin@example.com",
+  "user_name": "管理员",
+  "role": "super_admin",
+  "status": "active",
+  "permissions": [
+    "dashboard:read",
+    "config:read",
+    "config:write",
+    "projects:read",
+    "projects:write",
+    "users:read",
+    "tasks:read",
+    "submissions:read",
+    "logs:read"
+  ]
+}
+```
+
+为兼容小程序现有用户体系，`admin-auth-check` 也会识别 `users.roles` 中包含 `admin` 的用户。
 
 ## 部署建议
 
