@@ -214,6 +214,14 @@ body {
   width: 150px;
 }
 
+.class-search {
+  width: 340px;
+}
+
+.class-filter {
+  width: 150px;
+}
+
 .config-value {
   display: inline-block;
   max-width: 160px;
@@ -272,6 +280,68 @@ body {
   white-space: nowrap;
   border-radius: 8px;
   background: var(--admin-primary-soft);
+}
+
+.class-name-cell,
+.class-member-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.class-name-cell strong,
+.class-member-cell strong,
+.class-name-cell span,
+.class-member-cell span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.class-name-cell span,
+.class-member-cell span {
+  color: var(--admin-muted);
+  font-size: 12px;
+}
+
+.class-detail {
+  display: grid;
+  gap: 16px;
+}
+
+.class-detail-summary {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.class-detail-summary div {
+  padding: 14px;
+  border: 1px solid var(--admin-border);
+  border-radius: 14px;
+  background: #f8fbfd;
+}
+
+.class-detail-summary span {
+  display: block;
+  margin-bottom: 8px;
+  color: var(--admin-muted);
+  font-size: 12px;
+}
+
+.class-detail-summary strong {
+  display: block;
+  overflow: hidden;
+  color: #172033;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.class-application-toolbar {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 12px;
 }
 
 .project-editor-list {
@@ -417,8 +487,14 @@ body {
   .config-category,
   .project-status-filter,
   .user-search,
-  .user-filter {
+  .user-filter,
+  .class-search,
+  .class-filter {
     width: 100%;
+  }
+
+  .class-detail-summary {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .project-editor-row,
@@ -434,6 +510,10 @@ body {
 
 @media (max-width: 560px) {
   .stat-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .class-detail-summary {
     grid-template-columns: 1fr;
   }
 
