@@ -202,6 +202,10 @@ body {
   width: 180px;
 }
 
+.project-status-filter {
+  width: 160px;
+}
+
 .config-value {
   display: inline-block;
   max-width: 160px;
@@ -212,6 +216,17 @@ body {
   white-space: nowrap;
   border-radius: 8px;
   background: var(--admin-primary-soft);
+}
+
+.project-name-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.project-name-cell span {
+  color: var(--admin-muted);
+  font-size: 12px;
 }
 
 .login-page {
@@ -308,7 +323,8 @@ body {
   }
 
   .config-search,
-  .config-category {
+  .config-category,
+  .project-status-filter {
     width: 100%;
   }
 

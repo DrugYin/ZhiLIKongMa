@@ -147,8 +147,7 @@ cloudfunctions/
 ├── admin-auth-check/
 ├── admin-get-statistics/
 ├── admin-manage-config/
-├── admin-get-projects/
-├── admin-update-project/
+├── admin-manage-projects/
 ├── admin-get-users/
 ├── admin-get-tasks/
 ├── admin-get-operation-logs/
@@ -434,8 +433,18 @@ Web 登录
 
 ### 云函数
 
-- `admin-get-projects`
-- `admin-update-project`
+`admin-manage-projects`
+
+### 支持操作
+
+| action | 说明 |
+|--------|------|
+| `list` | 查询项目列表，支持关键词与状态筛选 |
+| `get` | 查询单个项目详情 |
+| `create` | 新增项目 |
+| `update` | 更新项目 |
+| `delete` | 删除项目，若已有任务、班级或教师引用则阻止删除 |
+| `seed_defaults` | 初始化默认项目 |
 
 ### 数据结构
 
@@ -655,8 +664,7 @@ Web 登录
 
 | 云函数 | 说明 | 优先级 |
 |--------|------|--------|
-| `admin-get-projects` | 获取项目列表 | P0 |
-| `admin-update-project` | 更新项目配置 | P1 |
+| `admin-manage-projects` | 项目配置增删改查 | P0 |
 
 ### 8.5 数据查询
 
@@ -886,7 +894,8 @@ https://example.com/admin/#/dashboard
 
 任务：
 
-- 实现项目列表与编辑。
+- 实现项目列表、新增、编辑和删除。
+- 实现默认项目初始化。
 - 实现操作日志查询。
 - 完善权限和二次确认。
 
@@ -922,8 +931,8 @@ https://example.com/admin/#/dashboard
 - [x] 系统配置可读取。
 - [x] 系统配置可新增、更新和删除。
 - [x] 配置变更会写操作日志。
-- [ ] 项目列表可读取。
-- [ ] 项目状态可更新。
+- [x] 项目列表可读取。
+- [x] 项目可新增、编辑、停用和安全删除。
 - [ ] 操作日志可查询。
 - [ ] 后台可部署到 CloudBase 静态网站托管。
 - [ ] 小程序现有业务不受后台影响。
