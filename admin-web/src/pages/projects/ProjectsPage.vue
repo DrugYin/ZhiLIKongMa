@@ -157,20 +157,47 @@
           <t-input v-model="form.cover_image" placeholder="可填写 cloud:// 或 https:// 图片地址，当前可为空" />
         </t-form-item>
 
-        <t-form-item label="任务分类" name="task_categories_text">
-          <t-textarea
-            v-model="form.task_categories_text"
-            :autosize="{ minRows: 3, maxRows: 6 }"
-            placeholder="每行一个分类，也支持用逗号分隔。例如：基础语法、算法练习、项目实战"
-          />
+        <t-form-item label="任务分类" name="task_categories">
+          <div class="project-editor-list">
+            <div
+              v-for="(item, index) in form.task_categories"
+              :key="`category-${index}`"
+              class="project-editor-row"
+            >
+              <t-input
+                v-model="form.task_categories[index]"
+                placeholder="例如 基础语法、算法练习、项目实战"
+              />
+              <t-button theme="danger" variant="text" @click="removeCategory(index)">删除</t-button>
+            </div>
+            <t-button variant="outline" block @click="addCategory">新增分类</t-button>
+          </div>
         </t-form-item>
 
-        <t-form-item label="难度等级" name="difficulty_levels_text">
-          <t-textarea
-            v-model="form.difficulty_levels_text"
-            :autosize="{ minRows: 6, maxRows: 12 }"
-            placeholder='请输入 JSON 数组，例如 [{"level":1,"name":"入门","color":"#52c41a"}]'
-          />
+        <t-form-item label="难度等级" name="difficulty_levels">
+          <div class="project-editor-list">
+            <div
+              v-for="(item, index) in form.difficulty_levels"
+              :key="`difficulty-${index}`"
+              class="project-difficulty-row"
+            >
+              <t-input-number
+                v-model="item.level"
+                :min="1"
+                theme="normal"
+                class="project-level-input"
+              />
+              <t-input v-model="item.name" placeholder="名称，例如 入门" />
+              <div class="project-color-field">
+                <input v-model="item.color" class="project-color-picker" type="color" />
+                <t-input v-model="item.color" placeholder="#1890ff" />
+              </div>
+              <t-button theme="danger" variant="text" @click="removeDifficultyLevel(index)">
+                删除
+              </t-button>
+            </div>
+            <t-button variant="outline" block @click="addDifficultyLevel">新增难度等级</t-button>
+          </div>
         </t-form-item>
       </t-form>
     </t-dialog>
@@ -196,6 +223,7 @@ const DEFAULT_DIFFICULTY_LEVELS = [
   { level: 4, name: '高级', color: '#ff4d4f' },
   { level: 5, name: '专家', color: '#722ed1' }
 ];
+const DEFAULT_TASK_CATEGORIES = ['基础训练'];
 const DEFAULT_FORM = {
   _id: '',
   project_name: '',
@@ -203,13 +231,21 @@ const DEFAULT_FORM = {
   description: '',
   cover_image: '',
   icon: '',
-  task_categories_text: '',
-  difficulty_levels_text: JSON.stringify(DEFAULT_DIFFICULTY_LEVELS, null, 2),
+  task_categories: DEFAULT_TASK_CATEGORIES,
+  difficulty_levels: DEFAULT_DIFFICULTY_LEVELS,
   default_points: 10,
   bonus_multiplier: 1,
   sort_order: 100,
   status: 'active'
 };
+
+function createDefaultForm() {
+  return {
+    ...DEFAULT_FORM,
+    task_categories: [...DEFAULT_TASK_CATEGORIES],
+    difficulty_levels: cloneDifficultyLevels(DEFAULT_DIFFICULTY_LEVELS)
+  };
+}
 
 const columns = [
   { colKey: 'project_name', title: '项目', width: 180, fixed: 'left' },
@@ -233,9 +269,7 @@ const rules = {
       message: '项目编码需以小写字母开头，仅支持小写字母、数字和下划线'
     }
   ],
-  status: [{ required: true, message: '请选择状态' }],
-  task_categories_text: [{ required: true, message: '请输入任务分类' }],
-  difficulty_levels_text: [{ required: true, message: '请输入难度等级 JSON' }]
+  status: [{ required: true, message: '请选择状态' }]
 };
 
 const loading = ref(false);
@@ -248,7 +282,7 @@ const filters = reactive({
   keyword: '',
   status: ''
 });
-const form = reactive({ ...DEFAULT_FORM });
+const form = reactive(createDefaultForm());
 
 const isEditing = computed(() => Boolean(form._id));
 const pagination = computed(() => ({
@@ -259,10 +293,10 @@ const pagination = computed(() => ({
 
 function resetForm(row = {}) {
   Object.assign(form, {
-    ...DEFAULT_FORM,
+    ...createDefaultForm(),
     ...row,
-    task_categories_text: stringifyCategories(row.task_categories),
-    difficulty_levels_text: JSON.stringify(row.difficulty_levels || DEFAULT_DIFFICULTY_LEVELS, null, 2),
+    task_categories: cloneCategories(row.task_categories),
+    difficulty_levels: cloneDifficultyLevels(row.difficulty_levels),
     default_points: Number(row.default_points ?? DEFAULT_FORM.default_points),
     bonus_multiplier: Number(row.bonus_multiplier ?? DEFAULT_FORM.bonus_multiplier),
     sort_order: Number(row.sort_order ?? DEFAULT_FORM.sort_order),
@@ -270,34 +304,70 @@ function resetForm(row = {}) {
   });
 }
 
-function stringifyCategories(categories) {
+function cloneCategories(categories) {
   if (!Array.isArray(categories) || !categories.length) {
-    return '';
+    return [...DEFAULT_TASK_CATEGORIES];
   }
 
-  return categories.join('\n');
+  const normalized = categories.map((item) => String(item || '').trim()).filter(Boolean);
+  return normalized.length ? normalized : [...DEFAULT_TASK_CATEGORIES];
 }
 
-function parseCategories(value) {
-  return String(value || '')
-    .split(/[\n,，]/)
-    .map((item) => item.trim())
-    .filter(Boolean);
+function cloneDifficultyLevels(levels) {
+  const source = Array.isArray(levels) && levels.length ? levels : DEFAULT_DIFFICULTY_LEVELS;
+  return source.map((item) => ({
+    level: Number(item.level) || 1,
+    name: String(item.name || '').trim(),
+    color: String(item.color || '#1890ff').trim()
+  }));
 }
 
-function parseDifficultyLevels(value) {
-  let parsed = [];
-  try {
-    parsed = JSON.parse(String(value || '[]'));
-  } catch (error) {
-    throw new Error('难度等级必须是合法 JSON 数组');
+function addCategory() {
+  form.task_categories.push('');
+}
+
+function removeCategory(index) {
+  if (form.task_categories.length <= 1) {
+    form.task_categories[0] = '';
+    return;
   }
 
-  if (!Array.isArray(parsed) || !parsed.length) {
+  form.task_categories.splice(index, 1);
+}
+
+function addDifficultyLevel() {
+  const maxLevel = Math.max(0, ...form.difficulty_levels.map((item) => Number(item.level) || 0));
+  form.difficulty_levels.push({
+    level: maxLevel + 1,
+    name: '',
+    color: '#1890ff'
+  });
+}
+
+function removeDifficultyLevel(index) {
+  if (form.difficulty_levels.length <= 1) {
+    MessagePlugin.warning('难度等级至少保留一项');
+    return;
+  }
+
+  form.difficulty_levels.splice(index, 1);
+}
+
+function normalizeCategories() {
+  const categories = form.task_categories.map((item) => String(item || '').trim()).filter(Boolean);
+  if (!categories.length) {
+    throw new Error('任务分类至少需要一项');
+  }
+
+  return [...new Set(categories)];
+}
+
+function normalizeDifficultyLevels() {
+  if (!Array.isArray(form.difficulty_levels) || !form.difficulty_levels.length) {
     throw new Error('难度等级至少需要一项');
   }
 
-  const levels = parsed.map((item) => ({
+  const levels = form.difficulty_levels.map((item) => ({
     level: Number(item.level),
     name: String(item.name || '').trim(),
     color: String(item.color || '#1890ff').trim()
@@ -309,6 +379,10 @@ function parseDifficultyLevels(value) {
       throw new Error('难度等级每项都必须包含正整数 level 和 name');
     }
 
+    if (!/^#([0-9a-f]{3}|[0-9a-f]{6})$/i.test(item.color)) {
+      throw new Error(`难度等级 ${item.level} 的颜色必须是十六进制色值`);
+    }
+
     if (levelSet.has(item.level)) {
       throw new Error(`难度等级 ${item.level} 重复`);
     }
@@ -316,15 +390,10 @@ function parseDifficultyLevels(value) {
     levelSet.add(item.level);
   });
 
-  return levels;
+  return levels.sort((current, next) => current.level - next.level);
 }
 
 function normalizePayload() {
-  const taskCategories = parseCategories(form.task_categories_text);
-  if (!taskCategories.length) {
-    throw new Error('任务分类至少需要一项');
-  }
-
   return {
     _id: form._id,
     project_name: form.project_name.trim(),
@@ -332,8 +401,8 @@ function normalizePayload() {
     description: form.description.trim(),
     cover_image: form.cover_image.trim(),
     icon: form.icon.trim(),
-    task_categories: taskCategories,
-    difficulty_levels: parseDifficultyLevels(form.difficulty_levels_text),
+    task_categories: normalizeCategories(),
+    difficulty_levels: normalizeDifficultyLevels(),
     default_points: Number(form.default_points || 0),
     bonus_multiplier: Number(form.bonus_multiplier || 0),
     sort_order: Number(form.sort_order || 0),
