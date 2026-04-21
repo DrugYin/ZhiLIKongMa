@@ -24,6 +24,7 @@ const DEFAULT_PERMISSIONS = [
   'projects:read',
   'projects:write',
   'users:read',
+  'users:write',
   'tasks:read',
   'submissions:read',
   'logs:read'
