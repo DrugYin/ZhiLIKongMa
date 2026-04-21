@@ -6,6 +6,7 @@ import DashboardPage from '@/pages/dashboard/DashboardPage.vue';
 import ConfigPage from '@/pages/config/ConfigPage.vue';
 import ProjectsPage from '@/pages/projects/ProjectsPage.vue';
 import UsersPage from '@/pages/users/UsersPage.vue';
+import ClassesPage from '@/pages/classes/ClassesPage.vue';
 import TasksPage from '@/pages/tasks/TasksPage.vue';
 import SubmissionsPage from '@/pages/submissions/SubmissionsPage.vue';
 import LogsPage from '@/pages/logs/LogsPage.vue';
@@ -26,6 +27,7 @@ const routes = [
       { path: 'config', name: 'config', component: ConfigPage, meta: { title: '系统配置' } },
       { path: 'projects', name: 'projects', component: ProjectsPage, meta: { title: '项目配置' } },
       { path: 'users', name: 'users', component: UsersPage, meta: { title: '用户管理' } },
+      { path: 'classes', name: 'classes', component: ClassesPage, meta: { title: '班级管理' } },
       { path: 'tasks', name: 'tasks', component: TasksPage, meta: { title: '任务管理' } },
       { path: 'submissions', name: 'submissions', component: SubmissionsPage, meta: { title: '提交记录' } },
       { path: 'logs', name: 'logs', component: LogsPage, meta: { title: '操作日志' } }
