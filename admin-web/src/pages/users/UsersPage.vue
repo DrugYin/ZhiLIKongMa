@@ -56,7 +56,7 @@
       >
         <template #user_name="{ row }">
           <div class="user-name-cell">
-            <t-avatar :image="row.avatar_url || undefined" size="36px">
+            <t-avatar :image="row.avatar_display_url || undefined" size="36px">
               {{ getAvatarText(row) }}
             </t-avatar>
             <div>
