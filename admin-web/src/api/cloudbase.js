@@ -81,3 +81,106 @@ export async function callAdminFunction(name, data = {}) {
 
   return result.data || result;
 }
+
+const tempFileURLCache = new Map();
+
+export function isCloudFileID(value) {
+  return /^cloud:\/\//.test(String(value || '').trim());
+}
+
+export function isWebURL(value) {
+  return /^https?:\/\//i.test(String(value || '').trim());
+}
+
+function normalizeTempFileURLResponse(response) {
+  if (Array.isArray(response?.fileList)) {
+    return response.fileList;
+  }
+
+  if (Array.isArray(response?.data?.fileList)) {
+    return response.data.fileList;
+  }
+
+  if (Array.isArray(response?.result?.fileList)) {
+    return response.result.fileList;
+  }
+
+  return [];
+}
+
+function getCachedTempFileURL(fileID) {
+  const cached = tempFileURLCache.get(fileID);
+  if (!cached || cached.expiresAt <= Date.now()) {
+    tempFileURLCache.delete(fileID);
+    return '';
+  }
+
+  return cached.url;
+}
+
+export async function resolveCloudFileURLs(fileIDs = [], maxAge = 3600) {
+  const result = {};
+  const pendingFileIDs = Array.from(new Set(
+    fileIDs
+      .map((item) => String(item || '').trim())
+      .filter(isCloudFileID)
+  )).filter((fileID) => {
+    const cachedURL = getCachedTempFileURL(fileID);
+    if (cachedURL) {
+      result[fileID] = cachedURL;
+      return false;
+    }
+
+    return true;
+  });
+
+  if (!pendingFileIDs.length) {
+    return result;
+  }
+
+  try {
+    const response = await cloudbaseApp.getTempFileURL({
+      fileList: pendingFileIDs.map((fileID) => ({
+        fileID,
+        maxAge
+      }))
+    });
+    const fileList = normalizeTempFileURLResponse(response);
+
+    fileList.forEach((item) => {
+      const fileID = item.fileID || item.fileId || item.fileid;
+      const tempURL = item.tempFileURL || item.tempFileUrl || item.download_url || item.url;
+      if (!fileID || !tempURL) {
+        return;
+      }
+
+      result[fileID] = tempURL;
+      tempFileURLCache.set(fileID, {
+        url: tempURL,
+        expiresAt: Date.now() + Math.max(maxAge - 60, 60) * 1000
+      });
+    });
+  } catch (error) {
+    console.warn('[cloud-storage] getTempFileURL failed:', error.message);
+  }
+
+  return result;
+}
+
+export async function resolveImageURL(value, maxAge = 3600) {
+  const url = String(value || '').trim();
+  if (!url) {
+    return '';
+  }
+
+  if (isWebURL(url)) {
+    return url;
+  }
+
+  if (!isCloudFileID(url)) {
+    return '';
+  }
+
+  const resolvedMap = await resolveCloudFileURLs([url], maxAge);
+  return resolvedMap[url] || '';
+}
