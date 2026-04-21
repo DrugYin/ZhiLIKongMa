@@ -1,7 +1,7 @@
 # 智慧控码后台管理网站项目文档
 
-**文档版本**: v1.0.0  
-**最后更新**: 2026-04-17  
+**文档版本**: v1.1.0
+**最后更新**: 2026-04-21
 **适用范围**: 独立后台管理网站（Web Admin）  
 **关联项目**: 智慧控码训练系统微信小程序  
 **数据来源**: 腾讯云开发 / CloudBase 文档数据库、云函数、云存储
@@ -146,8 +146,7 @@ admin-web/
 cloudfunctions/
 ├── admin-auth-check/
 ├── admin-get-statistics/
-├── admin-get-config/
-├── admin-update-config/
+├── admin-manage-config/
 ├── admin-get-projects/
 ├── admin-update-project/
 ├── admin-get-users/
@@ -357,8 +356,18 @@ Web 登录
 
 ### 云函数
 
-- `admin-get-config`
-- `admin-update-config`
+`admin-manage-config`
+
+### 支持操作
+
+| action | 说明 |
+|--------|------|
+| `list` | 查询配置列表，支持关键词与分类筛选 |
+| `get` | 查询单个配置详情 |
+| `create` | 新增配置 |
+| `update` | 更新配置 |
+| `delete` | 删除配置 |
+| `seed_defaults` | 初始化默认配置 |
 
 ### 配置数据结构
 
@@ -376,12 +385,18 @@ Web 登录
 }
 ```
 
-### 更新入参
+### 新增/更新入参
 
 ```js
 {
+  action: "update",
   config_key: "task_max_submissions",
-  config_value: 3
+  config_value: 3,
+  value_type: "number",
+  category: "task",
+  description: "任务默认最大提交次数",
+  sort_order: 90,
+  is_enabled: true
 }
 ```
 
@@ -634,8 +649,7 @@ Web 登录
 
 | 云函数 | 说明 | 优先级 |
 |--------|------|--------|
-| `admin-get-config` | 获取系统配置列表 | P0 |
-| `admin-update-config` | 更新系统配置 | P0 |
+| `admin-manage-config` | 系统配置增删改查 | P0 |
 
 ### 8.4 项目配置
 
@@ -857,9 +871,9 @@ https://example.com/admin/#/dashboard
 
 任务：
 
-- 实现 `admin-get-config`。
-- 实现 `admin-update-config`。
-- 实现配置分组表单。
+- 实现 `admin-manage-config`。
+- 实现配置列表、新增、编辑、删除。
+- 实现配置搜索、分类筛选和类型表单。
 - 写入操作日志。
 
 交付物：
@@ -905,9 +919,9 @@ https://example.com/admin/#/dashboard
 - [ ] 非管理员不能访问后台。
 - [ ] 运营概览可展示核心指标。
 - [ ] 运营概览可展示最近 7 天趋势。
-- [ ] 系统配置可读取。
-- [ ] 系统配置可更新。
-- [ ] 配置更新会写操作日志。
+- [x] 系统配置可读取。
+- [x] 系统配置可新增、更新和删除。
+- [x] 配置变更会写操作日志。
 - [ ] 项目列表可读取。
 - [ ] 项目状态可更新。
 - [ ] 操作日志可查询。

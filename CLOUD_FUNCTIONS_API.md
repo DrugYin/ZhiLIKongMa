@@ -1460,13 +1460,19 @@ RankingService.getRanking({ rank_type: 'week' })
 
 - `services/api.js` 中的 `configApi`
 - `config/project.js` 中的 `ProjectService`
+- `admin-web/src/api/config.js` 中的后台配置管理接口
+
+### 后台配置模块
+
+- `admin-manage-config`：后台系统配置增删改查，操作 `system_config` 集合
+- 支持 `action`: `list`、`get`、`create`、`update`、`delete`、`seed_defaults`
+- 写操作会校验 `users.admin_auth_uid` 对应用户是否具备 `admin` 角色，并写入 `operation_logs`
 
 ## 七、当前未落地但已预留的调用入口
 
 以下方法已经在 `services/api.js` 中预留，但仓库中还没有对应云函数实现：
 
 - 抽奖：`get-prizes`、`start-draw`、`get-draw-records`
-- 配置：`get-config`
 
 同步建议：
 
@@ -1475,7 +1481,7 @@ RankingService.getRanking({ rank_type: 'week' })
 
 ---
 
-**文档版本**: v3.7.0
-**最后更新**: 2026-04-15
+**文档版本**: v3.8.0
+**最后更新**: 2026-04-21
 **编写者**: 开发团队
-**更新说明**: 同步任务筛选与截止时间说明、审核页双待办、排行榜快照函数与最新集合结构
+**更新说明**: 同步后台系统配置管理云函数与配置 CRUD 接入情况
