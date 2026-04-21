@@ -150,6 +150,39 @@ body {
   background: #f8fbfd;
 }
 
+.chart-panel {
+  height: 260px;
+}
+
+.weekly-metrics {
+  display: grid;
+  gap: 18px;
+}
+
+.weekly-metrics div {
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--admin-border);
+}
+
+.weekly-metrics div:last-child {
+  border-bottom: 0;
+}
+
+.weekly-metrics span {
+  display: block;
+  margin-bottom: 8px;
+  color: var(--admin-muted);
+  font-size: 13px;
+}
+
+.weekly-metrics strong {
+  font-size: 24px;
+}
+
+.trend-table-card {
+  margin-top: 16px;
+}
+
 .login-page {
   display: grid;
   place-items: center;
