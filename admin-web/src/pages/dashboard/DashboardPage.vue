@@ -110,6 +110,7 @@ async function loadData() {
     Object.assign(overview, data.overview || {});
     trend.value = data.trend || [];
     updatedAt.value = data.updated_at || '';
+    await ensureTrendChartReady();
     await nextTick();
     renderTrendChart();
   } catch (error) {
@@ -120,7 +121,7 @@ async function loadData() {
 }
 
 function renderTrendChart() {
-  if (!trendChartRef.value) {
+  if (!trendChartRef.value || !echartsCore) {
     return;
   }
 
@@ -209,7 +210,7 @@ function handleResize() {
 }
 
 onMounted(() => {
-  ensureTrendChartReady().then(loadData);
+  loadData();
   window.addEventListener('resize', handleResize);
 });
 
