@@ -206,6 +206,14 @@ body {
   width: 160px;
 }
 
+.user-search {
+  width: 360px;
+}
+
+.user-filter {
+  width: 150px;
+}
+
 .config-value {
   display: inline-block;
   max-width: 160px;
@@ -227,6 +235,43 @@ body {
 .project-name-cell span {
   color: var(--admin-muted);
   font-size: 12px;
+}
+
+.user-name-cell {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.user-name-cell > div {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.user-name-cell strong,
+.user-name-cell span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.user-name-cell span {
+  color: var(--admin-muted);
+  font-size: 12px;
+}
+
+.user-openid {
+  display: inline-block;
+  max-width: 100%;
+  padding: 6px 10px;
+  overflow: hidden;
+  color: #1d4f45;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  border-radius: 8px;
+  background: var(--admin-primary-soft);
 }
 
 .project-editor-list {
@@ -370,7 +415,9 @@ body {
 
   .config-search,
   .config-category,
-  .project-status-filter {
+  .project-status-filter,
+  .user-search,
+  .user-filter {
     width: 100%;
   }
 
