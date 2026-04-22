@@ -421,7 +421,19 @@ body {
   gap: 10px;
 }
 
+.task-resource-field {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  width: 100%;
+  gap: 10px;
+}
+
+.task-hidden-upload {
+  display: none;
+}
+
 .task-editor-row,
+.task-resource-row,
 .task-file-row {
   display: grid;
   align-items: center;
@@ -436,8 +448,57 @@ body {
   grid-template-columns: minmax(0, 1fr) auto;
 }
 
+.task-resource-row {
+  grid-template-columns: minmax(0, 1fr) auto;
+}
+
 .task-file-row {
   grid-template-columns: minmax(160px, 1.2fr) minmax(120px, 0.8fr) 120px auto;
+}
+
+.task-resource-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.task-resource-panel {
+  display: grid;
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.task-resource-panel h3 {
+  margin: 0;
+  font-size: 16px;
+}
+
+.task-resource-card {
+  display: grid;
+  grid-template-columns: 110px minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: 10px;
+  padding: 12px;
+  border: 1px solid var(--admin-border);
+  border-radius: 12px;
+  background: #f8fbfd;
+}
+
+.task-resource-card span {
+  color: var(--admin-muted);
+  font-size: 13px;
+}
+
+.task-resource-card strong {
+  overflow: hidden;
+  font-weight: 500;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.task-resource-card em {
+  color: var(--admin-muted);
+  font-size: 12px;
+  font-style: normal;
 }
 
 .class-detail {
@@ -639,7 +700,18 @@ body {
   .project-editor-row,
   .project-difficulty-row,
   .task-editor-row,
+  .task-resource-row,
+  .task-resource-field,
   .task-file-row {
+    grid-template-columns: 1fr;
+    align-items: stretch;
+  }
+
+  .task-resource-actions {
+    flex-direction: column;
+  }
+
+  .task-resource-card {
     grid-template-columns: 1fr;
     align-items: stretch;
   }

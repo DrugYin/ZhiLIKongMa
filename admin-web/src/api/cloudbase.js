@@ -184,3 +184,32 @@ export async function resolveImageURL(value, maxAge = 3600) {
   const resolvedMap = await resolveCloudFileURLs([url], maxAge);
   return resolvedMap[url] || '';
 }
+
+function normalizeUploadFileResponse(response) {
+  return response?.fileID
+    || response?.fileId
+    || response?.fileid
+    || response?.data?.fileID
+    || response?.data?.fileId
+    || response?.result?.fileID
+    || response?.result?.fileId
+    || '';
+}
+
+export async function uploadCloudFile(file, cloudPath, onUploadProgress) {
+  const response = await cloudbaseApp.uploadFile({
+    cloudPath,
+    filePath: file,
+    ...(typeof onUploadProgress === 'function' ? { onUploadProgress } : {})
+  });
+  const fileID = normalizeUploadFileResponse(response);
+
+  if (!fileID) {
+    throw new Error('上传成功但未获取到云存储文件 ID');
+  }
+
+  return {
+    fileID,
+    response
+  };
+}

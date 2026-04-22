@@ -275,7 +275,34 @@
           </t-col>
           <t-col :span="6">
             <t-form-item label="封面图" name="cover_image">
-              <t-input v-model="form.cover_image" placeholder="可填写 cloud:// 或 https:// 图片地址" />
+              <div class="task-resource-field">
+                <t-input
+                  v-model="form.cover_image"
+                  placeholder="可填写 cloud:// 或 https:// 图片地址"
+                  @blur="resolveFormResourceURLs"
+                />
+                <t-space>
+                  <t-button size="small" variant="outline" :loading="uploadingCover" @click="triggerCoverUpload">
+                    上传
+                  </t-button>
+                  <t-button
+                    size="small"
+                    variant="text"
+                    :disabled="!form.cover_image"
+                    @click="previewResource(form.cover_image)"
+                  >
+                    预览
+                  </t-button>
+                  <t-button
+                    size="small"
+                    variant="text"
+                    :disabled="!form.cover_image"
+                    @click="downloadResource(form.cover_image, '任务封面')"
+                  >
+                    下载
+                  </t-button>
+                </t-space>
+              </div>
             </t-form-item>
           </t-col>
         </t-row>
@@ -293,12 +320,29 @@
             <div
               v-for="(item, index) in form.images"
               :key="`image-${index}`"
-              class="task-editor-row"
+              class="task-resource-row"
             >
-              <t-input v-model="form.images[index]" placeholder="cloud:// 或 https:// 图片地址" />
-              <t-button theme="danger" variant="text" @click="removeImage(index)">删除</t-button>
+              <t-input
+                v-model="form.images[index]"
+                placeholder="cloud:// 或 https:// 图片地址"
+                @blur="resolveFormResourceURLs"
+              />
+              <t-space>
+                <t-button size="small" variant="text" :disabled="!item" @click="previewResource(item)">
+                  预览
+                </t-button>
+                <t-button size="small" variant="text" :disabled="!item" @click="downloadResource(item, `任务图片-${index + 1}`)">
+                  下载
+                </t-button>
+                <t-button size="small" theme="danger" variant="text" @click="removeImage(index)">删除</t-button>
+              </t-space>
             </div>
-            <t-button variant="outline" block @click="addImage">新增图片</t-button>
+            <div class="task-resource-actions">
+              <t-button variant="outline" @click="addImage">手动新增图片地址</t-button>
+              <t-button theme="primary" variant="outline" :loading="uploadingImages" @click="triggerImageUpload">
+                上传本地图片
+              </t-button>
+            </div>
           </div>
         </t-form-item>
 
@@ -309,15 +353,37 @@
               :key="`file-${index}`"
               class="task-file-row"
             >
-              <t-input v-model="item.file_id" placeholder="file_id / cloud:// 文件地址" />
+              <t-input v-model="item.file_id" placeholder="file_id / cloud:// 文件地址" @blur="resolveFormResourceURLs" />
               <t-input v-model="item.file_name" placeholder="文件名" />
               <t-input-number v-model="item.file_size" :min="0" theme="normal" />
-              <t-button theme="danger" variant="text" @click="removeFile(index)">删除</t-button>
+              <t-space>
+                <t-button size="small" variant="text" :disabled="!item.file_id" @click="previewResource(item.file_id)">
+                  预览
+                </t-button>
+                <t-button
+                  size="small"
+                  variant="text"
+                  :disabled="!item.file_id"
+                  @click="downloadResource(item.file_id, item.file_name || `任务附件-${index + 1}`)"
+                >
+                  下载
+                </t-button>
+                <t-button size="small" theme="danger" variant="text" @click="removeFile(index)">删除</t-button>
+              </t-space>
             </div>
-            <t-button variant="outline" block @click="addFile">新增附件</t-button>
+            <div class="task-resource-actions">
+              <t-button variant="outline" @click="addFile">手动新增附件地址</t-button>
+              <t-button theme="primary" variant="outline" :loading="uploadingFiles" @click="triggerFileUpload">
+                上传本地附件
+              </t-button>
+            </div>
           </div>
         </t-form-item>
       </t-form>
+
+      <input ref="coverUploadInput" class="task-hidden-upload" type="file" accept="image/*" @change="handleCoverUpload" />
+      <input ref="imageUploadInput" class="task-hidden-upload" type="file" accept="image/*" multiple @change="handleImageUpload" />
+      <input ref="fileUploadInput" class="task-hidden-upload" type="file" multiple @change="handleFileUpload" />
     </t-dialog>
 
     <t-dialog
@@ -377,6 +443,47 @@
             <div class="task-description-panel">
               {{ selectedTask.description || '暂无任务说明' }}
             </div>
+            <div class="task-resource-panel">
+              <h3>任务资源</h3>
+              <div v-if="selectedTask.cover_image" class="task-resource-card">
+                <span>封面图</span>
+                <strong>{{ selectedTask.cover_image }}</strong>
+                <t-space>
+                  <t-button size="small" variant="text" @click="previewResource(selectedTask.cover_image)">预览</t-button>
+                  <t-button size="small" variant="text" @click="downloadResource(selectedTask.cover_image, '任务封面')">下载</t-button>
+                </t-space>
+              </div>
+              <div
+                v-for="(image, index) in selectedTask.images || []"
+                :key="`detail-image-${index}`"
+                class="task-resource-card"
+              >
+                <span>图片 {{ index + 1 }}</span>
+                <strong>{{ image }}</strong>
+                <t-space>
+                  <t-button size="small" variant="text" @click="previewResource(image)">预览</t-button>
+                  <t-button size="small" variant="text" @click="downloadResource(image, `任务图片-${index + 1}`)">下载</t-button>
+                </t-space>
+              </div>
+              <div
+                v-for="(file, index) in selectedTask.files || []"
+                :key="`detail-file-${index}`"
+                class="task-resource-card"
+              >
+                <span>{{ file.file_name || `附件 ${index + 1}` }}</span>
+                <strong>{{ file.file_id }}</strong>
+                <em>{{ formatFileSize(file.file_size) }}</em>
+                <t-space>
+                  <t-button size="small" variant="text" @click="previewResource(file.file_id)">预览</t-button>
+                  <t-button size="small" variant="text" @click="downloadResource(file.file_id, file.file_name || `任务附件-${index + 1}`)">下载</t-button>
+                </t-space>
+              </div>
+              <t-empty
+                v-if="!selectedTask.cover_image && !(selectedTask.images || []).length && !(selectedTask.files || []).length"
+                title="暂无任务资源"
+                description="可以在编辑任务中上传封面、图片或附件。"
+              />
+            </div>
           </t-tab-panel>
 
           <t-tab-panel value="submissions" label="提交记录">
@@ -413,7 +520,15 @@
                 </t-tag>
               </template>
               <template #material="{ row }">
-                图片 {{ (row.images || []).length }} / 附件 {{ (row.files || []).length }}
+                <t-button
+                  v-if="hasSubmissionResources(row)"
+                  size="small"
+                  variant="text"
+                  @click="openSubmissionResources(row)"
+                >
+                  图片 {{ (row.images || []).length }} / 附件 {{ (row.files || []).length }}
+                </t-button>
+                <span v-else>无资源</span>
               </template>
               <template #score="{ row }">
                 {{ row.score ?? '--' }} / {{ row.points_earned || 0 }} 分
@@ -424,6 +539,41 @@
             </t-table>
           </t-tab-panel>
         </t-tabs>
+      </div>
+    </t-dialog>
+
+    <t-dialog
+      v-model:visible="submissionResourceDialogVisible"
+      header="提交资源"
+      width="760px"
+      :footer="false"
+    >
+      <div v-if="selectedSubmission" class="task-resource-panel">
+        <div
+          v-for="(image, index) in selectedSubmission.images || []"
+          :key="`submission-image-${index}`"
+          class="task-resource-card"
+        >
+          <span>提交图片 {{ index + 1 }}</span>
+          <strong>{{ image }}</strong>
+          <t-space>
+            <t-button size="small" variant="text" @click="previewResource(image)">预览</t-button>
+            <t-button size="small" variant="text" @click="downloadResource(image, `提交图片-${index + 1}`)">下载</t-button>
+          </t-space>
+        </div>
+        <div
+          v-for="(file, index) in selectedSubmission.files || []"
+          :key="`submission-file-${index}`"
+          class="task-resource-card"
+        >
+          <span>{{ file.file_name || `提交附件 ${index + 1}` }}</span>
+          <strong>{{ file.file_id }}</strong>
+          <em>{{ formatFileSize(file.file_size) }}</em>
+          <t-space>
+            <t-button size="small" variant="text" @click="previewResource(file.file_id)">预览</t-button>
+            <t-button size="small" variant="text" @click="downloadResource(file.file_id, file.file_name || `提交附件-${index + 1}`)">下载</t-button>
+          </t-space>
+        </div>
       </div>
     </t-dialog>
   </section>
@@ -444,6 +594,12 @@ import {
   updateTask
 } from '@/api/tasks';
 import { getUsers } from '@/api/users';
+import {
+  isCloudFileID,
+  isWebURL,
+  resolveCloudFileURLs,
+  uploadCloudFile
+} from '@/api/cloudbase';
 
 const DEFAULT_FORM = {
   _id: '',
@@ -500,15 +656,23 @@ const rules = {
 const loading = ref(false);
 const saving = ref(false);
 const detailLoading = ref(false);
+const uploadingCover = ref(false);
+const uploadingImages = ref(false);
+const uploadingFiles = ref(false);
 const formDialogVisible = ref(false);
 const detailDialogVisible = ref(false);
+const submissionResourceDialogVisible = ref(false);
 const formRef = ref(null);
+const coverUploadInput = ref(null);
+const imageUploadInput = ref(null);
+const fileUploadInput = ref(null);
 const taskRows = ref([]);
 const projectOptions = ref([]);
 const classOptions = ref([]);
 const teacherOptions = ref([]);
 const total = ref(0);
 const selectedTask = ref(null);
+const selectedSubmission = ref(null);
 const detailTab = ref('info');
 const submissionRows = ref([]);
 const submissionTotal = ref(0);
@@ -526,6 +690,7 @@ const submissionFilters = reactive({
   pageSize: 10
 });
 const form = reactive(createDefaultForm());
+const resourceURLMap = reactive({});
 
 const isEditing = computed(() => Boolean(form._id));
 const pagination = computed(() => ({
@@ -570,6 +735,7 @@ function resetForm(row = {}) {
     images: cloneImages(row.images),
     files: cloneFiles(row.files)
   });
+  resolveFormResourceURLs();
 }
 
 function cloneImages(images) {
@@ -606,6 +772,235 @@ function addFile() {
 
 function removeFile(index) {
   form.files.splice(index, 1);
+}
+
+function getResourceFileIDs() {
+  return [
+    form.cover_image,
+    ...form.images,
+    ...form.files.map((item) => item.file_id),
+    selectedTask.value?.cover_image,
+    ...(selectedTask.value?.images || []),
+    ...(selectedTask.value?.files || []).map((item) => item.file_id),
+    ...(selectedSubmission.value?.images || []),
+    ...(selectedSubmission.value?.files || []).map((item) => item.file_id)
+  ].filter(isCloudFileID);
+}
+
+async function resolveResourceURLs(fileIDs = getResourceFileIDs()) {
+  const ids = Array.from(new Set(fileIDs.filter(isCloudFileID)));
+  if (!ids.length) {
+    return {};
+  }
+
+  const resolvedMap = await resolveCloudFileURLs(ids, 3600);
+  Object.assign(resourceURLMap, resolvedMap);
+  return resolvedMap;
+}
+
+function resolveFormResourceURLs() {
+  resolveResourceURLs(getResourceFileIDs()).catch((error) => {
+    console.warn('[tasks] resolve resource URLs failed:', error.message);
+  });
+}
+
+async function getResourceURL(value) {
+  const resource = String(value || '').trim();
+  if (!resource) {
+    return '';
+  }
+
+  if (isWebURL(resource)) {
+    return resource;
+  }
+
+  if (!isCloudFileID(resource)) {
+    return '';
+  }
+
+  if (!resourceURLMap[resource]) {
+    await resolveResourceURLs([resource]);
+  }
+
+  return resourceURLMap[resource] || '';
+}
+
+async function previewResource(value) {
+  const url = await getResourceURL(value);
+  if (!url) {
+    MessagePlugin.warning('暂时无法获取资源预览地址');
+    return;
+  }
+
+  window.open(url, '_blank', 'noopener,noreferrer');
+}
+
+async function downloadResource(value, filename = 'resource') {
+  const url = await getResourceURL(value);
+  if (!url) {
+    MessagePlugin.warning('暂时无法获取资源下载地址');
+    return;
+  }
+
+  const link = document.createElement('a');
+  link.href = url;
+  link.target = '_blank';
+  link.rel = 'noopener noreferrer';
+  link.download = filename;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+}
+
+function sanitizeFileName(name = '') {
+  const normalized = String(name || 'file')
+    .replace(/[\\/:*?"<>|#%&{}$!'@+`=]/g, '-')
+    .replace(/\s+/g, '-')
+    .replace(/-+/g, '-')
+    .replace(/^-|-$/g, '');
+
+  return normalized || 'file';
+}
+
+function getTodayFolder() {
+  const now = new Date();
+  return `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}`;
+}
+
+function buildCloudPath(file, folder) {
+  const timestamp = Date.now();
+  const random = Math.random().toString(36).slice(2, 8);
+  return `admin-web/tasks/${folder}/${getTodayFolder()}/${timestamp}-${random}-${sanitizeFileName(file.name)}`;
+}
+
+function assertUploadFile(file, { imageOnly = false } = {}) {
+  if (imageOnly && !/^image\//i.test(file.type || '')) {
+    throw new Error(`${file.name} 不是图片文件`);
+  }
+
+  const maxSize = imageOnly ? 20 * 1024 * 1024 : 100 * 1024 * 1024;
+  if (file.size > maxSize) {
+    throw new Error(`${file.name} 超过 ${imageOnly ? '20MB' : '100MB'} 限制`);
+  }
+}
+
+function triggerCoverUpload() {
+  coverUploadInput.value?.click();
+}
+
+function triggerImageUpload() {
+  imageUploadInput.value?.click();
+}
+
+function triggerFileUpload() {
+  fileUploadInput.value?.click();
+}
+
+async function uploadFilesToCloud(files, folder, options = {}) {
+  const uploaded = [];
+
+  for (const file of files) {
+    assertUploadFile(file, options);
+    const { fileID } = await uploadCloudFile(file, buildCloudPath(file, folder));
+    uploaded.push({
+      file,
+      fileID
+    });
+  }
+
+  await resolveResourceURLs(uploaded.map((item) => item.fileID));
+  return uploaded;
+}
+
+async function handleCoverUpload(event) {
+  const file = event.target.files?.[0];
+  event.target.value = '';
+  if (!file) {
+    return;
+  }
+
+  uploadingCover.value = true;
+  try {
+    const [uploaded] = await uploadFilesToCloud([file], 'covers', { imageOnly: true });
+    form.cover_image = uploaded.fileID;
+    MessagePlugin.success('封面图已上传');
+  } catch (error) {
+    MessagePlugin.error(error.message || '封面图上传失败');
+  } finally {
+    uploadingCover.value = false;
+  }
+}
+
+async function handleImageUpload(event) {
+  const files = Array.from(event.target.files || []);
+  event.target.value = '';
+  if (!files.length) {
+    return;
+  }
+
+  uploadingImages.value = true;
+  try {
+    const uploaded = await uploadFilesToCloud(files, 'images', { imageOnly: true });
+    form.images.push(...uploaded.map((item) => item.fileID));
+    MessagePlugin.success(`已上传 ${uploaded.length} 张图片`);
+  } catch (error) {
+    MessagePlugin.error(error.message || '图片上传失败');
+  } finally {
+    uploadingImages.value = false;
+  }
+}
+
+async function handleFileUpload(event) {
+  const files = Array.from(event.target.files || []);
+  event.target.value = '';
+  if (!files.length) {
+    return;
+  }
+
+  uploadingFiles.value = true;
+  try {
+    const uploaded = await uploadFilesToCloud(files, 'files');
+    form.files.push(...uploaded.map(({ file, fileID }) => ({
+      file_id: fileID,
+      file_name: file.name,
+      file_size: file.size
+    })));
+    MessagePlugin.success(`已上传 ${uploaded.length} 个附件`);
+  } catch (error) {
+    MessagePlugin.error(error.message || '附件上传失败');
+  } finally {
+    uploadingFiles.value = false;
+  }
+}
+
+function formatFileSize(size) {
+  const value = Number(size || 0);
+  if (!value) {
+    return '--';
+  }
+
+  if (value < 1024) {
+    return `${value} B`;
+  }
+
+  if (value < 1024 * 1024) {
+    return `${(value / 1024).toFixed(1)} KB`;
+  }
+
+  return `${(value / 1024 / 1024).toFixed(1)} MB`;
+}
+
+function hasSubmissionResources(row = {}) {
+  return Boolean((row.images || []).length || (row.files || []).length);
+}
+
+async function openSubmissionResources(row) {
+  selectedSubmission.value = row;
+  submissionResourceDialogVisible.value = true;
+  await resolveResourceURLs([
+    ...(row.images || []),
+    ...(row.files || []).map((item) => item.file_id)
+  ]);
 }
 
 function normalizeDateText(value) {
@@ -943,6 +1338,11 @@ async function openDetailDialog(row) {
   try {
     const data = await getTaskDetail(row._id);
     selectedTask.value = data.task || row;
+    await resolveResourceURLs([
+      selectedTask.value.cover_image,
+      ...(selectedTask.value.images || []),
+      ...(selectedTask.value.files || []).map((item) => item.file_id)
+    ]);
   } catch (error) {
     MessagePlugin.warning(error.message || '任务详情加载失败，已展示列表数据');
   } finally {
@@ -965,6 +1365,10 @@ async function loadSubmissions() {
     });
     submissionRows.value = data.list || [];
     submissionTotal.value = data.total || 0;
+    await resolveResourceURLs(submissionRows.value.flatMap((item) => [
+      ...(item.images || []),
+      ...(item.files || []).map((file) => file.file_id)
+    ]));
   } catch (error) {
     MessagePlugin.error(error.message || '提交记录加载失败');
   } finally {
