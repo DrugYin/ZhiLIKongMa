@@ -41,7 +41,3 @@ export function getTaskSubmissions(params = {}) {
     ...params
   });
 }
-
-export function getSubmissions(params = {}) {
-  return callAdminFunction('admin-get-submissions', params);
-}

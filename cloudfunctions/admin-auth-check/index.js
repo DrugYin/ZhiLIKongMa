@@ -30,6 +30,7 @@ const DEFAULT_PERMISSIONS = [
   'tasks:read',
   'tasks:write',
   'submissions:read',
+  'submissions:write',
   'logs:read'
 ]
 
