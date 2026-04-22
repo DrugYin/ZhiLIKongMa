@@ -16,12 +16,14 @@
 body {
   margin: 0;
   min-width: 0;
+  overflow-x: hidden;
   background:
     radial-gradient(circle at top left, rgba(29, 111, 95, 0.14), transparent 32%),
     linear-gradient(135deg, #f5f8fb 0%, #eef3f8 100%);
 }
 
 .admin-shell {
+  min-width: 0;
   min-height: 100vh;
 }
 
@@ -81,7 +83,9 @@ body {
 }
 
 .admin-content {
+  min-width: 0;
   padding: 24px;
+  overflow-x: hidden;
 }
 
 .page-header {
@@ -184,6 +188,7 @@ body {
 }
 
 .config-card {
+  min-width: 0;
   box-shadow: 0 18px 50px rgba(24, 48, 76, 0.08);
 }
 
@@ -464,7 +469,9 @@ body {
 .task-resource-panel {
   display: grid;
   gap: 10px;
+  min-width: 0;
   margin-top: 12px;
+  overflow-x: hidden;
 }
 
 .task-resource-panel h3 {
@@ -474,8 +481,9 @@ body {
 
 .task-image-gallery {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr));
   gap: 12px;
+  min-width: 0;
 }
 
 .task-image-preview-card {
@@ -488,13 +496,17 @@ body {
   background: #f8fbfd;
 }
 
+.task-image-preview-card > * {
+  min-width: 0;
+}
+
 .task-image-preview-card img,
 .task-image-placeholder {
   width: 100%;
-  height: 160px;
+  height: 150px;
   border-radius: 10px;
-  object-fit: cover;
-  background: #e8eef5;
+  object-fit: contain;
+  background: #ffffff;
 }
 
 .task-image-placeholder {
@@ -518,6 +530,34 @@ body {
   white-space: nowrap;
 }
 
+.task-image-preview-card--display {
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-areas:
+    "image image"
+    "meta action";
+  align-items: center;
+}
+
+.task-image-preview-card--display img,
+.task-image-preview-card--display .task-image-placeholder {
+  grid-area: image;
+  height: auto;
+  max-height: 170px;
+  aspect-ratio: 16 / 9;
+}
+
+.task-image-meta {
+  grid-area: meta;
+  min-width: 0;
+}
+
+.task-image-preview-card--display > .t-button {
+  grid-area: action;
+  justify-self: end;
+  width: auto;
+  min-width: 64px;
+}
+
 .task-image-preview-card--compact {
   grid-template-columns: 120px minmax(0, 1fr);
   align-items: center;
@@ -527,6 +567,12 @@ body {
 .task-image-preview-card--compact img,
 .task-image-preview-card--compact .task-image-placeholder {
   height: 72px;
+}
+
+.task-image-preview-card--compact span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .task-image-preview-card--mini {
@@ -542,11 +588,16 @@ body {
   display: grid;
   grid-template-columns: 110px minmax(0, 1fr) auto auto;
   align-items: center;
+  min-width: 0;
   gap: 10px;
   padding: 12px;
   border: 1px solid var(--admin-border);
   border-radius: 12px;
   background: #f8fbfd;
+}
+
+.task-resource-card > * {
+  min-width: 0;
 }
 
 .task-resource-card span {
