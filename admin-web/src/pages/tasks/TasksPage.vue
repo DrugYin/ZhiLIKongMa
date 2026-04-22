@@ -11,8 +11,8 @@
       </template>
     </PageHeader>
 
-    <t-card :bordered="false" class="config-card">
-      <div class="config-toolbar">
+    <t-card :bordered="false" class="config-card task-card">
+      <div class="config-toolbar task-toolbar">
         <t-input
           v-model="filters.keyword"
           clearable
@@ -62,15 +62,17 @@
         <t-button :loading="loading" @click="handleSearch">查询</t-button>
       </div>
 
-      <t-table
-        row-key="_id"
-        :data="taskRows"
-        :columns="columns"
-        :loading="loading"
-        :pagination="pagination"
-        hover
-        @page-change="handlePageChange"
-      >
+      <div class="task-table-shell">
+        <t-table
+          row-key="_id"
+          class="task-table"
+          :data="taskRows"
+          :columns="columns"
+          :loading="loading"
+          :pagination="pagination"
+          hover
+          @page-change="handlePageChange"
+        >
         <template #title="{ row }">
           <div class="task-title-cell">
             <strong>{{ row.title }}</strong>
@@ -125,7 +127,8 @@
             </t-popconfirm>
           </t-space>
         </template>
-      </t-table>
+        </t-table>
+      </div>
     </t-card>
 
     <t-dialog
@@ -644,16 +647,16 @@ const DEFAULT_FORM = {
 };
 
 const columns = [
-  { colKey: 'title', title: '任务', width: 220, fixed: 'left' },
-  { colKey: 'project_name', title: '项目', width: 120 },
-  { colKey: 'task_type', title: '类型/范围', width: 150 },
-  { colKey: 'teacher_name', title: '教师', width: 130, ellipsis: true },
-  { colKey: 'difficulty', title: '难度/积分', width: 120 },
-  { colKey: 'submissions', title: '提交', width: 140 },
-  { colKey: 'status', title: '状态', width: 90 },
-  { colKey: 'deadline', title: '截止时间', width: 150 },
-  { colKey: 'update_time', title: '更新时间', width: 170 },
-  { colKey: 'op', title: '操作', width: 190, fixed: 'right' }
+  { colKey: 'title', title: '任务', width: 190 },
+  { colKey: 'project_name', title: '项目', width: 100 },
+  { colKey: 'task_type', title: '类型/范围', width: 130 },
+  { colKey: 'teacher_name', title: '教师', width: 110, ellipsis: true },
+  { colKey: 'difficulty', title: '难度/积分', width: 105 },
+  { colKey: 'submissions', title: '提交', width: 110 },
+  { colKey: 'status', title: '状态', width: 82 },
+  { colKey: 'deadline', title: '截止时间', width: 128 },
+  { colKey: 'update_time', title: '更新时间', width: 145 },
+  { colKey: 'op', title: '操作', width: 128 }
 ];
 
 const submissionColumns = [
