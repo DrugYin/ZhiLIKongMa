@@ -449,7 +449,7 @@ body {
 }
 
 .task-resource-row {
-  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-columns: 120px minmax(0, 1fr) auto;
 }
 
 .task-file-row {
@@ -470,6 +470,72 @@ body {
 .task-resource-panel h3 {
   margin: 0;
   font-size: 16px;
+}
+
+.task-image-gallery {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 12px;
+}
+
+.task-image-preview-card {
+  display: grid;
+  gap: 10px;
+  min-width: 0;
+  padding: 12px;
+  border: 1px solid var(--admin-border);
+  border-radius: 14px;
+  background: #f8fbfd;
+}
+
+.task-image-preview-card img,
+.task-image-placeholder {
+  width: 100%;
+  height: 160px;
+  border-radius: 10px;
+  object-fit: cover;
+  background: #e8eef5;
+}
+
+.task-image-placeholder {
+  display: grid;
+  place-items: center;
+  color: var(--admin-muted);
+  font-size: 13px;
+}
+
+.task-image-preview-card span {
+  display: block;
+  color: var(--admin-muted);
+  font-size: 13px;
+}
+
+.task-image-preview-card strong {
+  display: block;
+  overflow: hidden;
+  font-weight: 500;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.task-image-preview-card--compact {
+  grid-template-columns: 120px minmax(0, 1fr);
+  align-items: center;
+  margin-top: 10px;
+}
+
+.task-image-preview-card--compact img,
+.task-image-preview-card--compact .task-image-placeholder {
+  height: 72px;
+}
+
+.task-image-preview-card--mini {
+  padding: 8px;
+}
+
+.task-image-preview-card--mini img,
+.task-image-preview-card--mini .task-image-placeholder {
+  height: 64px;
 }
 
 .task-resource-card {
@@ -714,6 +780,11 @@ body {
   .task-resource-card {
     grid-template-columns: 1fr;
     align-items: stretch;
+  }
+
+  .task-image-gallery,
+  .task-image-preview-card--compact {
+    grid-template-columns: 1fr;
   }
 
   .login-panel {

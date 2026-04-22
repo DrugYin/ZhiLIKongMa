@@ -289,19 +289,20 @@
                     size="small"
                     variant="text"
                     :disabled="!form.cover_image"
-                    @click="previewResource(form.cover_image)"
-                  >
-                    预览
-                  </t-button>
-                  <t-button
-                    size="small"
-                    variant="text"
-                    :disabled="!form.cover_image"
                     @click="downloadResource(form.cover_image, '任务封面')"
                   >
                     下载
                   </t-button>
                 </t-space>
+              </div>
+              <div v-if="form.cover_image" class="task-image-preview-card task-image-preview-card--compact">
+                <img
+                  v-if="getImagePreviewURL(form.cover_image)"
+                  :src="getImagePreviewURL(form.cover_image)"
+                  alt="任务封面"
+                />
+                <div v-else class="task-image-placeholder">图片地址待解析</div>
+                <span>{{ form.cover_image }}</span>
               </div>
             </t-form-item>
           </t-col>
@@ -322,15 +323,20 @@
               :key="`image-${index}`"
               class="task-resource-row"
             >
+              <div class="task-image-preview-card task-image-preview-card--mini">
+                <img
+                  v-if="getImagePreviewURL(item)"
+                  :src="getImagePreviewURL(item)"
+                  :alt="`任务图片 ${index + 1}`"
+                />
+                <div v-else class="task-image-placeholder">图片地址待解析</div>
+              </div>
               <t-input
                 v-model="form.images[index]"
                 placeholder="cloud:// 或 https:// 图片地址"
                 @blur="resolveFormResourceURLs"
               />
               <t-space>
-                <t-button size="small" variant="text" :disabled="!item" @click="previewResource(item)">
-                  预览
-                </t-button>
                 <t-button size="small" variant="text" :disabled="!item" @click="downloadResource(item, `任务图片-${index + 1}`)">
                   下载
                 </t-button>
@@ -357,9 +363,6 @@
               <t-input v-model="item.file_name" placeholder="文件名" />
               <t-input-number v-model="item.file_size" :min="0" theme="normal" />
               <t-space>
-                <t-button size="small" variant="text" :disabled="!item.file_id" @click="previewResource(item.file_id)">
-                  预览
-                </t-button>
                 <t-button
                   size="small"
                   variant="text"
@@ -445,25 +448,37 @@
             </div>
             <div class="task-resource-panel">
               <h3>任务资源</h3>
-              <div v-if="selectedTask.cover_image" class="task-resource-card">
-                <span>封面图</span>
-                <strong>{{ selectedTask.cover_image }}</strong>
-                <t-space>
-                  <t-button size="small" variant="text" @click="previewResource(selectedTask.cover_image)">预览</t-button>
+              <div v-if="selectedTask.cover_image || (selectedTask.images || []).length" class="task-image-gallery">
+                <div v-if="selectedTask.cover_image" class="task-image-preview-card">
+                  <img
+                    v-if="getImagePreviewURL(selectedTask.cover_image)"
+                    :src="getImagePreviewURL(selectedTask.cover_image)"
+                    alt="任务封面"
+                  />
+                  <div v-else class="task-image-placeholder">图片地址待解析</div>
+                  <div>
+                    <span>封面图</span>
+                    <strong>{{ selectedTask.cover_image }}</strong>
+                  </div>
                   <t-button size="small" variant="text" @click="downloadResource(selectedTask.cover_image, '任务封面')">下载</t-button>
-                </t-space>
-              </div>
-              <div
-                v-for="(image, index) in selectedTask.images || []"
-                :key="`detail-image-${index}`"
-                class="task-resource-card"
-              >
-                <span>图片 {{ index + 1 }}</span>
-                <strong>{{ image }}</strong>
-                <t-space>
-                  <t-button size="small" variant="text" @click="previewResource(image)">预览</t-button>
+                </div>
+                <div
+                  v-for="(image, index) in selectedTask.images || []"
+                  :key="`detail-image-${index}`"
+                  class="task-image-preview-card"
+                >
+                  <img
+                    v-if="getImagePreviewURL(image)"
+                    :src="getImagePreviewURL(image)"
+                    :alt="`任务图片 ${index + 1}`"
+                  />
+                  <div v-else class="task-image-placeholder">图片地址待解析</div>
+                  <div>
+                    <span>图片 {{ index + 1 }}</span>
+                    <strong>{{ image }}</strong>
+                  </div>
                   <t-button size="small" variant="text" @click="downloadResource(image, `任务图片-${index + 1}`)">下载</t-button>
-                </t-space>
+                </div>
               </div>
               <div
                 v-for="(file, index) in selectedTask.files || []"
@@ -474,7 +489,6 @@
                 <strong>{{ file.file_id }}</strong>
                 <em>{{ formatFileSize(file.file_size) }}</em>
                 <t-space>
-                  <t-button size="small" variant="text" @click="previewResource(file.file_id)">预览</t-button>
                   <t-button size="small" variant="text" @click="downloadResource(file.file_id, file.file_name || `任务附件-${index + 1}`)">下载</t-button>
                 </t-space>
               </div>
@@ -552,14 +566,19 @@
         <div
           v-for="(image, index) in selectedSubmission.images || []"
           :key="`submission-image-${index}`"
-          class="task-resource-card"
+          class="task-image-preview-card"
         >
-          <span>提交图片 {{ index + 1 }}</span>
-          <strong>{{ image }}</strong>
-          <t-space>
-            <t-button size="small" variant="text" @click="previewResource(image)">预览</t-button>
-            <t-button size="small" variant="text" @click="downloadResource(image, `提交图片-${index + 1}`)">下载</t-button>
-          </t-space>
+          <img
+            v-if="getImagePreviewURL(image)"
+            :src="getImagePreviewURL(image)"
+            :alt="`提交图片 ${index + 1}`"
+          />
+          <div v-else class="task-image-placeholder">图片地址待解析</div>
+          <div>
+            <span>提交图片 {{ index + 1 }}</span>
+            <strong>{{ image }}</strong>
+          </div>
+          <t-button size="small" variant="text" @click="downloadResource(image, `提交图片-${index + 1}`)">下载</t-button>
         </div>
         <div
           v-for="(file, index) in selectedSubmission.files || []"
@@ -570,7 +589,6 @@
           <strong>{{ file.file_id }}</strong>
           <em>{{ formatFileSize(file.file_size) }}</em>
           <t-space>
-            <t-button size="small" variant="text" @click="previewResource(file.file_id)">预览</t-button>
             <t-button size="small" variant="text" @click="downloadResource(file.file_id, file.file_name || `提交附件-${index + 1}`)">下载</t-button>
           </t-space>
         </div>
@@ -825,14 +843,17 @@ async function getResourceURL(value) {
   return resourceURLMap[resource] || '';
 }
 
-async function previewResource(value) {
-  const url = await getResourceURL(value);
-  if (!url) {
-    MessagePlugin.warning('暂时无法获取资源预览地址');
-    return;
+function getImagePreviewURL(value) {
+  const resource = String(value || '').trim();
+  if (!resource) {
+    return '';
   }
 
-  window.open(url, '_blank', 'noopener,noreferrer');
+  if (isWebURL(resource)) {
+    return resource;
+  }
+
+  return resourceURLMap[resource] || '';
 }
 
 async function downloadResource(value, filename = 'resource') {
