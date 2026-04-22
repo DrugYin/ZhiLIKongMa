@@ -222,6 +222,14 @@ body {
   width: 150px;
 }
 
+.task-search {
+  width: 360px;
+}
+
+.task-filter {
+  width: 150px;
+}
+
 .config-value {
   display: inline-block;
   max-width: 160px;
@@ -303,6 +311,111 @@ body {
 .class-member-cell span {
   color: var(--admin-muted);
   font-size: 12px;
+}
+
+.task-title-cell,
+.task-type-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.task-title-cell strong,
+.task-title-cell span,
+.task-type-cell span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.task-title-cell span,
+.task-type-cell span {
+  color: var(--admin-muted);
+  font-size: 12px;
+}
+
+.task-detail {
+  display: grid;
+  gap: 16px;
+}
+
+.task-detail-summary,
+.task-info-grid {
+  display: grid;
+  gap: 12px;
+}
+
+.task-detail-summary {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.task-info-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.task-detail-summary div,
+.task-info-grid div,
+.task-description-panel {
+  padding: 14px;
+  border: 1px solid var(--admin-border);
+  border-radius: 14px;
+  background: #f8fbfd;
+}
+
+.task-detail-summary span,
+.task-info-grid span {
+  display: block;
+  margin-bottom: 8px;
+  color: var(--admin-muted);
+  font-size: 12px;
+}
+
+.task-detail-summary strong,
+.task-info-grid strong {
+  display: block;
+  overflow: hidden;
+  color: #172033;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.task-description-panel {
+  margin-top: 12px;
+  color: #334155;
+  line-height: 1.8;
+  white-space: pre-wrap;
+}
+
+.task-submission-toolbar {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 12px;
+}
+
+.task-editor-list {
+  display: grid;
+  width: 100%;
+  gap: 10px;
+}
+
+.task-editor-row,
+.task-file-row {
+  display: grid;
+  align-items: center;
+  gap: 10px;
+  padding: 10px;
+  border: 1px solid var(--admin-border);
+  border-radius: 12px;
+  background: #f8fbfd;
+}
+
+.task-editor-row {
+  grid-template-columns: minmax(0, 1fr) auto;
+}
+
+.task-file-row {
+  grid-template-columns: minmax(160px, 1.2fr) minmax(120px, 0.8fr) 120px auto;
 }
 
 .class-detail {
@@ -489,16 +602,22 @@ body {
   .user-search,
   .user-filter,
   .class-search,
-  .class-filter {
+  .class-filter,
+  .task-search,
+  .task-filter {
     width: 100%;
   }
 
-  .class-detail-summary {
+  .class-detail-summary,
+  .task-detail-summary,
+  .task-info-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .project-editor-row,
-  .project-difficulty-row {
+  .project-difficulty-row,
+  .task-editor-row,
+  .task-file-row {
     grid-template-columns: 1fr;
     align-items: stretch;
   }
@@ -513,7 +632,9 @@ body {
     grid-template-columns: 1fr;
   }
 
-  .class-detail-summary {
+  .class-detail-summary,
+  .task-detail-summary,
+  .task-info-grid {
     grid-template-columns: 1fr;
   }
 
