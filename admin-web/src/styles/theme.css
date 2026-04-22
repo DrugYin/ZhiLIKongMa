@@ -235,6 +235,45 @@ body {
   width: 150px;
 }
 
+.task-toolbar {
+  flex-wrap: wrap;
+  min-width: 0;
+}
+
+.task-toolbar .task-search {
+  flex: 1 1 260px;
+  width: auto;
+  max-width: 360px;
+}
+
+.task-toolbar .task-filter {
+  flex: 0 1 140px;
+  width: 140px;
+}
+
+.task-table-shell {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+
+.task-card,
+.task-card .t-card__body {
+  max-width: 100%;
+  min-width: 0;
+  overflow-x: hidden;
+}
+
+.task-table {
+  min-width: 1228px;
+}
+
+.task-table .t-table__content {
+  min-width: 0;
+}
+
 .task-form {
   max-width: 100%;
   overflow-x: hidden;
