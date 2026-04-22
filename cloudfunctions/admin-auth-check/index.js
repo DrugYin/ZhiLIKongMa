@@ -28,6 +28,7 @@ const DEFAULT_PERMISSIONS = [
   'classes:read',
   'classes:write',
   'tasks:read',
+  'tasks:write',
   'submissions:read',
   'logs:read'
 ]
