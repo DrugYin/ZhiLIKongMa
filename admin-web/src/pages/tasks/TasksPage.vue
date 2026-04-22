@@ -449,14 +449,14 @@
             <div class="task-resource-panel">
               <h3>任务资源</h3>
               <div v-if="selectedTask.cover_image || (selectedTask.images || []).length" class="task-image-gallery">
-                <div v-if="selectedTask.cover_image" class="task-image-preview-card">
+                <div v-if="selectedTask.cover_image" class="task-image-preview-card task-image-preview-card--display">
                   <img
                     v-if="getImagePreviewURL(selectedTask.cover_image)"
                     :src="getImagePreviewURL(selectedTask.cover_image)"
                     alt="任务封面"
                   />
                   <div v-else class="task-image-placeholder">图片地址待解析</div>
-                  <div>
+                  <div class="task-image-meta">
                     <span>封面图</span>
                     <strong>{{ selectedTask.cover_image }}</strong>
                   </div>
@@ -465,7 +465,7 @@
                 <div
                   v-for="(image, index) in selectedTask.images || []"
                   :key="`detail-image-${index}`"
-                  class="task-image-preview-card"
+                  class="task-image-preview-card task-image-preview-card--display"
                 >
                   <img
                     v-if="getImagePreviewURL(image)"
@@ -473,7 +473,7 @@
                     :alt="`任务图片 ${index + 1}`"
                   />
                   <div v-else class="task-image-placeholder">图片地址待解析</div>
-                  <div>
+                  <div class="task-image-meta">
                     <span>图片 {{ index + 1 }}</span>
                     <strong>{{ image }}</strong>
                   </div>
@@ -566,7 +566,7 @@
         <div
           v-for="(image, index) in selectedSubmission.images || []"
           :key="`submission-image-${index}`"
-          class="task-image-preview-card"
+          class="task-image-preview-card task-image-preview-card--display"
         >
           <img
             v-if="getImagePreviewURL(image)"
@@ -574,7 +574,7 @@
             :alt="`提交图片 ${index + 1}`"
           />
           <div v-else class="task-image-placeholder">图片地址待解析</div>
-          <div>
+          <div class="task-image-meta">
             <span>提交图片 {{ index + 1 }}</span>
             <strong>{{ image }}</strong>
           </div>
