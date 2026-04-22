@@ -230,6 +230,28 @@ body {
   width: 150px;
 }
 
+.task-form {
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+.task-form .t-row,
+.task-form .t-col,
+.task-form .t-form__controls,
+.task-form .t-input,
+.task-form .t-input-number,
+.task-form .t-select,
+.task-form .t-textarea {
+  min-width: 0;
+}
+
+.task-form .t-input,
+.task-form .t-input-number,
+.task-form .t-select,
+.task-form .t-textarea {
+  width: 100%;
+}
+
 .config-value {
   display: inline-block;
   max-width: 160px;

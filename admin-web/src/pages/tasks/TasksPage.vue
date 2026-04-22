@@ -136,7 +136,7 @@
       :cancel-btn="{ content: '取消' }"
       @confirm="handleSubmit"
     >
-      <t-form ref="formRef" :data="form" :rules="rules" label-width="112px">
+      <t-form ref="formRef" :data="form" :rules="rules" label-width="112px" class="task-form">
         <t-form-item label="任务标题" name="title">
           <t-input v-model="form.title" placeholder="例如 变量与条件语句练习" />
         </t-form-item>
@@ -216,7 +216,7 @@
         </t-row>
 
         <t-row :gutter="[16, 0]">
-          <t-col :span="6">
+          <t-col :span="4">
             <t-form-item label="任务分类" name="category">
               <t-select
                 v-model="form.category"
@@ -234,12 +234,12 @@
               </t-select>
             </t-form-item>
           </t-col>
-          <t-col :span="3">
+          <t-col :span="4">
             <t-form-item label="难度" name="difficulty">
               <t-input-number v-model="form.difficulty" :min="1" :max="5" theme="normal" />
             </t-form-item>
           </t-col>
-          <t-col :span="3">
+          <t-col :span="4">
             <t-form-item label="积分" name="points">
               <t-input-number v-model="form.points" :min="0" theme="normal" />
             </t-form-item>
