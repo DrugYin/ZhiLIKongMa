@@ -115,6 +115,55 @@ async function fetchAllLogs() {
   return pages.reduce((result, item) => result.concat(item.data || []), [])
 }
 
+async function fetchAllUsers() {
+  const totalRes = await db.collection(USER_COLLECTION).count()
+  const total = totalRes.total || 0
+  const tasks = []
+
+  for (let skip = 0; skip < total; skip += PAGE_SIZE) {
+    tasks.push(
+      db.collection(USER_COLLECTION)
+        .skip(skip)
+        .limit(PAGE_SIZE)
+        .field({
+          _id: true,
+          _openid: true,
+          user_name: true,
+          nick_name: true,
+          nickname: true,
+          phone: true,
+          roles: true,
+          avatar_url: true
+        })
+        .get()
+    )
+  }
+
+  if (!tasks.length) {
+    return []
+  }
+
+  const pages = await Promise.all(tasks)
+  return pages.reduce((result, item) => result.concat(item.data || []), [])
+}
+
+function buildUserIndexes(users = []) {
+  return users.reduce((indexes, user) => {
+    if (user._id) {
+      indexes.byId[user._id] = user
+    }
+
+    if (user._openid) {
+      indexes.byOpenid[user._openid] = user
+    }
+
+    return indexes
+  }, {
+    byId: {},
+    byOpenid: {}
+  })
+}
+
 async function getLogById(logId) {
   if (!logId) {
     return null
@@ -140,8 +189,25 @@ function getActorType(doc = {}) {
   return doc.user_type || 'unknown'
 }
 
-function getActorName(doc = {}) {
-  return doc.operator_name
+function getUserDisplayName(user = {}) {
+  const profile = user || {}
+  return profile.user_name
+    || profile.nick_name
+    || profile.nickname
+    || profile.phone
+    || ''
+}
+
+function getActorUser(doc = {}, userIndexes = { byId: {}, byOpenid: {} }) {
+  return userIndexes.byId[doc.operator_id]
+    || userIndexes.byOpenid[doc.user_openid]
+    || userIndexes.byOpenid[doc.operator_openid]
+    || null
+}
+
+function getActorName(doc = {}, user = null) {
+  return getUserDisplayName(user)
+    || doc.operator_name
     || doc.user_name
     || doc.user_openid
     || doc.operator_id
@@ -160,14 +226,22 @@ function getTargetKey(doc = {}) {
     || '--'
 }
 
-function normalizeLogDoc(doc = {}) {
+function normalizeLogDoc(doc = {}, userIndexes = { byId: {}, byOpenid: {} }) {
+  const actorUser = getActorUser(doc, userIndexes)
+  const actorOpenid = actorUser?._openid || doc.user_openid || doc.operator_openid || ''
+  const actorId = doc.operator_id || actorUser?._id || actorOpenid || ''
+
   return {
     ...doc,
     module: getLogModule(doc),
     action: doc.action || '',
     actor_type: getActorType(doc),
-    actor_id: doc.operator_id || doc.user_openid || '',
-    actor_name: getActorName(doc),
+    actor_id: actorId,
+    actor_openid: actorOpenid,
+    actor_phone: actorUser?.phone || '',
+    actor_roles: actorUser?.roles || [],
+    actor_avatar_url: actorUser?.avatar_url || '',
+    actor_name: getActorName(doc, actorUser),
     target_type: doc.target_type || doc.module || '',
     target_id: doc.target_id || '',
     target_key: getTargetKey(doc),
@@ -268,10 +342,14 @@ async function listLogs(event = {}) {
   const pageSize = normalizePageSize(event.page_size || event.pageSize)
   const startDate = buildDateStart(event.start_date)
   const endDate = buildDateEnd(event.end_date)
-  const allLogs = await fetchAllLogs()
+  const [allLogs, allUsers] = await Promise.all([
+    fetchAllLogs(),
+    fetchAllUsers()
+  ])
+  const userIndexes = buildUserIndexes(allUsers)
 
   const filtered = allLogs
-    .map(normalizeLogDoc)
+    .map((log) => normalizeLogDoc(log, userIndexes))
     .filter((log) => !moduleName || log.module === moduleName)
     .filter((log) => !action || log.action === action)
     .filter((log) => !actorType || log.actor_type === actorType)
@@ -294,14 +372,17 @@ async function listLogs(event = {}) {
 
 async function getLog(event = {}) {
   const logId = normalizeString(event.log_id || event._id || event.id)
-  const log = await getLogById(logId)
+  const [log, allUsers] = await Promise.all([
+    getLogById(logId),
+    fetchAllUsers()
+  ])
 
   if (!log) {
     return failure('操作日志不存在', 404)
   }
 
   return success('获取操作日志详情成功', {
-    log: normalizeLogDoc(log)
+    log: normalizeLogDoc(log, buildUserIndexes(allUsers))
   })
 }
 

@@ -126,7 +126,7 @@
           <template #actor="{ row }">
             <div class="log-title-cell">
               <strong>{{ row.actor_name || '--' }}</strong>
-              <span>{{ getActorTypeLabel(row.actor_type) }} · {{ row.actor_id || '--' }}</span>
+              <span>{{ getActorTypeLabel(row.actor_type) }} · {{ getActorMeta(row) }}</span>
             </div>
           </template>
 
@@ -181,7 +181,11 @@
           </div>
           <div>
             <span>操作者 ID</span>
-            <strong>{{ selectedLog.actor_id || '--' }}</strong>
+            <strong>{{ selectedLog.actor_id || selectedLog.actor_openid || '--' }}</strong>
+          </div>
+          <div>
+            <span>手机号</span>
+            <strong>{{ selectedLog.actor_phone || '--' }}</strong>
           </div>
           <div>
             <span>目标</span>
@@ -322,6 +326,20 @@ function getActorTypeLabel(type) {
     unknown: '未知来源'
   };
   return map[type] || type || '--';
+}
+
+function getShortId(value) {
+  const text = String(value || '');
+  if (!text) {
+    return '--';
+  }
+
+  return text.length > 18 ? `${text.slice(0, 8)}...${text.slice(-6)}` : text;
+}
+
+function getActorMeta(row = {}) {
+  return row.actor_phone
+    || getShortId(row.actor_openid || row.actor_id);
 }
 
 function getActionLabel(action) {
