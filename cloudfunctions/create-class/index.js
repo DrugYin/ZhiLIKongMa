@@ -1,20 +1,12 @@
 const cloud = require('wx-server-sdk');
+const { verifyTeacherRole } = require('../_shared/auth');
+const { writeOperationLog } = require('../_shared/operation-log');
 
 cloud.init({
   env: cloud.DYNAMIC_CURRENT_ENV
 });
 
 const db = cloud.database();
-
-async function getCurrentUser(openid) {
-  const res = await db.collection('users').where({ _openid: openid }).limit(1).get();
-  return res.data[0] || null;
-}
-
-async function verifyTeacherRole(openid) {
-  const user = await getCurrentUser(openid);
-  return user && Array.isArray(user.roles) && user.roles.includes('teacher') ? user : null;
-}
 
 function generateClassCode() {
   const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
@@ -36,28 +28,10 @@ async function createUniqueClassCode() {
   throw new Error('班级邀请码生成失败，请重试');
 }
 
-async function writeOperationLog(openid, userType, action, targetId, detail, now) {
-  try {
-    await db.collection('operation_logs').add({
-      data: {
-        user_openid: openid,
-        user_type: userType,
-        action,
-        target_type: 'class',
-        target_id: targetId,
-        detail,
-        create_time: now
-      }
-    });
-  } catch (error) {
-    console.error('[create-class] writeOperationLog Error:', error);
-  }
-}
-
 exports.main = async (event) => {
   try {
     const { OPENID } = cloud.getWXContext();
-    const teacher = await verifyTeacherRole(OPENID);
+    const teacher = await verifyTeacherRole(db, OPENID);
 
     if (!teacher) {
       return {
@@ -114,13 +88,22 @@ exports.main = async (event) => {
       data: classData
     });
 
-    await writeOperationLog(OPENID, 'teacher', 'create_class', result._id, {
-      class_name: className,
-      class_code: classCode,
-      class_time: classTime,
-      location,
-      max_members: maxMembers
-    }, now);
+    await writeOperationLog(db, {
+      openid: OPENID,
+      userType: 'teacher',
+      action: 'create_class',
+      targetType: 'class',
+      targetId: result._id,
+      detail: {
+        class_name: className,
+        class_code: classCode,
+        class_time: classTime,
+        location,
+        max_members: maxMembers
+      },
+      now,
+      contextLabel: 'create-class'
+    });
 
     return {
       success: true,
