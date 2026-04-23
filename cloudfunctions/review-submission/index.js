@@ -1,6 +1,6 @@
 const cloud = require('wx-server-sdk')
-const { verifyTeacherRole } = require('../_shared/auth')
-const { writeOperationLog } = require('../_shared/operation-log')
+const { verifyTeacherRole } = require('/opt/auth')
+const { writeOperationLog } = require('/opt/operation-log')
 
 cloud.init({
   env: cloud.DYNAMIC_CURRENT_ENV
