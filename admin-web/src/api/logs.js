@@ -1,9 +1,12 @@
 import { callAdminFunction } from './cloudbase';
 
 export function getOperationLogs(params = {}) {
+  const { action: logAction, ...restParams } = params;
+
   return callAdminFunction('admin-manage-logs', {
+    ...restParams,
     action: 'list',
-    ...params
+    log_action: logAction
   });
 }
 
