@@ -18,6 +18,7 @@ const auth = app.auth()
 
 const USER_COLLECTION = 'users'
 const LOG_COLLECTION = 'operation_logs'
+const CLASS_COLLECTION = 'classes'
 const PAGE_SIZE = 100
 
 function success(message, data = {}) {
@@ -153,6 +154,37 @@ async function fetchAllUsers() {
   return pages.reduce((result, item) => result.concat(item.data || []), [])
 }
 
+async function fetchAllClasses() {
+  const totalRes = await db.collection(CLASS_COLLECTION).count()
+  const total = totalRes.total || 0
+  const tasks = []
+
+  for (let skip = 0; skip < total; skip += PAGE_SIZE) {
+    tasks.push(
+      db.collection(CLASS_COLLECTION)
+        .skip(skip)
+        .limit(PAGE_SIZE)
+        .field({
+          _id: true,
+          class_name: true,
+          class_code: true,
+          project_code: true,
+          project_name: true,
+          teacher_openid: true,
+          status: true
+        })
+        .get()
+    )
+  }
+
+  if (!tasks.length) {
+    return []
+  }
+
+  const pages = await Promise.all(tasks)
+  return pages.reduce((result, item) => result.concat(item.data || []), [])
+}
+
 function buildUserIndexes(users = []) {
   return users.reduce((indexes, user) => {
     if (user._id) {
@@ -167,6 +199,23 @@ function buildUserIndexes(users = []) {
   }, {
     byId: {},
     byOpenid: {}
+  })
+}
+
+function buildClassIndexes(classes = []) {
+  return classes.reduce((indexes, classInfo) => {
+    if (classInfo._id) {
+      indexes.byId[classInfo._id] = classInfo
+    }
+
+    if (classInfo.class_code) {
+      indexes.byCode[classInfo.class_code] = classInfo
+    }
+
+    return indexes
+  }, {
+    byId: {},
+    byCode: {}
   })
 }
 
@@ -220,6 +269,86 @@ function getActorName(doc = {}, user = null) {
     || '--'
 }
 
+function isClassRelatedLog(doc = {}) {
+  const moduleName = getLogModule(doc)
+  const action = normalizeString(doc.action)
+
+  return moduleName === 'class'
+    || moduleName === 'classes'
+    || doc.target_type === 'class'
+    || /class/.test(action)
+}
+
+function getClassFromLog(doc = {}, classIndexes = { byId: {}, byCode: {} }) {
+  if (!isClassRelatedLog(doc)) {
+    return null
+  }
+
+  const detail = doc.detail || {}
+  const after = detail.after || {}
+  const before = detail.before || {}
+  const classId = pickFirst(
+    detail.class_id,
+    after.class_id,
+    before.class_id,
+    doc.target_type === 'class' ? doc.target_id : ''
+  )
+  const classCode = pickFirst(
+    detail.class_code,
+    after.class_code,
+    before.class_code,
+    doc.target_type === 'class' ? doc.target_key : ''
+  )
+
+  return classIndexes.byId[classId]
+    || classIndexes.byCode[classCode]
+    || null
+}
+
+function formatClassTarget(classInfo = {}) {
+  const className = normalizeString(classInfo.class_name)
+  const classCode = normalizeString(classInfo.class_code)
+
+  if (className && classCode && className !== classCode) {
+    return `${className}（${classCode}）`
+  }
+
+  return className || classCode
+}
+
+function getStudentTargetName(detail = {}, userIndexes = { byId: {}, byOpenid: {} }) {
+  const studentOpenid = pickFirst(
+    detail.student_openid,
+    detail.member_openid,
+    detail.after?.student_openid,
+    detail.before?.student_openid
+  )
+  const studentUser = userIndexes.byOpenid[studentOpenid] || userIndexes.byId[studentOpenid] || null
+
+  return pickFirst(
+    getUserDisplayName(studentUser),
+    detail.student_name,
+    detail.member_name,
+    studentOpenid
+  )
+}
+
+function getJoinClassTarget(doc = {}, classTarget = '', userIndexes = { byId: {}, byOpenid: {} }) {
+  const detail = doc.detail || {}
+
+  if (doc.action === 'join_class_approve' || doc.action === 'join_class_reject') {
+    const studentName = getStudentTargetName(detail, userIndexes)
+
+    if (studentName && classTarget) {
+      return `${studentName} -> ${classTarget}`
+    }
+
+    return studentName || classTarget
+  }
+
+  return ''
+}
+
 function getDetailTargetKey(detail = {}) {
   const after = detail.after || {}
   const before = detail.before || {}
@@ -257,16 +386,20 @@ function getDetailTargetKey(detail = {}) {
   )
 }
 
-function getTargetKey(doc = {}) {
+function getTargetKey(doc = {}, userIndexes = { byId: {}, byOpenid: {} }, classIndexes = { byId: {}, byCode: {} }) {
   const detail = doc.detail || {}
+  const classTarget = formatClassTarget(getClassFromLog(doc, classIndexes) || {})
+
   return pickFirst(
+    getJoinClassTarget(doc, classTarget, userIndexes),
+    classTarget,
     getDetailTargetKey(detail),
     doc.target_key,
     doc.target_id
   ) || '--'
 }
 
-function normalizeLogDoc(doc = {}, userIndexes = { byId: {}, byOpenid: {} }) {
+function normalizeLogDoc(doc = {}, userIndexes = { byId: {}, byOpenid: {} }, classIndexes = { byId: {}, byCode: {} }) {
   const actorUser = getActorUser(doc, userIndexes)
   const actorOpenid = actorUser?._openid || doc.user_openid || doc.operator_openid || ''
   const actorId = doc.operator_id || actorUser?._id || actorOpenid || ''
@@ -284,7 +417,7 @@ function normalizeLogDoc(doc = {}, userIndexes = { byId: {}, byOpenid: {} }) {
     actor_name: getActorName(doc, actorUser),
     target_type: doc.target_type || doc.module || '',
     target_id: doc.target_id || '',
-    target_key: getTargetKey(doc),
+    target_key: getTargetKey(doc, userIndexes, classIndexes),
     detail: doc.detail && typeof doc.detail === 'object' ? doc.detail : {},
     create_time: doc.create_time || null
   }
@@ -382,14 +515,16 @@ async function listLogs(event = {}) {
   const pageSize = normalizePageSize(event.page_size || event.pageSize)
   const startDate = buildDateStart(event.start_date)
   const endDate = buildDateEnd(event.end_date)
-  const [allLogs, allUsers] = await Promise.all([
+  const [allLogs, allUsers, allClasses] = await Promise.all([
     fetchAllLogs(),
-    fetchAllUsers()
+    fetchAllUsers(),
+    fetchAllClasses()
   ])
   const userIndexes = buildUserIndexes(allUsers)
+  const classIndexes = buildClassIndexes(allClasses)
 
   const filtered = allLogs
-    .map((log) => normalizeLogDoc(log, userIndexes))
+    .map((log) => normalizeLogDoc(log, userIndexes, classIndexes))
     .filter((log) => !moduleName || log.module === moduleName)
     .filter((log) => !action || log.action === action)
     .filter((log) => !actorType || log.actor_type === actorType)
@@ -412,9 +547,10 @@ async function listLogs(event = {}) {
 
 async function getLog(event = {}) {
   const logId = normalizeString(event.log_id || event._id || event.id)
-  const [log, allUsers] = await Promise.all([
+  const [log, allUsers, allClasses] = await Promise.all([
     getLogById(logId),
-    fetchAllUsers()
+    fetchAllUsers(),
+    fetchAllClasses()
   ])
 
   if (!log) {
@@ -422,7 +558,7 @@ async function getLog(event = {}) {
   }
 
   return success('获取操作日志详情成功', {
-    log: normalizeLogDoc(log, buildUserIndexes(allUsers))
+    log: normalizeLogDoc(log, buildUserIndexes(allUsers), buildClassIndexes(allClasses))
   })
 }
 
