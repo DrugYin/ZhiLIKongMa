@@ -5,6 +5,7 @@
 
 const cloud = require('wx-server-sdk')
 const tcb = require('@cloudbase/node-sdk')
+const { writeAdminOperationLog } = require('/opt/admin-operation-log')
 
 cloud.init({
   env: cloud.DYNAMIC_CURRENT_ENV
@@ -17,7 +18,6 @@ const app = tcb.init({
 const auth = app.auth()
 
 const COLLECTION_NAME = 'users'
-const LOG_COLLECTION_NAME = 'operation_logs'
 const PAGE_SIZE = 100
 const VALID_ROLES = ['student', 'teacher', 'admin']
 const VALID_STATUS = ['active', 'disabled']
@@ -362,58 +362,51 @@ async function updateUser(event = {}, admin) {
 }
 
 async function writeOperationLog(action, user, admin, beforeUser = null) {
-  try {
-    const detail = {
-      user_name: user.user_name,
-      phone: user.phone,
-      roles: user.roles,
-      status: user.status,
-      admin_status: user.admin_status
-    }
-
-    if (beforeUser) {
-      detail.before = {
-        user_name: beforeUser.user_name,
-        phone: beforeUser.phone,
-        roles: beforeUser.roles,
-        current_role: beforeUser.current_role,
-        status: beforeUser.status,
-        admin_role: beforeUser.admin_role,
-        admin_status: beforeUser.admin_status,
-        points: beforeUser.points,
-        total_points: beforeUser.total_points,
-        teacher_project_code: beforeUser.teacher_project_code
-      }
-    }
-
-    detail.after = {
-      user_name: user.user_name,
-      phone: user.phone,
-      roles: user.roles,
-      current_role: user.current_role,
-      status: user.status,
-      admin_role: user.admin_role,
-      admin_status: user.admin_status,
-      points: user.points,
-      total_points: user.total_points,
-      teacher_project_code: user.teacher_project_code
-    }
-
-    await db.collection(LOG_COLLECTION_NAME).add({
-      data: {
-        module: 'users',
-        action,
-        target_id: user._id,
-        target_key: user.phone || user.user_name || user._id,
-        operator_id: admin.user._id,
-        operator_name: admin.user.user_name || admin.user.nick_name || '管理员',
-        detail,
-        create_time: new Date()
-      }
-    })
-  } catch (error) {
-    console.warn('[admin-manage-users] writeOperationLog failed:', error.message)
+  const detail = {
+    user_name: user.user_name,
+    phone: user.phone,
+    roles: user.roles,
+    status: user.status,
+    admin_status: user.admin_status
   }
+
+  if (beforeUser) {
+    detail.before = {
+      user_name: beforeUser.user_name,
+      phone: beforeUser.phone,
+      roles: beforeUser.roles,
+      current_role: beforeUser.current_role,
+      status: beforeUser.status,
+      admin_role: beforeUser.admin_role,
+      admin_status: beforeUser.admin_status,
+      points: beforeUser.points,
+      total_points: beforeUser.total_points,
+      teacher_project_code: beforeUser.teacher_project_code
+    }
+  }
+
+  detail.after = {
+    user_name: user.user_name,
+    phone: user.phone,
+    roles: user.roles,
+    current_role: user.current_role,
+    status: user.status,
+    admin_role: user.admin_role,
+    admin_status: user.admin_status,
+    points: user.points,
+    total_points: user.total_points,
+    teacher_project_code: user.teacher_project_code
+  }
+
+  await writeAdminOperationLog(db, {
+    module: 'users',
+    action,
+    targetId: user._id,
+    targetKey: user.phone || user.user_name || user._id,
+    admin,
+    detail,
+    contextLabel: 'admin-manage-users'
+  })
 }
 
 exports.main = async (event = {}) => {

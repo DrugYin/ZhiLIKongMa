@@ -5,6 +5,7 @@
 
 const cloud = require('wx-server-sdk')
 const tcb = require('@cloudbase/node-sdk')
+const { writeAdminOperationLog } = require('/opt/admin-operation-log')
 
 cloud.init({
   env: cloud.DYNAMIC_CURRENT_ENV
@@ -17,7 +18,6 @@ const app = tcb.init({
 const auth = app.auth()
 
 const COLLECTION_NAME = 'system_config'
-const LOG_COLLECTION_NAME = 'operation_logs'
 const CONFIG_KEY_PATTERN = /^[a-z][a-z0-9_]{1,63}$/
 const VALUE_TYPES = ['string', 'number', 'boolean', 'json']
 const POSITIVE_NUMBER_KEYS = ['task_max_submissions', 'class_max_members', 'lottery_daily_limit']
@@ -479,36 +479,29 @@ async function seedDefaultConfigs(admin) {
 }
 
 async function writeOperationLog(action, config, admin, beforeConfig = null) {
-  try {
-    const detail = {
-      config_key: config.config_key,
-      category: config.category,
-      value_type: config.value_type
-    }
-
-    if (beforeConfig) {
-      detail.before_value = beforeConfig.config_value
-    }
-
-    if (action !== 'delete') {
-      detail.after_value = config.config_value
-    }
-
-    await db.collection(LOG_COLLECTION_NAME).add({
-      data: {
-        module: 'system_config',
-        action,
-        target_id: config._id || config.config_key,
-        target_key: config.config_key,
-        operator_id: admin.user._id,
-        operator_name: admin.user.user_name || admin.user.nick_name || '管理员',
-        detail,
-        create_time: new Date()
-      }
-    })
-  } catch (error) {
-    console.warn('[admin-manage-config] writeOperationLog failed:', error.message)
+  const detail = {
+    config_key: config.config_key,
+    category: config.category,
+    value_type: config.value_type
   }
+
+  if (beforeConfig) {
+    detail.before_value = beforeConfig.config_value
+  }
+
+  if (action !== 'delete') {
+    detail.after_value = config.config_value
+  }
+
+  await writeAdminOperationLog(db, {
+    module: 'system_config',
+    action,
+    targetId: config._id || config.config_key,
+    targetKey: config.config_key,
+    admin,
+    detail,
+    contextLabel: 'admin-manage-config'
+  })
 }
 
 exports.main = async (event = {}) => {
