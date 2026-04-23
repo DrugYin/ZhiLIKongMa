@@ -5,6 +5,7 @@
 
 const cloud = require('wx-server-sdk')
 const tcb = require('@cloudbase/node-sdk')
+const { writeAdminOperationLog } = require('../_shared/admin-operation-log')
 
 cloud.init({
   env: cloud.DYNAMIC_CURRENT_ENV
@@ -18,7 +19,6 @@ const app = tcb.init({
 const auth = app.auth()
 
 const COLLECTION_NAME = 'projects'
-const LOG_COLLECTION_NAME = 'operation_logs'
 const PROJECT_CODE_PATTERN = /^[a-z][a-z0-9_]{1,63}$/
 const VALID_STATUS = ['active', 'inactive']
 const DEFAULT_DIFFICULTY_LEVELS = [
@@ -497,48 +497,41 @@ async function seedDefaultProjects(admin) {
 }
 
 async function writeOperationLog(action, project, admin, beforeProject = null) {
-  try {
-    const detail = {
-      project_code: project.project_code,
-      project_name: project.project_name,
-      status: project.status
-    }
-
-    if (beforeProject) {
-      detail.before = {
-        project_name: beforeProject.project_name,
-        project_code: beforeProject.project_code,
-        status: beforeProject.status,
-        task_categories: beforeProject.task_categories,
-        difficulty_levels: beforeProject.difficulty_levels
-      }
-    }
-
-    if (action !== 'delete') {
-      detail.after = {
-        project_name: project.project_name,
-        project_code: project.project_code,
-        status: project.status,
-        task_categories: project.task_categories,
-        difficulty_levels: project.difficulty_levels
-      }
-    }
-
-    await db.collection(LOG_COLLECTION_NAME).add({
-      data: {
-        module: 'projects',
-        action,
-        target_id: project._id || project.project_code,
-        target_key: project.project_code,
-        operator_id: admin.user._id,
-        operator_name: admin.user.user_name || admin.user.nick_name || '管理员',
-        detail,
-        create_time: new Date()
-      }
-    })
-  } catch (error) {
-    console.warn('[admin-manage-projects] writeOperationLog failed:', error.message)
+  const detail = {
+    project_code: project.project_code,
+    project_name: project.project_name,
+    status: project.status
   }
+
+  if (beforeProject) {
+    detail.before = {
+      project_name: beforeProject.project_name,
+      project_code: beforeProject.project_code,
+      status: beforeProject.status,
+      task_categories: beforeProject.task_categories,
+      difficulty_levels: beforeProject.difficulty_levels
+    }
+  }
+
+  if (action !== 'delete') {
+    detail.after = {
+      project_name: project.project_name,
+      project_code: project.project_code,
+      status: project.status,
+      task_categories: project.task_categories,
+      difficulty_levels: project.difficulty_levels
+    }
+  }
+
+  await writeAdminOperationLog(db, {
+    module: 'projects',
+    action,
+    targetId: project._id || project.project_code,
+    targetKey: project.project_code,
+    admin,
+    detail,
+    contextLabel: 'admin-manage-projects'
+  })
 }
 
 exports.main = async (event = {}) => {

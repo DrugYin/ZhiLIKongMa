@@ -5,6 +5,7 @@
 
 const cloud = require('wx-server-sdk')
 const tcb = require('@cloudbase/node-sdk')
+const { writeAdminOperationLog } = require('../_shared/admin-operation-log')
 
 cloud.init({
   env: cloud.DYNAMIC_CURRENT_ENV
@@ -22,7 +23,6 @@ const SUBMISSION_COLLECTION = 'submissions'
 const USER_COLLECTION = 'users'
 const CLASS_COLLECTION = 'classes'
 const PROJECT_COLLECTION = 'projects'
-const LOG_COLLECTION = 'operation_logs'
 const PAGE_SIZE = 100
 const VALID_TASK_TYPES = ['class', 'public']
 const VALID_VISIBILITIES = ['class_only', 'public']
@@ -762,55 +762,48 @@ async function listSubmissions(event = {}) {
 }
 
 async function writeOperationLog(action, task, admin, beforeTask = null) {
-  try {
-    const detail = {
+  const detail = {
+    title: task.title,
+    task_type: task.task_type,
+    project_code: task.project_code,
+    class_id: task.class_id,
+    teacher_openid: task.teacher_openid,
+    status: task.status
+  }
+
+  if (beforeTask) {
+    detail.before = {
+      title: beforeTask.title,
+      task_type: beforeTask.task_type,
+      project_code: beforeTask.project_code,
+      class_id: beforeTask.class_id,
+      teacher_openid: beforeTask.teacher_openid,
+      status: beforeTask.status
+    }
+  }
+
+  if (action !== 'delete') {
+    detail.after = {
       title: task.title,
       task_type: task.task_type,
       project_code: task.project_code,
       class_id: task.class_id,
       teacher_openid: task.teacher_openid,
-      status: task.status
+      status: task.status,
+      difficulty: task.difficulty,
+      points: task.points
     }
-
-    if (beforeTask) {
-      detail.before = {
-        title: beforeTask.title,
-        task_type: beforeTask.task_type,
-        project_code: beforeTask.project_code,
-        class_id: beforeTask.class_id,
-        teacher_openid: beforeTask.teacher_openid,
-        status: beforeTask.status
-      }
-    }
-
-    if (action !== 'delete') {
-      detail.after = {
-        title: task.title,
-        task_type: task.task_type,
-        project_code: task.project_code,
-        class_id: task.class_id,
-        teacher_openid: task.teacher_openid,
-        status: task.status,
-        difficulty: task.difficulty,
-        points: task.points
-      }
-    }
-
-    await db.collection(LOG_COLLECTION).add({
-      data: {
-        module: 'tasks',
-        action,
-        target_id: task._id,
-        target_key: task.title || task._id,
-        operator_id: admin.user._id,
-        operator_name: admin.user.user_name || admin.user.nick_name || '管理员',
-        detail,
-        create_time: new Date()
-      }
-    })
-  } catch (error) {
-    console.warn('[admin-manage-tasks] writeOperationLog failed:', error.message)
   }
+
+  await writeAdminOperationLog(db, {
+    module: 'tasks',
+    action,
+    targetId: task._id,
+    targetKey: task.title || task._id,
+    admin,
+    detail,
+    contextLabel: 'admin-manage-tasks'
+  })
 }
 
 exports.main = async (event = {}) => {

@@ -5,6 +5,7 @@
 
 const cloud = require('wx-server-sdk')
 const tcb = require('@cloudbase/node-sdk')
+const { writeAdminOperationLog } = require('../_shared/admin-operation-log')
 
 cloud.init({
   env: cloud.DYNAMIC_CURRENT_ENV
@@ -21,7 +22,6 @@ const CLASS_COLLECTION = 'classes'
 const MEMBERSHIP_COLLECTION = 'class_memberships'
 const APPLICATION_COLLECTION = 'class_join_applications'
 const USER_COLLECTION = 'users'
-const LOG_COLLECTION = 'operation_logs'
 const PAGE_SIZE = 100
 const VALID_STATUS = ['active', 'inactive', 'deleted']
 const CLASS_CODE_PATTERN = /^[A-Z0-9]{4,12}$/
@@ -870,52 +870,45 @@ async function reviewApplication(event = {}, admin) {
 }
 
 async function writeOperationLog(action, classInfo, admin, beforeClass = null) {
-  try {
-    const detail = {
+  const detail = {
+    class_name: classInfo.class_name,
+    class_code: classInfo.class_code,
+    project_code: classInfo.project_code,
+    teacher_openid: classInfo.teacher_openid,
+    status: classInfo.status
+  }
+
+  if (beforeClass) {
+    detail.before = {
+      class_name: beforeClass.class_name,
+      project_code: beforeClass.project_code,
+      teacher_openid: beforeClass.teacher_openid,
+      max_members: beforeClass.max_members,
+      status: beforeClass.status
+    }
+  }
+
+  if (action !== 'delete') {
+    detail.after = {
       class_name: classInfo.class_name,
-      class_code: classInfo.class_code,
       project_code: classInfo.project_code,
       teacher_openid: classInfo.teacher_openid,
-      status: classInfo.status
+      max_members: classInfo.max_members,
+      status: classInfo.status,
+      member_openid: classInfo.member_openid,
+      application_id: classInfo.application_id
     }
-
-    if (beforeClass) {
-      detail.before = {
-        class_name: beforeClass.class_name,
-        project_code: beforeClass.project_code,
-        teacher_openid: beforeClass.teacher_openid,
-        max_members: beforeClass.max_members,
-        status: beforeClass.status
-      }
-    }
-
-    if (action !== 'delete') {
-      detail.after = {
-        class_name: classInfo.class_name,
-        project_code: classInfo.project_code,
-        teacher_openid: classInfo.teacher_openid,
-        max_members: classInfo.max_members,
-        status: classInfo.status,
-        member_openid: classInfo.member_openid,
-        application_id: classInfo.application_id
-      }
-    }
-
-    await db.collection(LOG_COLLECTION).add({
-      data: {
-        module: 'classes',
-        action,
-        target_id: classInfo._id,
-        target_key: classInfo.class_code || classInfo._id,
-        operator_id: admin.user._id,
-        operator_name: admin.user.user_name || admin.user.nick_name || '管理员',
-        detail,
-        create_time: new Date()
-      }
-    })
-  } catch (error) {
-    console.warn('[admin-manage-classes] writeOperationLog failed:', error.message)
   }
+
+  await writeAdminOperationLog(db, {
+    module: 'classes',
+    action,
+    targetId: classInfo._id,
+    targetKey: classInfo.class_code || classInfo._id,
+    admin,
+    detail,
+    contextLabel: 'admin-manage-classes'
+  })
 }
 
 exports.main = async (event = {}) => {

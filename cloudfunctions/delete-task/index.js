@@ -1,4 +1,6 @@
 const cloud = require('wx-server-sdk');
+const { verifyTeacherRole } = require('../_shared/auth');
+const { writeOperationLog } = require('../_shared/operation-log');
 
 cloud.init({
   env: cloud.DYNAMIC_CURRENT_ENV
@@ -6,16 +8,6 @@ cloud.init({
 
 const db = cloud.database();
 const _ = db.command;
-
-async function getCurrentUser(openid) {
-  const res = await db.collection('users').where({ _openid: openid }).limit(1).get();
-  return res.data[0] || null;
-}
-
-async function verifyTeacherRole(openid) {
-  const user = await getCurrentUser(openid);
-  return user && Array.isArray(user.roles) && user.roles.includes('teacher') ? user : null;
-}
 
 async function adjustClassTaskStats(classId, totalDelta, publishedDelta, now) {
   if (!classId || (!totalDelta && !publishedDelta)) {
@@ -39,28 +31,10 @@ async function adjustClassTaskStats(classId, totalDelta, publishedDelta, now) {
   });
 }
 
-async function writeOperationLog(openid, userType, action, targetId, detail, now) {
-  try {
-    await db.collection('operation_logs').add({
-      data: {
-        user_openid: openid,
-        user_type: userType,
-        action,
-        target_type: 'task',
-        target_id: targetId,
-        detail,
-        create_time: now
-      }
-    });
-  } catch (error) {
-    console.error('[delete-task] writeOperationLog Error:', error);
-  }
-}
-
 exports.main = async (event) => {
   try {
     const { OPENID } = cloud.getWXContext();
-    const teacher = await verifyTeacherRole(OPENID);
+    const teacher = await verifyTeacherRole(db, OPENID);
     const taskId = String(event.task_id || '').trim();
 
     if (!teacher) {
@@ -118,12 +92,21 @@ exports.main = async (event) => {
       await adjustClassTaskStats(taskInfo.class_id, -1, taskInfo.status === 'published' ? -1 : 0, now);
     }
 
-    await writeOperationLog(OPENID, 'teacher', 'delete_task', taskId, {
-      title: taskInfo.title || '',
-      task_type: taskInfo.task_type || '',
-      class_id: taskInfo.class_id || '',
-      status: taskInfo.status || ''
-    }, now);
+    await writeOperationLog(db, {
+      openid: OPENID,
+      userType: 'teacher',
+      action: 'delete_task',
+      targetType: 'task',
+      targetId: taskId,
+      detail: {
+        title: taskInfo.title || '',
+        task_type: taskInfo.task_type || '',
+        class_id: taskInfo.class_id || '',
+        status: taskInfo.status || ''
+      },
+      now,
+      contextLabel: 'delete-task'
+    });
 
     return {
       success: true,

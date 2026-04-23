@@ -5,6 +5,7 @@
 
 const cloud = require('wx-server-sdk')
 const tcb = require('@cloudbase/node-sdk')
+const { writeAdminOperationLog } = require('../_shared/admin-operation-log')
 
 cloud.init({
   env: cloud.DYNAMIC_CURRENT_ENV
@@ -20,7 +21,6 @@ const auth = app.auth()
 const SUBMISSION_COLLECTION = 'submissions'
 const USER_COLLECTION = 'users'
 const TASK_COLLECTION = 'tasks'
-const LOG_COLLECTION = 'operation_logs'
 const PAGE_SIZE = 100
 const VALID_STATUSES = ['pending', 'approved', 'rejected']
 
@@ -367,33 +367,26 @@ function getCreditedPoints(submission = {}) {
 }
 
 async function writeOperationLog(action, submission, admin, beforeSubmission = null) {
-  try {
-    await db.collection(LOG_COLLECTION).add({
-      data: {
-        module: 'submissions',
-        action,
-        target_id: submission._id,
-        target_key: submission.task_title || submission._id,
-        operator_id: admin.user._id,
-        operator_name: admin.user.user_name || admin.user.nick_name || '管理员',
-        detail: {
-          task_id: submission.task_id,
-          task_title: submission.task_title || '',
-          student_openid: submission.student_openid,
-          student_name: submission.student_name || '',
-          before_status: beforeSubmission ? beforeSubmission.status : '',
-          after_status: submission.status,
-          before_points: beforeSubmission ? Number(beforeSubmission.points_earned || 0) : 0,
-          after_points: Number(submission.points_earned || 0),
-          score: submission.score,
-          feedback: submission.feedback || ''
-        },
-        create_time: new Date()
-      }
-    })
-  } catch (error) {
-    console.warn('[admin-manage-submissions] writeOperationLog failed:', error.message)
-  }
+  await writeAdminOperationLog(db, {
+    module: 'submissions',
+    action,
+    targetId: submission._id,
+    targetKey: submission.task_title || submission._id,
+    admin,
+    detail: {
+      task_id: submission.task_id,
+      task_title: submission.task_title || '',
+      student_openid: submission.student_openid,
+      student_name: submission.student_name || '',
+      before_status: beforeSubmission ? beforeSubmission.status : '',
+      after_status: submission.status,
+      before_points: beforeSubmission ? Number(beforeSubmission.points_earned || 0) : 0,
+      after_points: Number(submission.points_earned || 0),
+      score: submission.score,
+      feedback: submission.feedback || ''
+    },
+    contextLabel: 'admin-manage-submissions'
+  })
 }
 
 async function reviewSubmission(event = {}, admin) {

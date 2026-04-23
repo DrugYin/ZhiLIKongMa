@@ -1,4 +1,6 @@
 const cloud = require('wx-server-sdk')
+const { verifyTeacherRole } = require('../_shared/auth')
+const { writeOperationLog } = require('../_shared/operation-log')
 
 cloud.init({
   env: cloud.DYNAMIC_CURRENT_ENV
@@ -7,16 +9,6 @@ cloud.init({
 const db = cloud.database()
 const _ = db.command
 const ALLOWED_STATUS = new Set(['approved', 'rejected'])
-
-async function getCurrentUser(openid) {
-  const res = await db.collection('users').where({ _openid: openid }).limit(1).get()
-  return res.data[0] || null
-}
-
-async function verifyTeacherRole(openid) {
-  const user = await getCurrentUser(openid)
-  return user && Array.isArray(user.roles) && user.roles.includes('teacher') ? user : null
-}
 
 async function getSubmissionById(submissionId) {
   try {
@@ -105,28 +97,10 @@ function normalizeFileList(value) {
   }, [])
 }
 
-async function writeOperationLog(openid, targetId, detail, now) {
-  try {
-    await db.collection('operation_logs').add({
-      data: {
-        user_openid: openid,
-        user_type: 'teacher',
-        action: 'review_submission',
-        target_type: 'submission',
-        target_id: targetId,
-        detail,
-        create_time: now
-      }
-    })
-  } catch (error) {
-    console.error('[review-submission] writeOperationLog error:', error)
-  }
-}
-
 exports.main = async (event) => {
   try {
     const { OPENID } = cloud.getWXContext()
-    const teacher = await verifyTeacherRole(OPENID)
+    const teacher = await verifyTeacherRole(db, OPENID)
     const submissionId = normalizeString(event.submission_id)
     const status = normalizeStatus(event.status)
     const feedback = normalizeString(event.feedback)
@@ -233,17 +207,26 @@ exports.main = async (event) => {
       })
     }
 
-    await writeOperationLog(OPENID, submissionId, {
-      task_id: submissionInfo.task_id,
-      task_title: submissionInfo.task_title || '',
-      student_openid: submissionInfo.student_openid,
-      student_name: submissionInfo.student_name || '',
-      status,
-      score,
-      points_earned: pointsEarned,
-      feedback_image_count: feedbackImages.length,
-      feedback_file_count: feedbackFiles.length
-    }, now)
+    await writeOperationLog(db, {
+      openid: OPENID,
+      userType: 'teacher',
+      action: 'review_submission',
+      targetType: 'submission',
+      targetId: submissionId,
+      detail: {
+        task_id: submissionInfo.task_id,
+        task_title: submissionInfo.task_title || '',
+        student_openid: submissionInfo.student_openid,
+        student_name: submissionInfo.student_name || '',
+        status,
+        score,
+        points_earned: pointsEarned,
+        feedback_image_count: feedbackImages.length,
+        feedback_file_count: feedbackFiles.length
+      },
+      now,
+      contextLabel: 'review-submission'
+    })
 
     return {
       success: true,

@@ -1,4 +1,5 @@
 const cloud = require('wx-server-sdk');
+const { getCurrentUser } = require('../_shared/auth');
 
 cloud.init({
   env: cloud.DYNAMIC_CURRENT_ENV
@@ -6,11 +7,6 @@ cloud.init({
 
 const db = cloud.database();
 const _ = db.command;
-
-async function getCurrentUser(openid) {
-  const res = await db.collection('users').where({ _openid: openid }).limit(1).get();
-  return res.data[0] || null;
-}
 
 function normalizeStatus(value) {
   const status = String(value || '').trim();
@@ -33,7 +29,7 @@ exports.main = async (event) => {
       };
     }
 
-    const currentUser = await getCurrentUser(OPENID);
+    const currentUser = await getCurrentUser(db, OPENID);
     if (!currentUser || !Array.isArray(currentUser.roles) || !currentUser.roles.includes('teacher')) {
       return {
         success: false,

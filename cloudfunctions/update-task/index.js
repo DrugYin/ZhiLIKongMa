@@ -1,4 +1,6 @@
 const cloud = require('wx-server-sdk');
+const { verifyTeacherRole } = require('../_shared/auth');
+const { writeOperationLog } = require('../_shared/operation-log');
 
 cloud.init({
   env: cloud.DYNAMIC_CURRENT_ENV
@@ -9,16 +11,6 @@ const _ = db.command;
 const TASK_TYPES = new Set(['class', 'public']);
 const TASK_VISIBILITIES = new Set(['class_only', 'public']);
 const TASK_STATUSES = new Set(['draft', 'published', 'closed']);
-
-async function getCurrentUser(openid) {
-  const res = await db.collection('users').where({ _openid: openid }).limit(1).get();
-  return res.data[0] || null;
-}
-
-async function verifyTeacherRole(openid) {
-  const user = await getCurrentUser(openid);
-  return user && Array.isArray(user.roles) && user.roles.includes('teacher') ? user : null;
-}
 
 async function getOwnedClass(openid, classId) {
   if (!classId) {
@@ -186,28 +178,10 @@ async function adjustClassTaskStats(classId, totalDelta, publishedDelta, now) {
   });
 }
 
-async function writeOperationLog(openid, userType, action, targetId, detail, now) {
-  try {
-    await db.collection('operation_logs').add({
-      data: {
-        user_openid: openid,
-        user_type: userType,
-        action,
-        target_type: 'task',
-        target_id: targetId,
-        detail,
-        create_time: now
-      }
-    });
-  } catch (error) {
-    console.error('[update-task] writeOperationLog Error:', error);
-  }
-}
-
 exports.main = async (event) => {
   try {
     const { OPENID } = cloud.getWXContext();
-    const teacher = await verifyTeacherRole(OPENID);
+    const teacher = await verifyTeacherRole(db, OPENID);
     const taskId = normalizeString(event.task_id);
 
     if (!teacher) {
@@ -386,14 +360,23 @@ exports.main = async (event) => {
       await adjustClassTaskStats(nextClassId, nextTotal, nextPublished, now);
     }
 
-    await writeOperationLog(OPENID, 'teacher', 'update_task', taskId, {
-      title,
-      task_type: taskType,
-      visibility,
-      class_id: classId,
-      difficulty,
-      status: rawStatus
-    }, now);
+    await writeOperationLog(db, {
+      openid: OPENID,
+      userType: 'teacher',
+      action: 'update_task',
+      targetType: 'task',
+      targetId: taskId,
+      detail: {
+        title,
+        task_type: taskType,
+        visibility,
+        class_id: classId,
+        difficulty,
+        status: rawStatus
+      },
+      now,
+      contextLabel: 'update-task'
+    });
 
     return {
       success: true,

@@ -3,6 +3,7 @@ const { getCurrentUser } = require('/opt/auth')
 const { getAllMembershipsByStudent, buildJoinedClassIds } = require('/opt/membership')
 const { canStudentAccessTask } = require('/opt/task-access')
 const { failure, success } = require('/opt/response')
+const { writeOperationLog } = require('../_shared/operation-log')
 
 cloud.init({
   env: cloud.DYNAMIC_CURRENT_ENV
@@ -167,24 +168,6 @@ function isTransactionConflictError(error) {
   return message.includes('conflict')
     || message.includes('写冲突')
     || (message.includes('transaction') && message.includes('abort'))
-}
-
-async function writeOperationLog(openid, action, targetId, detail, now) {
-  try {
-    await db.collection('operation_logs').add({
-      data: {
-        user_openid: openid,
-        user_type: 'student',
-        action,
-        target_type: 'submission',
-        target_id: targetId,
-        detail,
-        create_time: now
-      }
-    })
-  } catch (error) {
-    console.error('[submit-task] writeOperationLog error:', error)
-  }
 }
 
 async function createSubmissionWithTransaction({
@@ -394,12 +377,21 @@ exports.main = async (event) => {
       initialSubmissionCount
     })
 
-    await writeOperationLog(OPENID, 'submit_task', submitResult._id, {
-      task_id: taskId,
-      task_title: taskInfo.title || '',
-      submit_no: submitResult.submitNo,
-      is_overtime: isOvertime
-    }, now)
+    await writeOperationLog(db, {
+      openid: OPENID,
+      userType: 'student',
+      action: 'submit_task',
+      targetType: 'submission',
+      targetId: submitResult._id,
+      detail: {
+        task_id: taskId,
+        task_title: taskInfo.title || '',
+        submit_no: submitResult.submitNo,
+        is_overtime: isOvertime
+      },
+      now,
+      contextLabel: 'submit-task'
+    })
 
     return success('提交任务成功', {
       _id: submitResult._id,
