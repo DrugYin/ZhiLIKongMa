@@ -1,4 +1,6 @@
 const cloud = require('wx-server-sdk');
+const { verifyTeacherRole } = require('../_shared/auth');
+const { writeOperationLog } = require('../_shared/operation-log');
 
 cloud.init({
   env: cloud.DYNAMIC_CURRENT_ENV
@@ -7,34 +9,6 @@ cloud.init({
 const db = cloud.database();
 const _ = db.command;
 const PAGE_SIZE = 100;
-
-async function getCurrentUser(openid) {
-  const res = await db.collection('users').where({ _openid: openid }).limit(1).get();
-  return res.data[0] || null;
-}
-
-async function verifyTeacherRole(openid) {
-  const user = await getCurrentUser(openid);
-  return user && Array.isArray(user.roles) && user.roles.includes('teacher') ? user : null;
-}
-
-async function writeOperationLog(openid, userType, action, targetId, detail, now) {
-  try {
-    await db.collection('operation_logs').add({
-      data: {
-        user_openid: openid,
-        user_type: userType,
-        action,
-        target_type: 'class',
-        target_id: targetId,
-        detail,
-        create_time: now
-      }
-    });
-  } catch (error) {
-    console.error('[delete-class] writeOperationLog Error:', error);
-  }
-}
 
 async function getAllUsersInClass(classId) {
   const totalRes = await db.collection('users').where({
@@ -93,7 +67,7 @@ async function getAllMembershipsInClass(classId) {
 exports.main = async (event) => {
   try {
     const { OPENID } = cloud.getWXContext();
-    const teacher = await verifyTeacherRole(OPENID);
+    const teacher = await verifyTeacherRole(db, OPENID);
     const classId = String(event.class_id || '').trim();
 
     if (!teacher) {
@@ -173,13 +147,22 @@ exports.main = async (event) => {
       }
     });
 
-    await writeOperationLog(OPENID, 'teacher', 'delete_class', classId, {
-      class_name: classInfo.class_name,
-      class_code: classInfo.class_code,
-      removed_member_count: Array.from(new Set(
-        legacyMembers.map((item) => item._openid).concat(memberships.map((item) => item.student_openid))
-      )).length
-    }, now);
+    await writeOperationLog(db, {
+      openid: OPENID,
+      userType: 'teacher',
+      action: 'delete_class',
+      targetType: 'class',
+      targetId: classId,
+      detail: {
+        class_name: classInfo.class_name,
+        class_code: classInfo.class_code,
+        removed_member_count: Array.from(new Set(
+          legacyMembers.map((item) => item._openid).concat(memberships.map((item) => item.student_openid))
+        )).length
+      },
+      now,
+      contextLabel: 'delete-class'
+    });
 
     return {
       success: true,

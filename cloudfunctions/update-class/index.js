@@ -1,4 +1,6 @@
 const cloud = require('wx-server-sdk');
+const { verifyTeacherRole } = require('../_shared/auth');
+const { writeOperationLog } = require('../_shared/operation-log');
 
 cloud.init({
   env: cloud.DYNAMIC_CURRENT_ENV
@@ -6,34 +8,6 @@ cloud.init({
 
 const db = cloud.database();
 const PAGE_SIZE = 100;
-
-async function getCurrentUser(openid) {
-  const res = await db.collection('users').where({ _openid: openid }).limit(1).get();
-  return res.data[0] || null;
-}
-
-async function verifyTeacherRole(openid) {
-  const user = await getCurrentUser(openid);
-  return user && Array.isArray(user.roles) && user.roles.includes('teacher') ? user : null;
-}
-
-async function writeOperationLog(openid, userType, action, targetId, detail, now) {
-  try {
-    await db.collection('operation_logs').add({
-      data: {
-        user_openid: openid,
-        user_type: userType,
-        action,
-        target_type: 'class',
-        target_id: targetId,
-        detail,
-        create_time: now
-      }
-    });
-  } catch (error) {
-    console.error('[update-class] writeOperationLog Error:', error);
-  }
-}
 
 async function getAllUsersInClass(classId) {
   const totalRes = await db.collection('users').where({
@@ -63,7 +37,7 @@ async function getAllUsersInClass(classId) {
 exports.main = async (event) => {
   try {
     const { OPENID } = cloud.getWXContext();
-    const teacher = await verifyTeacherRole(OPENID);
+    const teacher = await verifyTeacherRole(db, OPENID);
     const classId = String(event.class_id || '').trim();
 
     if (!teacher) {
@@ -177,13 +151,22 @@ exports.main = async (event) => {
       }
     });
 
-    await writeOperationLog(OPENID, 'teacher', 'update_class', classId, {
-      class_name: className,
-      project_code: projectCode,
-      class_time: classTime,
-      location,
-      max_members: maxMembers
-    }, now);
+    await writeOperationLog(db, {
+      openid: OPENID,
+      userType: 'teacher',
+      action: 'update_class',
+      targetType: 'class',
+      targetId: classId,
+      detail: {
+        class_name: className,
+        project_code: projectCode,
+        class_time: classTime,
+        location,
+        max_members: maxMembers
+      },
+      now,
+      contextLabel: 'update-class'
+    });
 
     return {
       success: true,
