@@ -5,7 +5,7 @@
 
 const cloud = require('wx-server-sdk')
 const tcb = require('@cloudbase/node-sdk')
-const { writeAdminOperationLog } = require('../_shared/admin-operation-log')
+const { writeAdminOperationLog } = require('/opt/admin-operation-log')
 
 cloud.init({
   env: cloud.DYNAMIC_CURRENT_ENV

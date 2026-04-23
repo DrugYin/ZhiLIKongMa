@@ -3,7 +3,7 @@ const { getCurrentUser } = require('/opt/auth')
 const { getAllMembershipsByStudent, buildJoinedClassIds } = require('/opt/membership')
 const { canStudentAccessTask } = require('/opt/task-access')
 const { failure, success } = require('/opt/response')
-const { writeOperationLog } = require('../_shared/operation-log')
+const { writeOperationLog } = require('/opt/operation-log')
 
 cloud.init({
   env: cloud.DYNAMIC_CURRENT_ENV
