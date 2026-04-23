@@ -79,6 +79,12 @@ function normalizeString(value) {
   return String(value || '').trim()
 }
 
+function pickFirst(...values) {
+  return values
+    .map((value) => normalizeString(value))
+    .find(Boolean) || ''
+}
+
 function normalizePage(value) {
   const page = Number(value || 1)
   return Number.isInteger(page) && page > 0 ? page : 1
@@ -214,16 +220,50 @@ function getActorName(doc = {}, user = null) {
     || '--'
 }
 
+function getDetailTargetKey(detail = {}) {
+  const after = detail.after || {}
+  const before = detail.before || {}
+
+  return pickFirst(
+    detail.title,
+    detail.task_title,
+    after.title,
+    after.task_title,
+    before.title,
+    before.task_title,
+    detail.class_name,
+    after.class_name,
+    before.class_name,
+    detail.user_name,
+    after.user_name,
+    before.user_name,
+    detail.student_name,
+    after.student_name,
+    before.student_name,
+    detail.member_name,
+    detail.project_name,
+    after.project_name,
+    before.project_name,
+    detail.config_key,
+    detail.phone,
+    after.phone,
+    before.phone,
+    detail.class_code,
+    after.class_code,
+    before.class_code,
+    detail.project_code,
+    after.project_code,
+    before.project_code
+  )
+}
+
 function getTargetKey(doc = {}) {
   const detail = doc.detail || {}
-  return doc.target_key
-    || detail.task_title
-    || detail.class_name
-    || detail.student_name
-    || detail.config_key
-    || detail.project_code
-    || doc.target_id
-    || '--'
+  return pickFirst(
+    getDetailTargetKey(detail),
+    doc.target_key,
+    doc.target_id
+  ) || '--'
 }
 
 function normalizeLogDoc(doc = {}, userIndexes = { byId: {}, byOpenid: {} }) {
@@ -335,7 +375,7 @@ function buildSummary(logs) {
 async function listLogs(event = {}) {
   const keyword = normalizeString(event.keyword)
   const moduleName = normalizeString(event.module)
-  const action = normalizeString(event.action)
+  const action = normalizeString(event.log_action || event.action_filter)
   const actorType = normalizeString(event.actor_type)
   const targetId = normalizeString(event.target_id)
   const page = normalizePage(event.page)

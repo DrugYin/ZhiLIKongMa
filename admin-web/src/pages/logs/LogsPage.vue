@@ -133,7 +133,7 @@
           <template #target="{ row }">
             <div class="log-title-cell">
               <strong>{{ row.target_key || '--' }}</strong>
-              <span>{{ row.target_id || '--' }}</span>
+              <span>{{ getTargetMeta(row) }}</span>
             </div>
           </template>
 
@@ -193,7 +193,7 @@
           </div>
           <div>
             <span>目标 ID</span>
-            <strong>{{ selectedLog.target_id || '--' }}</strong>
+            <strong>{{ getShortId(selectedLog.target_id) }}</strong>
           </div>
         </div>
 
@@ -238,6 +238,10 @@ const actionOptions = [
   'create_class',
   'update_class',
   'delete_class',
+  'join_class_apply',
+  'join_class_approve',
+  'join_class_reject',
+  'remove_class_member',
   'join_class',
   'remove_member',
   'register'
@@ -342,6 +346,18 @@ function getActorMeta(row = {}) {
     || getShortId(row.actor_openid || row.actor_id);
 }
 
+function getTargetMeta(row = {}) {
+  if (!row.target_id) {
+    return getModuleLabel(row.target_type || row.module);
+  }
+
+  if (row.target_key && row.target_key === row.target_id) {
+    return getModuleLabel(row.target_type || row.module);
+  }
+
+  return getShortId(row.target_id);
+}
+
 function getActionLabel(action) {
   const map = {
     create: '新增',
@@ -356,6 +372,10 @@ function getActionLabel(action) {
     create_class: '创建班级',
     update_class: '更新班级',
     delete_class: '删除班级',
+    join_class_apply: '申请入班',
+    join_class_approve: '通过入班',
+    join_class_reject: '拒绝入班',
+    remove_class_member: '移除成员',
     join_class: '加入班级',
     remove_member: '移除成员',
     register: '注册'
