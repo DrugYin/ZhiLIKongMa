@@ -16,12 +16,14 @@
 body {
   margin: 0;
   min-width: 0;
+  overflow-x: hidden;
   background:
     radial-gradient(circle at top left, rgba(29, 111, 95, 0.14), transparent 32%),
     linear-gradient(135deg, #f5f8fb 0%, #eef3f8 100%);
 }
 
 .admin-shell {
+  min-width: 0;
   min-height: 100vh;
 }
 
@@ -81,7 +83,9 @@ body {
 }
 
 .admin-content {
+  min-width: 0;
   padding: 24px;
+  overflow-x: hidden;
 }
 
 .page-header {
@@ -183,6 +187,952 @@ body {
   margin-top: 16px;
 }
 
+.config-card {
+  min-width: 0;
+  box-shadow: 0 18px 50px rgba(24, 48, 76, 0.08);
+}
+
+.config-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.config-search {
+  width: 320px;
+}
+
+.config-category {
+  width: 180px;
+}
+
+.project-status-filter {
+  width: 160px;
+}
+
+.user-search {
+  width: 360px;
+}
+
+.user-filter {
+  width: 150px;
+}
+
+.class-search {
+  width: 340px;
+}
+
+.class-filter {
+  width: 150px;
+}
+
+.task-search {
+  width: 360px;
+}
+
+.task-filter {
+  width: 150px;
+}
+
+.task-toolbar {
+  flex-wrap: wrap;
+  min-width: 0;
+}
+
+.task-toolbar .task-search {
+  flex: 1 1 260px;
+  width: auto;
+  max-width: 360px;
+}
+
+.task-toolbar .task-filter {
+  flex: 0 1 140px;
+  width: 140px;
+}
+
+.task-table-shell {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+
+.task-card,
+.task-card .t-card__body {
+  max-width: 100%;
+  min-width: 0;
+  overflow-x: hidden;
+}
+
+.task-table {
+  min-width: 1228px;
+}
+
+.task-table .t-table__content {
+  min-width: 0;
+}
+
+.task-form {
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+.task-form .t-row,
+.task-form .t-col,
+.task-form .t-form__controls,
+.task-form .t-input,
+.task-form .t-input-number,
+.task-form .t-select,
+.task-form .t-textarea {
+  min-width: 0;
+}
+
+.task-form .t-input,
+.task-form .t-input-number,
+.task-form .t-select,
+.task-form .t-textarea {
+  width: 100%;
+}
+
+.config-value {
+  display: inline-block;
+  max-width: 160px;
+  padding: 4px 8px;
+  overflow: hidden;
+  color: #1d4f45;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  border-radius: 8px;
+  background: var(--admin-primary-soft);
+}
+
+.project-name-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.project-name-cell span {
+  color: var(--admin-muted);
+  font-size: 12px;
+}
+
+.user-name-cell {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.user-name-cell > div {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.user-name-cell strong,
+.user-name-cell span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.user-name-cell span {
+  color: var(--admin-muted);
+  font-size: 12px;
+}
+
+.user-openid {
+  display: inline-block;
+  max-width: 100%;
+  padding: 6px 10px;
+  overflow: hidden;
+  color: #1d4f45;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  border-radius: 8px;
+  background: var(--admin-primary-soft);
+}
+
+.class-name-cell,
+.class-member-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.class-name-cell strong,
+.class-member-cell strong,
+.class-name-cell span,
+.class-member-cell span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.class-name-cell span,
+.class-member-cell span {
+  color: var(--admin-muted);
+  font-size: 12px;
+}
+
+.task-title-cell,
+.task-type-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.task-title-cell strong,
+.task-title-cell span,
+.task-type-cell span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.task-title-cell span,
+.task-type-cell span {
+  color: var(--admin-muted);
+  font-size: 12px;
+}
+
+.task-detail {
+  display: grid;
+  gap: 16px;
+}
+
+.task-detail-summary,
+.task-info-grid {
+  display: grid;
+  gap: 12px;
+}
+
+.task-detail-summary {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.task-info-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.task-detail-summary div,
+.task-info-grid div,
+.task-description-panel {
+  padding: 14px;
+  border: 1px solid var(--admin-border);
+  border-radius: 14px;
+  background: #f8fbfd;
+}
+
+.task-detail-summary span,
+.task-info-grid span {
+  display: block;
+  margin-bottom: 8px;
+  color: var(--admin-muted);
+  font-size: 12px;
+}
+
+.task-detail-summary strong,
+.task-info-grid strong {
+  display: block;
+  overflow: hidden;
+  color: #172033;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.task-description-panel {
+  margin-top: 12px;
+  color: #334155;
+  line-height: 1.8;
+  white-space: pre-wrap;
+}
+
+.task-submission-toolbar {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 12px;
+}
+
+.task-editor-list {
+  display: grid;
+  width: 100%;
+  gap: 10px;
+}
+
+.task-resource-field {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  width: 100%;
+  gap: 10px;
+}
+
+.task-hidden-upload {
+  display: none;
+}
+
+.task-editor-row,
+.task-resource-row,
+.task-file-row {
+  display: grid;
+  align-items: center;
+  gap: 10px;
+  padding: 10px;
+  border: 1px solid var(--admin-border);
+  border-radius: 12px;
+  background: #f8fbfd;
+}
+
+.task-editor-row {
+  grid-template-columns: minmax(0, 1fr) auto;
+}
+
+.task-resource-row {
+  grid-template-columns: 120px minmax(0, 1fr) auto;
+}
+
+.task-file-row {
+  grid-template-columns: minmax(160px, 1.2fr) minmax(120px, 0.8fr) 120px auto;
+}
+
+.task-resource-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.task-resource-panel {
+  display: grid;
+  gap: 10px;
+  min-width: 0;
+  margin-top: 12px;
+  overflow-x: hidden;
+}
+
+.task-resource-panel h3 {
+  margin: 0;
+  font-size: 16px;
+}
+
+.task-image-gallery {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr));
+  gap: 12px;
+  min-width: 0;
+}
+
+.task-image-preview-card {
+  display: grid;
+  gap: 10px;
+  min-width: 0;
+  padding: 12px;
+  border: 1px solid var(--admin-border);
+  border-radius: 14px;
+  background: #f8fbfd;
+}
+
+.task-image-preview-card > * {
+  min-width: 0;
+}
+
+.task-image-preview-card img,
+.task-image-placeholder {
+  width: 100%;
+  height: 150px;
+  border-radius: 10px;
+  object-fit: contain;
+  background: #ffffff;
+}
+
+.task-image-placeholder {
+  display: grid;
+  place-items: center;
+  color: var(--admin-muted);
+  font-size: 13px;
+}
+
+.task-image-preview-card span {
+  display: block;
+  color: var(--admin-muted);
+  font-size: 13px;
+}
+
+.task-image-preview-card strong {
+  display: block;
+  overflow: hidden;
+  font-weight: 500;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.task-image-preview-card--display {
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-areas:
+    "image image"
+    "meta action";
+  align-items: center;
+}
+
+.task-image-preview-card--display img,
+.task-image-preview-card--display .task-image-placeholder {
+  grid-area: image;
+  height: auto;
+  max-height: 170px;
+  aspect-ratio: 16 / 9;
+}
+
+.task-image-meta {
+  grid-area: meta;
+  min-width: 0;
+}
+
+.task-image-preview-card--display > .t-button {
+  grid-area: action;
+  justify-self: end;
+  width: auto;
+  min-width: 64px;
+}
+
+.task-image-preview-card--compact {
+  grid-template-columns: 120px minmax(0, 1fr);
+  align-items: center;
+  margin-top: 10px;
+}
+
+.task-image-preview-card--compact img,
+.task-image-preview-card--compact .task-image-placeholder {
+  height: 72px;
+}
+
+.task-image-preview-card--compact span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.task-image-preview-card--mini {
+  padding: 8px;
+}
+
+.task-image-preview-card--mini img,
+.task-image-preview-card--mini .task-image-placeholder {
+  height: 64px;
+}
+
+.task-resource-card {
+  display: grid;
+  grid-template-columns: 110px minmax(0, 1fr) auto auto;
+  align-items: center;
+  min-width: 0;
+  gap: 10px;
+  padding: 12px;
+  border: 1px solid var(--admin-border);
+  border-radius: 12px;
+  background: #f8fbfd;
+}
+
+.task-resource-card > * {
+  min-width: 0;
+}
+
+.task-resource-card span {
+  color: var(--admin-muted);
+  font-size: 13px;
+}
+
+.task-resource-card strong {
+  overflow: hidden;
+  font-weight: 500;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.task-resource-card em {
+  color: var(--admin-muted);
+  font-size: 12px;
+  font-style: normal;
+}
+
+.submission-stat-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
+  margin-bottom: 16px;
+}
+
+.submission-stat-card {
+  border: 1px solid rgba(219, 229, 239, 0.72);
+  box-shadow: 0 18px 50px rgba(24, 48, 76, 0.08);
+}
+
+.submission-stat-card span,
+.submission-stat-card em {
+  display: block;
+  color: var(--admin-muted);
+  font-size: 13px;
+  font-style: normal;
+}
+
+.submission-stat-card strong {
+  display: block;
+  margin: 8px 0 4px;
+  font-size: 28px;
+}
+
+.submission-card,
+.submission-card .t-card__body {
+  max-width: 100%;
+  min-width: 0;
+  overflow-x: hidden;
+}
+
+.submission-toolbar {
+  flex-wrap: wrap;
+  min-width: 0;
+}
+
+.submission-search {
+  flex: 1 1 280px;
+  width: auto;
+  max-width: 420px;
+}
+
+.submission-filter {
+  flex: 0 1 140px;
+  width: 140px;
+}
+
+.submission-table-shell {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+
+.submission-table {
+  min-width: 1160px;
+}
+
+.submission-title-cell {
+  display: grid;
+  min-width: 0;
+  gap: 4px;
+}
+
+.submission-title-cell strong,
+.submission-title-cell span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.submission-title-cell span {
+  color: var(--admin-muted);
+  font-size: 12px;
+}
+
+.submission-detail {
+  display: grid;
+  gap: 16px;
+}
+
+.submission-detail-summary,
+.submission-info-grid {
+  display: grid;
+  gap: 12px;
+}
+
+.submission-detail-summary {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.submission-info-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.submission-detail-summary div,
+.submission-info-grid div,
+.submission-section {
+  min-width: 0;
+  padding: 14px;
+  border: 1px solid var(--admin-border);
+  border-radius: 14px;
+  background: #f8fbfd;
+}
+
+.submission-detail-summary span,
+.submission-info-grid span {
+  display: block;
+  margin-bottom: 8px;
+  color: var(--admin-muted);
+  font-size: 12px;
+}
+
+.submission-detail-summary strong,
+.submission-info-grid strong {
+  display: block;
+  overflow: hidden;
+  font-size: 18px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.submission-section {
+  display: grid;
+  gap: 10px;
+}
+
+.submission-section h3 {
+  margin: 0;
+  font-size: 16px;
+}
+
+.submission-section p {
+  margin: 0;
+  color: #334155;
+  line-height: 1.8;
+  white-space: pre-wrap;
+}
+
+.submission-resource-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr));
+  gap: 12px;
+  min-width: 0;
+}
+
+.submission-image-card,
+.submission-file-card {
+  display: grid;
+  min-width: 0;
+  gap: 10px;
+  padding: 12px;
+  border: 1px solid var(--admin-border);
+  border-radius: 14px;
+  background: #ffffff;
+}
+
+.submission-image-card {
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-areas:
+    "image image"
+    "meta action";
+  align-items: center;
+}
+
+.submission-image-card img,
+.submission-image-placeholder {
+  grid-area: image;
+  width: 100%;
+  max-height: 180px;
+  aspect-ratio: 16 / 9;
+  object-fit: contain;
+  border-radius: 10px;
+  background: #f3f6fa;
+}
+
+.submission-image-placeholder {
+  display: grid;
+  place-items: center;
+  color: var(--admin-muted);
+  font-size: 13px;
+}
+
+.submission-image-card > div:not(.submission-image-placeholder) {
+  grid-area: meta;
+  min-width: 0;
+}
+
+.submission-image-card > .t-button {
+  grid-area: action;
+  justify-self: end;
+  width: auto;
+  min-width: 64px;
+}
+
+.submission-image-card span,
+.submission-file-card span {
+  display: block;
+  color: var(--admin-muted);
+  font-size: 13px;
+}
+
+.submission-image-card strong,
+.submission-file-card strong {
+  display: block;
+  overflow: hidden;
+  font-weight: 500;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.submission-file-card {
+  grid-template-columns: minmax(100px, 0.8fr) minmax(0, 1fr) auto auto;
+  align-items: center;
+}
+
+.submission-file-card > * {
+  min-width: 0;
+}
+
+.submission-file-card em {
+  color: var(--admin-muted);
+  font-size: 12px;
+  font-style: normal;
+}
+
+.submission-detail-actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.log-stat-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
+  margin-bottom: 16px;
+}
+
+.log-stat-card {
+  border: 1px solid rgba(219, 229, 239, 0.72);
+  box-shadow: 0 18px 50px rgba(24, 48, 76, 0.08);
+}
+
+.log-stat-card span,
+.log-stat-card em {
+  display: block;
+  color: var(--admin-muted);
+  font-size: 13px;
+  font-style: normal;
+}
+
+.log-stat-card strong {
+  display: block;
+  margin: 8px 0 4px;
+  font-size: 28px;
+}
+
+.log-card,
+.log-card .t-card__body {
+  max-width: 100%;
+  min-width: 0;
+  overflow-x: hidden;
+}
+
+.log-toolbar {
+  flex-wrap: wrap;
+  min-width: 0;
+}
+
+.log-search {
+  flex: 1 1 260px;
+  width: auto;
+  max-width: 380px;
+}
+
+.log-filter {
+  flex: 0 1 132px;
+  width: 132px;
+}
+
+.log-date {
+  flex: 0 1 170px;
+  width: 170px;
+}
+
+.log-module-strip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.log-table-shell {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+
+.log-table {
+  min-width: 970px;
+}
+
+.log-title-cell {
+  display: grid;
+  min-width: 0;
+  gap: 4px;
+}
+
+.log-title-cell strong,
+.log-title-cell span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.log-title-cell span {
+  color: var(--admin-muted);
+  font-size: 12px;
+}
+
+.log-detail {
+  display: grid;
+  gap: 16px;
+}
+
+.log-detail-summary,
+.log-detail-grid {
+  display: grid;
+  gap: 12px;
+}
+
+.log-detail-summary {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.log-detail-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.log-detail-summary div,
+.log-detail-grid div,
+.log-json-panel {
+  min-width: 0;
+  padding: 14px;
+  border: 1px solid var(--admin-border);
+  border-radius: 14px;
+  background: #f8fbfd;
+}
+
+.log-detail-summary span,
+.log-detail-grid span {
+  display: block;
+  margin-bottom: 8px;
+  color: var(--admin-muted);
+  font-size: 12px;
+}
+
+.log-detail-summary strong,
+.log-detail-grid strong {
+  display: block;
+  overflow: hidden;
+  font-size: 18px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.log-json-panel {
+  display: grid;
+  gap: 10px;
+}
+
+.log-json-panel h3 {
+  margin: 0;
+  font-size: 16px;
+}
+
+.log-json-panel pre {
+  max-height: 420px;
+  margin: 0;
+  padding: 14px;
+  overflow: auto;
+  border-radius: 12px;
+  color: #d9e8ff;
+  background: #102033;
+}
+
+.class-detail {
+  display: grid;
+  gap: 16px;
+}
+
+.class-detail-summary {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.class-detail-summary div {
+  padding: 14px;
+  border: 1px solid var(--admin-border);
+  border-radius: 14px;
+  background: #f8fbfd;
+}
+
+.class-detail-summary span {
+  display: block;
+  margin-bottom: 8px;
+  color: var(--admin-muted);
+  font-size: 12px;
+}
+
+.class-detail-summary strong {
+  display: block;
+  overflow: hidden;
+  color: #172033;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.class-application-toolbar {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 12px;
+}
+
+.project-editor-list {
+  display: grid;
+  width: 100%;
+  gap: 10px;
+}
+
+.project-editor-row,
+.project-difficulty-row {
+  display: grid;
+  align-items: center;
+  gap: 10px;
+  padding: 10px;
+  border: 1px solid var(--admin-border);
+  border-radius: 12px;
+  background: #f8fbfd;
+}
+
+.project-editor-row {
+  grid-template-columns: minmax(0, 1fr) auto;
+}
+
+.project-difficulty-row {
+  grid-template-columns: 120px minmax(120px, 1fr) minmax(190px, 0.9fr) auto;
+}
+
+.project-level-input {
+  width: 100%;
+}
+
+.project-color-field {
+  display: grid;
+  grid-template-columns: 42px minmax(0, 1fr);
+  align-items: center;
+  gap: 8px;
+}
+
+.project-color-picker {
+  width: 42px;
+  height: 32px;
+  padding: 2px;
+  border: 1px solid var(--admin-border);
+  border-radius: 8px;
+  background: #ffffff;
+  cursor: pointer;
+}
+
 .login-page {
   display: grid;
   place-items: center;
@@ -271,6 +1221,74 @@ body {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
+  .submission-stat-grid,
+  .log-stat-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .config-toolbar {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .config-search,
+  .config-category,
+  .project-status-filter,
+  .user-search,
+  .user-filter,
+  .class-search,
+  .class-filter,
+  .task-search,
+  .task-filter,
+  .submission-search,
+  .submission-filter,
+  .log-search,
+  .log-filter,
+  .log-date {
+    width: 100%;
+    max-width: 100%;
+  }
+
+  .class-detail-summary,
+  .task-detail-summary,
+  .task-info-grid,
+  .submission-detail-summary,
+  .submission-info-grid,
+  .log-detail-summary,
+  .log-detail-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .project-editor-row,
+  .project-difficulty-row,
+  .task-editor-row,
+  .task-resource-row,
+  .task-resource-field,
+  .task-file-row {
+    grid-template-columns: 1fr;
+    align-items: stretch;
+  }
+
+  .task-resource-actions {
+    flex-direction: column;
+  }
+
+  .task-resource-card {
+    grid-template-columns: 1fr;
+    align-items: stretch;
+  }
+
+  .task-image-gallery,
+  .task-image-preview-card--compact,
+  .submission-resource-list {
+    grid-template-columns: 1fr;
+  }
+
+  .submission-file-card {
+    grid-template-columns: 1fr;
+    align-items: stretch;
+  }
+
   .login-panel {
     width: min(100%, 430px);
   }
@@ -278,6 +1296,18 @@ body {
 
 @media (max-width: 560px) {
   .stat-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .class-detail-summary,
+  .task-detail-summary,
+  .task-info-grid,
+  .submission-stat-grid,
+  .submission-detail-summary,
+  .submission-info-grid,
+  .log-stat-grid,
+  .log-detail-summary,
+  .log-detail-grid {
     grid-template-columns: 1fr;
   }
 

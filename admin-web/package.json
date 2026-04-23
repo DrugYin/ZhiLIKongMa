@@ -11,6 +11,7 @@
   "dependencies": {
     "@cloudbase/js-sdk": "^2.11.0",
     "echarts": "^5.5.1",
+    "or": "^0.2.0",
     "pinia": "^2.1.7",
     "tdesign-vue-next": "^1.9.8",
     "vue": "^3.4.31",
