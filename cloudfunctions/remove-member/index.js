@@ -1,4 +1,6 @@
 const cloud = require('wx-server-sdk');
+const { getCurrentUser } = require('../_shared/auth');
+const { writeOperationLog } = require('../_shared/operation-log');
 
 cloud.init({
   env: cloud.DYNAMIC_CURRENT_ENV
@@ -7,35 +9,12 @@ cloud.init({
 const db = cloud.database();
 const _ = db.command;
 
-async function getCurrentUser(openid) {
-  const res = await db.collection('users').where({ _openid: openid }).limit(1).get();
-  return res.data[0] || null;
-}
-
 async function getMembership(classId, openid) {
   const res = await db.collection('class_memberships').where({
     class_id: classId,
     student_openid: openid
   }).limit(1).get();
   return res.data[0] || null;
-}
-
-async function writeOperationLog(openid, userType, action, targetId, detail, now) {
-  try {
-    await db.collection('operation_logs').add({
-      data: {
-        user_openid: openid,
-        user_type: userType,
-        action,
-        target_type: 'class',
-        target_id: targetId,
-        detail,
-        create_time: now
-      }
-    });
-  } catch (error) {
-    console.error('[remove-member] writeOperationLog Error:', error);
-  }
 }
 
 exports.main = async (event) => {
@@ -52,7 +31,7 @@ exports.main = async (event) => {
       };
     }
 
-    const teacher = await getCurrentUser(OPENID);
+    const teacher = await getCurrentUser(db, OPENID);
     if (!teacher || !Array.isArray(teacher.roles) || !teacher.roles.includes('teacher')) {
       return {
         success: false,
@@ -132,10 +111,19 @@ exports.main = async (event) => {
       }
     });
 
-    await writeOperationLog(OPENID, 'teacher', 'remove_class_member', classId, {
-      member_openid: memberOpenid,
-      member_name: member ? (member.user_name || member.nick_name || '') : ''
-    }, now);
+    await writeOperationLog(db, {
+      openid: OPENID,
+      userType: 'teacher',
+      action: 'remove_class_member',
+      targetType: 'class',
+      targetId: classId,
+      detail: {
+        member_openid: memberOpenid,
+        member_name: member ? (member.user_name || member.nick_name || '') : ''
+      },
+      now,
+      contextLabel: 'remove-member'
+    });
 
     return {
       success: true,
