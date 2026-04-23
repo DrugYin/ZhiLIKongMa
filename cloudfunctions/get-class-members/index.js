@@ -1,4 +1,5 @@
 const cloud = require('wx-server-sdk');
+const { getCurrentUser } = require('/opt/auth');
 
 cloud.init({
   env: cloud.DYNAMIC_CURRENT_ENV
@@ -6,11 +7,6 @@ cloud.init({
 
 const db = cloud.database();
 const _ = db.command;
-
-async function getCurrentUser(openid) {
-  const res = await db.collection('users').where({ _openid: openid }).limit(1).get();
-  return res.data[0] || null;
-}
 
 async function isUserMemberOfClass(user, openid, classId) {
   if (user && user.class_id === classId) {
@@ -141,7 +137,7 @@ exports.main = async (event) => {
       };
     }
 
-    const currentUser = await getCurrentUser(OPENID);
+    const currentUser = await getCurrentUser(db, OPENID);
     const classRes = await db.collection('classes').doc(classId).get();
     const classInfo = classRes.data || null;
     if (!classInfo) {
