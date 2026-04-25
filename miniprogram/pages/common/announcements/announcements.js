@@ -32,6 +32,7 @@ Page({
         ...item,
         publishText: this.formatPublishTime(item.publish_time),
         modeText: item.display_mode === 'always' ? '每次进入弹出' : '弹出一次',
+        sourceText: item.source_type === 'system' ? '系统通知' : '平台公告',
         readText: item.is_read ? '已读' : '未读'
       }))
 
@@ -77,6 +78,25 @@ Page({
         icon: 'none'
       })
     }
+  },
+
+  async handleAction(e) {
+    const { id } = e.currentTarget.dataset
+    const announcement = this.data.announcements.find((item) => item._id === id)
+
+    if (!announcement) {
+      return
+    }
+
+    try {
+      if (!announcement.is_read) {
+        await AnnouncementService.markRead(id)
+      }
+    } catch (error) {
+      console.error('[announcements] action mark read error:', error)
+    }
+
+    AnnouncementService.openAction(announcement)
   },
 
   formatPublishTime(value) {

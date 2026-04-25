@@ -1,6 +1,7 @@
 const cloud = require('wx-server-sdk')
 const { verifyTeacherRole } = require('/opt/auth')
 const { writeOperationLog } = require('/opt/operation-log')
+const { createSystemNotification, safeCreateNotification } = require('/opt/notification')
 
 cloud.init({
   env: cloud.DYNAMIC_CURRENT_ENV
@@ -227,6 +228,19 @@ exports.main = async (event) => {
       now,
       contextLabel: 'review-submission'
     })
+
+    await safeCreateNotification(() => createSystemNotification(db, {
+      title: '任务审核结果',
+      content: `你提交的《${submissionInfo.task_title || taskInfo.title || '未命名任务'}》任务已${status === 'approved' ? '通过' : '被驳回'}`,
+      targetOpenid: submissionInfo.student_openid,
+      notificationType: 'submission_reviewed',
+      actionUrl: `/pages/student/task-manage/submission-records/submission-records?task_id=${submissionInfo.task_id}`,
+      relatedType: 'submission',
+      relatedId: submissionId,
+      senderOpenid: OPENID,
+      senderName: teacher.user_name || teacher.nick_name || '',
+      now
+    }), 'review-submission submission_reviewed')
 
     return {
       success: true,

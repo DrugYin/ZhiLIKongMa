@@ -56,6 +56,15 @@ Component({
 
     handleViewAll() {
       this.triggerEvent('viewall')
+    },
+
+    handleAction() {
+      const current = this.getCurrentAnnouncement()
+      if (current) {
+        this.triggerEvent('action', {
+          announcement: current
+        })
+      }
     }
   }
 })

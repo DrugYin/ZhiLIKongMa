@@ -28,8 +28,13 @@
         </view>
         <text class="announcement-content">{{item.content}}</text>
         <view class="announcement-footer">
-          <text class="announcement-mode"></text>
-          <button wx:if="{{!item.is_read}}" class="read-btn" data-id="{{item._id}}" bindtap="handleRead">标记已读</button>
+          <text class="announcement-mode">{{item.sourceText}}</text>
+          <view class="announcement-actions">
+            <button wx:if="{{item.action_url}}" class="read-btn action-btn" data-id="{{item._id}}" bindtap="handleAction">
+              {{item.action_label || '前往查看'}}
+            </button>
+            <button wx:if="{{!item.is_read}}" class="read-btn" data-id="{{item._id}}" bindtap="handleRead">标记已读</button>
+          </view>
         </view>
       </view>
     </view>

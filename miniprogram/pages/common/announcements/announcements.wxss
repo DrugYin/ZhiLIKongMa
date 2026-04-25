@@ -147,6 +147,12 @@
   font-size: 22rpx;
 }
 
+.announcement-actions {
+  display: flex;
+  flex-shrink: 0;
+  gap: 14rpx;
+}
+
 .read-btn {
   flex-shrink: 0;
   height: 60rpx;
@@ -162,6 +168,11 @@
 
 .read-btn::after {
   border: none;
+}
+
+.action-btn {
+  color: #ffffff;
+  background: linear-gradient(135deg, #1f7ae0 0%, #4a8ff5 100%);
 }
 
 .empty-card {

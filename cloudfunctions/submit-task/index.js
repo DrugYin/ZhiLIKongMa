@@ -4,6 +4,7 @@ const { getAllMembershipsByStudent, buildJoinedClassIds } = require('/opt/member
 const { canStudentAccessTask } = require('/opt/task-access')
 const { failure, success } = require('/opt/response')
 const { writeOperationLog } = require('/opt/operation-log')
+const { createSystemNotification, safeCreateNotification } = require('/opt/notification')
 
 cloud.init({
   env: cloud.DYNAMIC_CURRENT_ENV
@@ -392,6 +393,21 @@ exports.main = async (event) => {
       now,
       contextLabel: 'submit-task'
     })
+
+    if (taskInfo.teacher_openid) {
+      await safeCreateNotification(() => createSystemNotification(db, {
+        title: '任务提交提醒',
+        content: `学生${user.user_name || user.nick_name || '未命名学生'}提交《${taskInfo.title || '未命名任务'}》任务`,
+        targetOpenid: taskInfo.teacher_openid,
+        notificationType: 'task_submitted',
+        actionUrl: `/pages/teacher/pending/pending?type=submission&record_id=${submitResult._id}`,
+        relatedType: 'submission',
+        relatedId: submitResult._id,
+        senderOpenid: OPENID,
+        senderName: user.user_name || user.nick_name || '',
+        now
+      }), 'submit-task task_submitted')
+    }
 
     return success('提交任务成功', {
       _id: submitResult._id,
