@@ -33,7 +33,7 @@ Page({
       },
       {
         key: 'announcement',
-        title: '公告中心',
+        title: '通知中心',
         desc: '查看系统通知、学习安排和功能更新'
       },
       {

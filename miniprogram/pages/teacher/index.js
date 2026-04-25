@@ -47,8 +47,8 @@ Page({
       },
       {
         key: 'announcement',
-        mark: '告',
-        title: '公告中心',
+        mark: '通',
+        title: '通知中心',
         desc: '查看系统通知与运营安排'
       }
     ],

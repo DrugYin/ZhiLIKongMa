@@ -58,16 +58,16 @@ Page({
         desc: '查看周榜、月榜和总榜变化'
       },
       {
-        key: 'announcement',
-        mark: '告',
-        title: '公告中心',
-        desc: '查看系统通知和学习安排'
-      },
-      {
         key: 'records',
         mark: '记',
         title: '提交记录',
         desc: '统一查看所有任务的历史提交'
+      },
+      {
+        key: 'announcement',
+        mark: '通',
+        title: '通知中心',
+        desc: '查看系统通知和学习安排'
       }
     ]
   },

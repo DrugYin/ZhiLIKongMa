@@ -1,6 +1,4 @@
 .container {
-  min-height: 100vh;
-  background: linear-gradient(180deg, #f7f8fa 0%, #eef2f7 100%);
 }
 
 .header {
@@ -11,8 +9,8 @@
 
 .content {
   box-sizing: border-box;
-  height: calc(100vh - 96rpx);
-  padding: 0rpx 24rpx calc(60rpx + env(safe-area-inset-bottom));
+  min-height: 100vh;
+  padding: 0rpx 24rpx calc(10rpx + env(safe-area-inset-bottom));
 }
 
 .hero-card,
