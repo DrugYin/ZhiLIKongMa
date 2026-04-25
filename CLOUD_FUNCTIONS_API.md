@@ -1409,6 +1409,12 @@ RankingService.getRanking({ rank_type: 'week' })
 
 功能：刷新周榜、月榜、总榜三类排行榜快照，写入 `ranking_snapshots` 集合，供 `get-ranking` 优先读取。
 
+说明：
+
+- 固定写入 `ranking_snapshots/week`、`ranking_snapshots/month`、`ranking_snapshots/total` 作为当前快照。
+- 周榜和月榜会额外按统计周期保存历史快照，文档 ID 分别形如 `week_2026-04-25_2026-05-01`、`month_2026-04`。
+- 周榜和月榜快照会记录 `period_key`、`period_start`、`period_end`、`period_start_text`、`period_end_text`，便于后续按周期查询历史榜单。
+
 入参：无
 
 返回示例：
@@ -1419,6 +1425,7 @@ RankingService.getRanking({ rank_type: 'week' })
   message: '排行榜快照刷新成功',
   data: {
     rank_types: ['week', 'month', 'total'],
+    saved_snapshots: ['week', 'week_2026-04-11_2026-04-17', 'month', 'month_2026-04', 'total'],
     generated_at: '2026-04-15T07:00:00.000Z'
   }
 }

@@ -636,7 +636,7 @@ Web 登录
 | `submissions` | `task_id`、`student_openid`、`teacher_openid`、`status`、`submit_time` |
 | `system_config` | `config_key` 唯一、`category`、`is_public` |
 | `operation_logs` | `user_openid`、`action`、`target_type`、`create_time` |
-| `ranking_snapshots` | `_id` |
+| `ranking_snapshots` | `_id`、`rank_type`、`snapshot_scope`、`period_key` |
 
 ---
 
@@ -679,7 +679,7 @@ Web 登录
 
 | 云函数 | 说明 | 优先级 |
 |--------|------|--------|
-| `admin-refresh-ranking` | 触发排行榜快照刷新 | P1 |
+| `admin-refresh-ranking` | 触发排行榜快照刷新，并保存周榜/月榜周期历史快照 | P1 |
 
 ---
 
