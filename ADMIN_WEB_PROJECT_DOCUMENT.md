@@ -636,7 +636,7 @@ Web 登录
 | `submissions` | `task_id`、`student_openid`、`teacher_openid`、`status`、`submit_time` |
 | `system_config` | `config_key` 唯一、`category`、`is_public` |
 | `operation_logs` | `user_openid`、`action`、`target_type`、`create_time` |
-| `ranking_snapshots` | `_id` |
+| `ranking_snapshots` | `_id`、`rank_type`、`snapshot_scope`、`period_key` |
 
 ---
 
@@ -673,13 +673,14 @@ Web 登录
 | `admin-get-users` | 查询用户列表 | P1 |
 | `admin-get-tasks` | 查询任务列表 | P1 |
 | `admin-get-submissions` | 查询提交记录 | P1 |
+| `admin-manage-rankings` | 查询当前排行榜与历史排行榜快照 | P1 |
 | `admin-get-operation-logs` | 查询操作日志 | P0 |
 
 ### 8.6 运维动作
 
 | 云函数 | 说明 | 优先级 |
 |--------|------|--------|
-| `admin-refresh-ranking` | 触发排行榜快照刷新 | P1 |
+| `admin-refresh-ranking` | 触发排行榜快照刷新，并保存周榜/月榜周期历史快照 | P1 |
 
 ---
 
@@ -693,7 +694,9 @@ Web 登录
 /config
 /projects
 /users
+/classes
 /tasks
+/rankings
 /submissions
 /logs
 ```
@@ -706,7 +709,9 @@ Web 登录
 ├── 系统配置
 ├── 项目配置
 ├── 用户管理
+├── 班级管理
 ├── 任务管理
+├── 排行榜
 ├── 提交记录
 └── 操作日志
 ```

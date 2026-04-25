@@ -235,6 +235,14 @@ body {
   width: 150px;
 }
 
+.announcement-search {
+  width: 360px;
+}
+
+.announcement-filter {
+  width: 150px;
+}
+
 .task-toolbar {
   flex-wrap: wrap;
   min-width: 0;
@@ -268,6 +276,41 @@ body {
 
 .task-table {
   min-width: 1228px;
+}
+
+.announcement-toolbar {
+  flex-wrap: wrap;
+  min-width: 0;
+}
+
+.announcement-toolbar .announcement-search {
+  flex: 1 1 260px;
+  width: auto;
+  max-width: 420px;
+}
+
+.announcement-toolbar .announcement-filter {
+  flex: 0 1 150px;
+  width: 150px;
+}
+
+.announcement-card,
+.announcement-card .t-card__body {
+  max-width: 100%;
+  min-width: 0;
+  overflow-x: hidden;
+}
+
+.announcement-table-shell {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+
+.announcement-table {
+  min-width: 1190px;
 }
 
 .task-table .t-table__content {
@@ -380,7 +423,10 @@ body {
 }
 
 .task-title-cell,
-.task-type-cell {
+.task-type-cell,
+.announcement-title-cell,
+.announcement-scope-cell,
+.announcement-time-cell {
   display: flex;
   flex-direction: column;
   gap: 4px;
@@ -389,16 +435,92 @@ body {
 
 .task-title-cell strong,
 .task-title-cell span,
-.task-type-cell span {
+.task-type-cell span,
+.announcement-title-cell strong,
+.announcement-title-cell span,
+.announcement-scope-cell span,
+.announcement-time-cell span {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
 .task-title-cell span,
-.task-type-cell span {
+.task-type-cell span,
+.announcement-title-cell span,
+.announcement-scope-cell span,
+.announcement-time-cell span {
   color: var(--admin-muted);
   font-size: 12px;
+}
+
+.announcement-form {
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+.announcement-form .t-row,
+.announcement-form .t-col,
+.announcement-form .t-form__controls,
+.announcement-form .t-input,
+.announcement-form .t-input-number,
+.announcement-form .t-select,
+.announcement-form .t-textarea {
+  min-width: 0;
+}
+
+.announcement-form .t-input,
+.announcement-form .t-input-number,
+.announcement-form .t-select,
+.announcement-form .t-textarea {
+  width: 100%;
+}
+
+.announcement-detail {
+  display: grid;
+  gap: 16px;
+}
+
+.announcement-detail-head {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.announcement-detail-head div,
+.announcement-detail-content,
+.announcement-detail-meta {
+  min-width: 0;
+  padding: 14px;
+  border: 1px solid var(--admin-border);
+  border-radius: 14px;
+  background: #f8fbfd;
+}
+
+.announcement-detail-head span,
+.announcement-detail-meta span {
+  display: block;
+  color: var(--admin-muted);
+  font-size: 12px;
+}
+
+.announcement-detail-head strong {
+  display: block;
+  margin-top: 8px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.announcement-detail-content {
+  color: #334155;
+  line-height: 1.8;
+  white-space: pre-wrap;
+}
+
+.announcement-detail-meta {
+  display: grid;
+  gap: 8px;
 }
 
 .task-detail {
@@ -917,6 +1039,160 @@ body {
   font-size: 28px;
 }
 
+.ranking-tabs {
+  min-width: 0;
+}
+
+.ranking-stat-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
+  margin-bottom: 16px;
+}
+
+.ranking-stat-card {
+  min-width: 0;
+  border: 1px solid rgba(219, 229, 239, 0.72);
+  box-shadow: 0 18px 50px rgba(24, 48, 76, 0.08);
+}
+
+.ranking-stat-card span,
+.ranking-stat-card em {
+  display: block;
+  overflow: hidden;
+  color: var(--admin-muted);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 13px;
+  font-style: normal;
+}
+
+.ranking-stat-card strong {
+  display: block;
+  margin: 8px 0 4px;
+  overflow: hidden;
+  font-size: 24px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ranking-card,
+.ranking-card .t-card__body {
+  max-width: 100%;
+  min-width: 0;
+  overflow-x: hidden;
+}
+
+.ranking-toolbar {
+  flex-wrap: wrap;
+}
+
+.ranking-filter {
+  width: 180px;
+}
+
+.ranking-top-three {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.ranking-podium {
+  min-width: 0;
+  padding: 14px;
+  border: 1px solid var(--admin-border);
+  border-radius: 14px;
+  background: #f8fbfd;
+}
+
+.ranking-podium span,
+.ranking-podium em {
+  display: block;
+  overflow: hidden;
+  color: var(--admin-muted);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 13px;
+  font-style: normal;
+}
+
+.ranking-podium strong {
+  display: block;
+  margin: 8px 0;
+  overflow: hidden;
+  font-size: 20px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ranking-table-shell {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+
+.ranking-table {
+  min-width: 860px;
+}
+
+.ranking-history-table {
+  min-width: 960px;
+}
+
+.ranking-student-cell {
+  display: grid;
+  min-width: 0;
+  gap: 4px;
+}
+
+.ranking-student-cell strong,
+.ranking-student-cell span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ranking-student-cell span {
+  color: var(--admin-muted);
+  font-size: 12px;
+}
+
+.ranking-detail {
+  display: grid;
+  gap: 16px;
+}
+
+.ranking-detail-summary {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.ranking-detail-summary div {
+  min-width: 0;
+  padding: 14px;
+  border: 1px solid var(--admin-border);
+  border-radius: 14px;
+  background: #f8fbfd;
+}
+
+.ranking-detail-summary span {
+  display: block;
+  margin-bottom: 8px;
+  color: var(--admin-muted);
+  font-size: 12px;
+}
+
+.ranking-detail-summary strong {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .log-card,
 .log-card .t-card__body {
   max-width: 100%;
@@ -1222,6 +1498,7 @@ body {
   }
 
   .submission-stat-grid,
+  .ranking-stat-grid,
   .log-stat-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
@@ -1231,15 +1508,18 @@ body {
     flex-direction: column;
   }
 
-  .config-search,
-  .config-category,
-  .project-status-filter,
-  .user-search,
-  .user-filter,
-  .class-search,
-  .class-filter,
-  .task-search,
-  .task-filter,
+    .config-search,
+    .config-category,
+    .project-status-filter,
+    .user-search,
+    .user-filter,
+    .class-search,
+    .class-filter,
+    .ranking-filter,
+    .announcement-search,
+    .announcement-filter,
+    .task-search,
+    .task-filter,
   .submission-search,
   .submission-filter,
   .log-search,
@@ -1254,17 +1534,20 @@ body {
   .task-info-grid,
   .submission-detail-summary,
   .submission-info-grid,
+  .ranking-detail-summary,
   .log-detail-summary,
   .log-detail-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
-  .project-editor-row,
-  .project-difficulty-row,
-  .task-editor-row,
-  .task-resource-row,
-  .task-resource-field,
-  .task-file-row {
+    .project-editor-row,
+    .project-difficulty-row,
+    .task-editor-row,
+    .task-resource-row,
+    .task-resource-field,
+    .task-file-row,
+    .ranking-top-three,
+    .announcement-detail-head {
     grid-template-columns: 1fr;
     align-items: stretch;
   }
@@ -1305,6 +1588,8 @@ body {
   .submission-stat-grid,
   .submission-detail-summary,
   .submission-info-grid,
+  .ranking-stat-grid,
+  .ranking-detail-summary,
   .log-stat-grid,
   .log-detail-summary,
   .log-detail-grid {

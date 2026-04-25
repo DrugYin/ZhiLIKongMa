@@ -1,6 +1,7 @@
 const AuthService = require('../../services/auth')
 const ClassService = require('../../services/class')
 const TaskService = require('../../services/task')
+const AnnouncementService = require('../../services/announcement')
 const formatUtils = require('../../utils/format')
 const Toast = require('../../utils/toast')
 
@@ -23,6 +24,8 @@ Page({
       studentCount: 0,
       pendingCount: 0
     },
+    announcementVisible: false,
+    popupAnnouncements: [],
     quickActions: [
       {
         key: 'pending',
@@ -41,6 +44,12 @@ Page({
         mark: '任',
         title: '任务管理',
         desc: '维护任务内容与发布状态'
+      },
+      {
+        key: 'announcement',
+        mark: '通',
+        title: '通知中心',
+        desc: '查看系统通知与运营安排'
       }
     ],
     recentActivities: [],
@@ -65,6 +74,8 @@ Page({
     if (this._pageReady) {
       this.loadPageData()
     }
+
+    this.loadPopupAnnouncements()
   },
 
   onPullDownRefresh() {
@@ -442,7 +453,62 @@ Page({
 
     if (key === 'task') {
       this.goToTaskManage()
+      return
     }
+
+    if (key === 'announcement') {
+      this.goToAnnouncements()
+    }
+  },
+
+  async loadPopupAnnouncements() {
+    try {
+      const data = await AnnouncementService.getPopupAnnouncements()
+      const popupAnnouncements = data.popup_list || data.list || []
+      this.setData({
+        popupAnnouncements,
+        announcementVisible: popupAnnouncements.length > 0
+      })
+    } catch (error) {
+      console.error('[teacher-index] loadPopupAnnouncements error:', error)
+    }
+  },
+
+  async handleAnnouncementRead(e) {
+    const announcement = e.detail && e.detail.announcement
+    if (!announcement || !announcement._id) {
+      return
+    }
+
+    try {
+      await AnnouncementService.markRead(announcement._id)
+    } catch (error) {
+      console.error('[teacher-index] markAnnouncementRead error:', error)
+    }
+  },
+
+  async handleAnnouncementAction(e) {
+    const announcement = e.detail && e.detail.announcement
+    if (!announcement || !announcement._id) {
+      return
+    }
+
+    try {
+      await AnnouncementService.markRead(announcement._id)
+    } catch (error) {
+      console.error('[teacher-index] action markAnnouncementRead error:', error)
+    }
+
+    this.setData({
+      announcementVisible: false
+    })
+    AnnouncementService.openAction(announcement)
+  },
+
+  handleAnnouncementPanelClose() {
+    this.setData({
+      announcementVisible: false
+    })
   },
 
   goToReview() {
@@ -464,6 +530,12 @@ Page({
   goToPending() {
     wx.switchTab({
       url: '/pages/teacher/pending/pending'
+    })
+  },
+
+  goToAnnouncements() {
+    wx.navigateTo({
+      url: '/pages/common/announcements/announcements'
     })
   },
 

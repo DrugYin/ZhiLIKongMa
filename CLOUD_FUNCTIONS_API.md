@@ -1,6 +1,6 @@
 # 云函数 API 文档
 
-本文档基于当前仓库代码同步整理，覆盖已经落地的用户系统、班级管理、任务管理、提交审核、排行榜与项目配置云函数，并标注前端已接入情况与仍待实现的调用入口。
+本文档基于当前仓库代码同步整理，覆盖已经落地的用户系统、班级管理、任务管理、提交审核、排行榜、项目配置与公告管理云函数，并标注前端已接入情况与仍待实现的调用入口。
 
 ## 通用说明
 
@@ -11,6 +11,7 @@
 - `services/api.js`
 - `services/auth.js`
 - `services/class.js`
+- `services/announcement.js`
 - `services/ranking.js`
 - `services/task.js`
 
@@ -58,6 +59,8 @@ const { OPENID } = cloud.getWXContext();
 - `projects`
 - `ranking_snapshots`
 - `system_config`
+- `announcements`
+- `announcement_reads`
 - `operation_logs`
 
 ## 一、用户系统
@@ -1406,6 +1409,12 @@ RankingService.getRanking({ rank_type: 'week' })
 
 功能：刷新周榜、月榜、总榜三类排行榜快照，写入 `ranking_snapshots` 集合，供 `get-ranking` 优先读取。
 
+说明：
+
+- 固定写入 `ranking_snapshots/week`、`ranking_snapshots/month`、`ranking_snapshots/total` 作为当前快照。
+- 周榜和月榜会额外按统计周期保存历史快照，文档 ID 分别形如 `week_2026-04-25_2026-05-01`、`month_2026-04`。
+- 周榜和月榜快照会记录 `period_key`、`period_start`、`period_end`、`period_start_text`、`period_end_text`，便于后续按周期查询历史榜单。
+
 入参：无
 
 返回示例：
@@ -1416,6 +1425,7 @@ RankingService.getRanking({ rank_type: 'week' })
   message: '排行榜快照刷新成功',
   data: {
     rank_types: ['week', 'month', 'total'],
+    saved_snapshots: ['week', 'week_2026-04-11_2026-04-17', 'month', 'month_2026-04', 'total'],
     generated_at: '2026-04-15T07:00:00.000Z'
   }
 }
@@ -1432,6 +1442,22 @@ RankingService.getRanking({ rank_type: 'week' })
 - `get-ranking` 已自动消费快照结果
 
 ## 六、前端封装对照
+
+### 公告模块
+
+- `get-announcements`：小程序公告读取与已读记录，操作 `announcements`、`announcement_reads` 集合
+- 支持 `action`: `list`、`read` / `mark_read`
+- `list` 会按发布时间、有效期、可见范围过滤；可见范围支持 `all`、`role`、`users`
+- `display_mode = always` 表示每次进入弹出；`display_mode = once` 表示用户标记已读后不再自动弹出
+- 小程序封装：`services/announcement.js` 中的 `AnnouncementService`
+- 小程序入口：学生首页、教师首页、学生我的页、教师我的页与 `/pages/common/announcements/announcements`
+
+### 后台公告模块
+
+- `admin-manage-announcements`：后台公告增删改查与发布/关闭，操作 `announcements` 集合
+- 支持 `action`: `list`、`get`、`create`、`update`、`delete`、`publish`、`close`
+- 写操作会校验 `users.admin_auth_uid` 对应用户是否具备 `admin` 角色，并写入 `operation_logs`
+- 后台入口：`admin-web/src/pages/announcements/AnnouncementsPage.vue`
 
 ### 用户模块
 
@@ -1475,6 +1501,15 @@ RankingService.getRanking({ rank_type: 'week' })
 - 写操作会校验 `users.admin_auth_uid` 对应用户是否具备 `admin` 角色，并写入 `operation_logs`
 - 删除项目时会检查 `tasks.project_code`、`classes.project_code`、`users.teacher_project_code`，若存在引用则阻止删除，建议改为停用
 
+### 后台排行榜模块
+
+- `admin-manage-rankings`：后台排行榜查询，操作 `ranking_snapshots` 集合
+- 支持 `action`: `current`、`history`、`history_detail`
+- `current` 按 `rank_type = week | month | total` 返回当前快照完整榜单
+- `history` 分页返回周榜/月榜周期历史快照摘要
+- `history_detail` 按 `snapshot_id` 返回单个历史快照完整榜单
+- 后台入口：`admin-web/src/pages/rankings/RankingsPage.vue`
+
 ## 七、当前未落地但已预留的调用入口
 
 以下方法已经在 `services/api.js` 中预留，但仓库中还没有对应云函数实现：
@@ -1488,7 +1523,7 @@ RankingService.getRanking({ rank_type: 'week' })
 
 ---
 
-**文档版本**: v3.9.0
-**最后更新**: 2026-04-21
+**文档版本**: v3.10.0
+**最后更新**: 2026-04-25
 **编写者**: 开发团队
-**更新说明**: 同步后台项目配置管理云函数与项目 CRUD 接入情况
+**更新说明**: 同步公告管理、公告弹窗策略与小程序公告入口接入情况

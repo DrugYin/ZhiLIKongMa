@@ -32,6 +32,11 @@ Page({
         desc: '统一查看任务提交、审核状态和历史反馈'
       },
       {
+        key: 'announcement',
+        title: '通知中心',
+        desc: '查看系统通知、学习安排和功能更新'
+      },
+      {
         key: 'setting',
         title: '账号设置',
         desc: '完善头像、昵称和基础资料'
@@ -92,6 +97,11 @@ Page({
 
     if (key === 'records') {
       this.goToSubmissionRecords()
+      return
+    }
+
+    if (key === 'announcement') {
+      this.goToAnnouncements()
     }
   },
 
@@ -116,6 +126,12 @@ Page({
   goToSetting() {
     wx.navigateTo({
       url: '/pages/student/setting/setting'
+    })
+  },
+
+  goToAnnouncements() {
+    wx.navigateTo({
+      url: '/pages/common/announcements/announcements'
     })
   },
 

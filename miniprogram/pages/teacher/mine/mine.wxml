@@ -63,6 +63,13 @@
           </view>
           <text class="action-arrow">›</text>
         </view>
+        <view class="action-item" bindtap="goToAnnouncements">
+          <view class="action-copy">
+            <text class="action-title">通知中心</text>
+            <text class="action-desc">查看系统通知、教学安排和功能更新</text>
+          </view>
+          <text class="action-arrow">›</text>
+        </view>
         <view class="action-item" bindtap="goToStudent">
           <view class="action-copy">
             <text class="action-title">切换到学生端</text>

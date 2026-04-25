@@ -9,6 +9,7 @@
     "pages/student/class-manage/class-manage",
     "pages/student/class-manage/class-detail/class-detail",
     "pages/student/class-manage/join-confirm/join-confirm",
+    "pages/common/announcements/announcements",
     "pages/login/login",
     "pages/teacher/index",
     "pages/student/setting/setting",

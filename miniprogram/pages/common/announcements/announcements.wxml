@@ -1,0 +1,49 @@
+<view class="container">
+  <view class="header">
+    <custom-navbar showBack="{{true}}" placeholder="{{true}}" title="通知中心" />
+  </view>
+
+  <scroll-view class="content" scroll-y enhanced>
+    <view class="hero-card">
+      <text class="hero-eyebrow">系统通知</text>
+      <text class="hero-title">通知中心</text>
+      <text class="hero-desc">查看管理员发布的系统通知、学习安排与功能更新。</text>
+      <view class="hero-meta">
+        <text>{{total}} 条通知</text>
+      </view>
+    </view>
+
+    <view wx:if="{{loading}}" class="section-card loading-card">
+      <text>通知加载中...</text>
+    </view>
+
+    <view wx:elif="{{announcements.length}}" class="announcement-list">
+      <view wx:for="{{announcements}}" wx:key="_id" class="announcement-card">
+        <view class="announcement-card-head">
+          <view class="announcement-title-wrap">
+            <text class="announcement-title">{{item.title}}</text>
+            <text class="announcement-time">{{item.publishText}}</text>
+          </view>
+          <text class="announcement-state {{item.is_read ? 'announcement-state-read' : ''}}">{{item.readText}}</text>
+        </view>
+        <text class="announcement-content">{{item.content}}</text>
+        <view class="announcement-footer">
+          <text class="announcement-mode">{{item.sourceText}}</text>
+          <view class="announcement-actions">
+            <button wx:if="{{item.action_url}}" class="read-btn action-btn" data-id="{{item._id}}" bindtap="handleAction">
+              {{item.action_label || '前往查看'}}
+            </button>
+            <button wx:if="{{!item.is_read}}" class="read-btn" data-id="{{item._id}}" bindtap="handleRead">标记已读</button>
+          </view>
+        </view>
+      </view>
+    </view>
+
+    <view wx:else class="section-card empty-card">
+      <text class="empty-title">暂无通知</text>
+      <text class="empty-desc">当前没有与你相关的通知，稍后再来看看。</text>
+    </view>
+
+    <view class="footer-placeholder"></view>
+  </scroll-view>
+</view>

@@ -8,8 +8,10 @@ import ProjectsPage from '@/pages/projects/ProjectsPage.vue';
 import UsersPage from '@/pages/users/UsersPage.vue';
 import ClassesPage from '@/pages/classes/ClassesPage.vue';
 import TasksPage from '@/pages/tasks/TasksPage.vue';
+import RankingsPage from '@/pages/rankings/RankingsPage.vue';
 import SubmissionsPage from '@/pages/submissions/SubmissionsPage.vue';
 import LogsPage from '@/pages/logs/LogsPage.vue';
+import AnnouncementsPage from '@/pages/announcements/AnnouncementsPage.vue';
 
 const routes = [
   {
@@ -29,6 +31,8 @@ const routes = [
       { path: 'users', name: 'users', component: UsersPage, meta: { title: '用户管理' } },
       { path: 'classes', name: 'classes', component: ClassesPage, meta: { title: '班级管理' } },
       { path: 'tasks', name: 'tasks', component: TasksPage, meta: { title: '任务管理' } },
+      { path: 'rankings', name: 'rankings', component: RankingsPage, meta: { title: '排行榜' } },
+      { path: 'announcements', name: 'announcements', component: AnnouncementsPage, meta: { title: '公告管理' } },
       { path: 'submissions', name: 'submissions', component: SubmissionsPage, meta: { title: '提交记录' } },
       { path: 'logs', name: 'logs', component: LogsPage, meta: { title: '操作日志' } }
     ]

@@ -98,6 +98,10 @@ function formatChinaDateTime(date) {
   return `${year}-${month}-${day} ${hour}:${minute}:${second}.${millisecond}`
 }
 
+function formatChinaDate(date) {
+  return formatChinaDateTime(date).slice(0, 10)
+}
+
 function getWeekRange() {
   const now = getChinaNow()
   const year = now.getUTCFullYear()
@@ -130,6 +134,26 @@ function buildPeriodRange(rankType) {
   }
 
   return getWeekRange()
+}
+
+function buildPeriodMeta(rankType, range) {
+  if (!range || !range.start || !range.end) {
+    return null
+  }
+
+  const startText = formatChinaDate(range.start)
+  const endText = formatChinaDate(range.end)
+  const periodKey = rankType === 'month'
+    ? startText.slice(0, 7)
+    : `${startText}_${endText}`
+
+  return {
+    period_key: periodKey,
+    period_start: range.start,
+    period_end: range.end,
+    period_start_text: startText,
+    period_end_text: endText
+  }
 }
 
 function buildScoreMap(submissions = []) {
@@ -216,7 +240,7 @@ function buildRankList(users, rankType, scoreMap) {
     }))
 }
 
-async function saveSnapshot(rankType, rankingList, generatedAt) {
+function buildSnapshotData(rankType, rankingList, generatedAt, periodMeta = null) {
   const snapshotData = {
     rank_type: rankType,
     participant_count: rankingList.length,
@@ -226,31 +250,69 @@ async function saveSnapshot(rankType, rankingList, generatedAt) {
     update_time: generatedAt
   }
 
+  if (periodMeta) {
+    Object.assign(snapshotData, periodMeta)
+  }
+
+  return snapshotData
+}
+
+function buildPeriodSnapshotId(rankType, periodMeta) {
+  return `${rankType}_${periodMeta.period_key}`
+}
+
+async function saveSnapshot(rankType, rankingList, generatedAt, periodMeta = null) {
+  const snapshotData = buildSnapshotData(rankType, rankingList, generatedAt, periodMeta)
+
   await db.collection('ranking_snapshots').doc(rankType).set({
-    data: snapshotData
+    data: {
+      ...snapshotData,
+      snapshot_scope: 'current'
+    }
   })
+
+  if (!periodMeta || !['week', 'month'].includes(rankType)) {
+    return [rankType]
+  }
+
+  const periodSnapshotId = buildPeriodSnapshotId(rankType, periodMeta)
+  await db.collection('ranking_snapshots').doc(periodSnapshotId).set({
+    data: {
+      ...snapshotData,
+      snapshot_scope: 'period',
+      current_snapshot_id: rankType
+    }
+  })
+
+  return [rankType, periodSnapshotId]
 }
 
 exports.main = async () => {
   try {
     const generatedAt = new Date()
     const users = await getAllUsers()
+    const savedSnapshots = []
 
     for (const rankType of RANK_TYPES) {
       let scoreMap = {}
+      let periodMeta = null
 
       if (rankType !== 'total') {
-        const { start, end } = buildPeriodRange(rankType)
+        const range = buildPeriodRange(rankType)
+        const { start, end } = range
         const submissions = await getSubmissionsByRange(start, end)
         scoreMap = buildScoreMap(submissions)
+        periodMeta = buildPeriodMeta(rankType, range)
       }
 
       const rankingList = buildRankList(users, rankType, scoreMap)
-      await saveSnapshot(rankType, rankingList, generatedAt)
+      const snapshotIds = await saveSnapshot(rankType, rankingList, generatedAt, periodMeta)
+      savedSnapshots.push(...snapshotIds)
     }
 
     return success('排行榜快照刷新成功', {
       rank_types: RANK_TYPES,
+      saved_snapshots: savedSnapshots,
       generated_at: generatedAt
     })
   } catch (error) {
