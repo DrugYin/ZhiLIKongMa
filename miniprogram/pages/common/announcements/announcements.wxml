@@ -5,7 +5,7 @@
 
   <scroll-view class="content" scroll-y enhanced refresher-enabled bindrefresherrefresh="onPullDownRefresh">
     <view class="hero-card">
-      <text class="hero-eyebrow">Announcements</text>
+      <text class="hero-eyebrow">系统通知</text>
       <text class="hero-title">公告中心</text>
       <text class="hero-desc">查看管理员发布的系统通知、学习安排与功能更新。</text>
       <view class="hero-meta">
