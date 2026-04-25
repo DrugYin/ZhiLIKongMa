@@ -110,4 +110,12 @@
 
     <view class="footer-placeholder"></view>
   </scroll-view>
+
+  <announcement-panel
+    visible="{{announcementVisible}}"
+    announcements="{{popupAnnouncements}}"
+    bindread="handleAnnouncementRead"
+    bindclose="handleAnnouncementPanelClose"
+    bindviewall="goToAnnouncements"
+  />
 </view>

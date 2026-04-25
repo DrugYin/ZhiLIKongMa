@@ -1,5 +1,6 @@
 const AuthService = require('../../services/auth')
 const ClassService = require('../../services/class')
+const AnnouncementService = require('../../services/announcement')
 const RankingService = require('../../services/ranking')
 const TaskService = require('../../services/task')
 const formatUtils = require('../../utils/format')
@@ -14,6 +15,8 @@ Page({
     heroDesc: '查看本周任务、班级进度和学习提醒，让今天的训练安排更清晰。',
     notice: '',
     showNotice: false,
+    announcementVisible: false,
+    popupAnnouncements: [],
     featuredTask: {
       title: '登录后查看本周任务',
       description: '系统会自动同步你已加入班级中本周最新的待提交任务。',
@@ -55,6 +58,12 @@ Page({
         desc: '查看周榜、月榜和总榜变化'
       },
       {
+        key: 'announcement',
+        mark: '告',
+        title: '公告中心',
+        desc: '查看系统通知和学习安排'
+      },
+      {
         key: 'records',
         mark: '记',
         title: '提交记录',
@@ -81,6 +90,8 @@ Page({
     if (this._pageReady) {
       this.initPage({ silent: true })
     }
+
+    this.loadPopupAnnouncements()
   },
 
   async initPage({ silent = false } = {}) {
@@ -553,9 +564,46 @@ Page({
       return
     }
 
+    if (key === 'announcement') {
+      this.goToAnnouncements()
+      return
+    }
+
     if (key === 'records') {
       this.goToSubmissionRecords()
     }
+  },
+
+  async loadPopupAnnouncements() {
+    try {
+      const data = await AnnouncementService.getPopupAnnouncements()
+      const popupAnnouncements = data.popup_list || data.list || []
+      this.setData({
+        popupAnnouncements,
+        announcementVisible: popupAnnouncements.length > 0
+      })
+    } catch (error) {
+      console.error('[student-index] loadPopupAnnouncements error:', error)
+    }
+  },
+
+  async handleAnnouncementRead(e) {
+    const announcement = e.detail && e.detail.announcement
+    if (!announcement || !announcement._id) {
+      return
+    }
+
+    try {
+      await AnnouncementService.markRead(announcement._id)
+    } catch (error) {
+      console.error('[student-index] markAnnouncementRead error:', error)
+    }
+  },
+
+  handleAnnouncementPanelClose() {
+    this.setData({
+      announcementVisible: false
+    })
   },
 
   goLogin() {
@@ -579,6 +627,12 @@ Page({
   goToRank() {
     wx.switchTab({
       url: '/pages/student/rank/rank'
+    })
+  },
+
+  goToAnnouncements() {
+    wx.navigateTo({
+      url: '/pages/common/announcements/announcements'
     })
   },
 

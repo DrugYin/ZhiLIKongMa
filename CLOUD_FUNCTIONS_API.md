@@ -1,6 +1,6 @@
 # 云函数 API 文档
 
-本文档基于当前仓库代码同步整理，覆盖已经落地的用户系统、班级管理、任务管理、提交审核、排行榜与项目配置云函数，并标注前端已接入情况与仍待实现的调用入口。
+本文档基于当前仓库代码同步整理，覆盖已经落地的用户系统、班级管理、任务管理、提交审核、排行榜、项目配置与公告管理云函数，并标注前端已接入情况与仍待实现的调用入口。
 
 ## 通用说明
 
@@ -11,6 +11,7 @@
 - `services/api.js`
 - `services/auth.js`
 - `services/class.js`
+- `services/announcement.js`
 - `services/ranking.js`
 - `services/task.js`
 
@@ -58,6 +59,8 @@ const { OPENID } = cloud.getWXContext();
 - `projects`
 - `ranking_snapshots`
 - `system_config`
+- `announcements`
+- `announcement_reads`
 - `operation_logs`
 
 ## 一、用户系统
@@ -1433,6 +1436,22 @@ RankingService.getRanking({ rank_type: 'week' })
 
 ## 六、前端封装对照
 
+### 公告模块
+
+- `get-announcements`：小程序公告读取与已读记录，操作 `announcements`、`announcement_reads` 集合
+- 支持 `action`: `list`、`read` / `mark_read`
+- `list` 会按发布时间、有效期、可见范围过滤；可见范围支持 `all`、`role`、`users`
+- `display_mode = always` 表示每次进入弹出；`display_mode = once` 表示用户标记已读后不再自动弹出
+- 小程序封装：`services/announcement.js` 中的 `AnnouncementService`
+- 小程序入口：学生首页、教师首页、学生我的页、教师我的页与 `/pages/common/announcements/announcements`
+
+### 后台公告模块
+
+- `admin-manage-announcements`：后台公告增删改查与发布/关闭，操作 `announcements` 集合
+- 支持 `action`: `list`、`get`、`create`、`update`、`delete`、`publish`、`close`
+- 写操作会校验 `users.admin_auth_uid` 对应用户是否具备 `admin` 角色，并写入 `operation_logs`
+- 后台入口：`admin-web/src/pages/announcements/AnnouncementsPage.vue`
+
 ### 用户模块
 
 - `services/api.js` 中的 `userApi`
@@ -1488,7 +1507,7 @@ RankingService.getRanking({ rank_type: 'week' })
 
 ---
 
-**文档版本**: v3.9.0
-**最后更新**: 2026-04-21
+**文档版本**: v3.10.0
+**最后更新**: 2026-04-25
 **编写者**: 开发团队
-**更新说明**: 同步后台项目配置管理云函数与项目 CRUD 接入情况
+**更新说明**: 同步公告管理、公告弹窗策略与小程序公告入口接入情况
