@@ -15,7 +15,7 @@
 
 .content {
   box-sizing: border-box;
-  padding: 0rpx 24rpx calc(180rpx + env(safe-area-inset-bottom));
+  padding: 0rpx 24rpx calc(100rpx + env(safe-area-inset-bottom));
 }
 
 .profile-card,

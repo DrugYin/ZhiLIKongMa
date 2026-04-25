@@ -1,6 +1,6 @@
 <view class="container">
   <view class="header">
-    <custom-navbar placeholder="{{true}}" title="公告中心" />
+    <custom-navbar showBack="{{true}}" placeholder="{{true}}" title="公告中心" />
   </view>
 
   <scroll-view class="content" scroll-y enhanced refresher-enabled bindrefresherrefresh="onPullDownRefresh">
@@ -29,7 +29,7 @@
         <text class="announcement-content">{{item.content}}</text>
         <view class="announcement-footer">
           <text class="announcement-mode"></text>
-          <button class="read-btn" data-id="{{item._id}}" bindtap="handleRead">标记已读</button>
+          <button wx:if="{{!item.is_read}}" class="read-btn" data-id="{{item._id}}" bindtap="handleRead">标记已读</button>
         </view>
       </view>
     </view>
