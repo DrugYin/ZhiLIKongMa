@@ -13,7 +13,14 @@
     </scroll-view>
 
     <view class="announcement-actions">
-      <button class="ghost-btn" bindtap="handleViewAll">查看全部</button>
+      <button
+        wx:if="{{announcements[currentIndex].action_url}}"
+        class="ghost-btn"
+        bindtap="handleAction"
+      >
+        {{announcements[currentIndex].action_label || '前往查看'}}
+      </button>
+      <button wx:else class="ghost-btn" bindtap="handleViewAll">查看全部</button>
       <button class="primary-btn" bindtap="handleRead">
         {{currentIndex + 1 < announcements.length ? '下一条' : '我知道了'}}
       </button>

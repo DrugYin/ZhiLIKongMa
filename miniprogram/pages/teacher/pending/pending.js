@@ -115,7 +115,8 @@ Page({
     reviewAction: ''
   },
 
-  onLoad() {
+  onLoad(options = {}) {
+    this._routeHint = this.normalizeRouteHint(options)
     this.initPage()
   },
 
@@ -124,6 +125,15 @@ Page({
     if (tabBar) {
       tabBar.changeData({ type: 'teacher' })
       tabBar.init('/pages/teacher/pending/pending')
+    }
+
+    const storedHint = this.consumeStoredRouteHint()
+    if (storedHint) {
+      this._routeHint = storedHint
+      if (this._pageReady) {
+        this.initPage({ silent: true })
+      }
+      return
     }
 
     if (this._pageReady) {
@@ -165,6 +175,7 @@ Page({
       })
 
       this.applyFilters()
+      this.applyRouteHint()
       this._pageReady = true
     } catch (error) {
       console.error('[teacher-pending] initPage error:', error)
@@ -368,6 +379,73 @@ Page({
     })
   },
 
+  applyRouteHint() {
+    const hint = this._routeHint
+    if (!hint || hint.consumed) {
+      return
+    }
+
+    if (hint.type === 'submission') {
+      const record = this.data.records.find((item) => item.recordType === 'submission' && item.id === hint.recordId)
+      this._routeHint.consumed = true
+      this.setData({
+        typeFilter: 'submission',
+        statusFilter: 'all',
+        classFilter: 'all'
+      }, () => {
+        this.applyFilters()
+        if (record) {
+          setTimeout(() => {
+            this.openRecordById(record.id)
+          }, 80)
+        }
+      })
+      return
+    }
+
+    if (hint.type === 'application') {
+      const record = this.data.records.find((item) => item.recordType === 'application' && item.id === hint.recordId)
+      this._routeHint.consumed = true
+      this.setData({
+        typeFilter: 'application',
+        statusFilter: 'all',
+        classFilter: record && record.className ? record.className : 'all'
+      }, () => {
+        this.applyFilters()
+      })
+    }
+  },
+
+  normalizeRouteHint(options = {}) {
+    const type = String(options.type || '').trim()
+    const recordId = String(options.record_id || options.recordId || options.id || '').trim()
+
+    if (!type && !recordId) {
+      return null
+    }
+
+    return {
+      type,
+      recordId,
+      consumed: false
+    }
+  },
+
+  consumeStoredRouteHint() {
+    try {
+      const hint = wx.getStorageSync('teacher_pending_route_hint')
+      if (!hint) {
+        return null
+      }
+
+      wx.removeStorageSync('teacher_pending_route_hint')
+      return this.normalizeRouteHint(hint)
+    } catch (error) {
+      console.error('[teacher-pending] consumeStoredRouteHint error:', error)
+      return null
+    }
+  },
+
   formatDateTime(value) {
     if (!value) {
       return '--'
@@ -414,6 +492,10 @@ Page({
 
   async openRecordPopup(e) {
     const { id } = e.currentTarget.dataset
+    this.openRecordById(id)
+  },
+
+  async openRecordById(id) {
     const record = this.data.records.find((item) => item.id === id)
 
     if (!record || record.recordType !== 'submission') {

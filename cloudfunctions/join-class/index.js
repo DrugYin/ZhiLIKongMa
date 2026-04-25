@@ -1,6 +1,7 @@
 const cloud = require('wx-server-sdk');
 const { getCurrentUser } = require('/opt/auth');
 const { writeOperationLog } = require('/opt/operation-log');
+const { createSystemNotification, safeCreateNotification } = require('/opt/notification');
 
 cloud.init({
   env: cloud.DYNAMIC_CURRENT_ENV
@@ -118,6 +119,21 @@ exports.main = async (event) => {
       now,
       contextLabel: 'join-class'
     });
+
+    if (classInfo.teacher_openid) {
+      await safeCreateNotification(() => createSystemNotification(db, {
+        title: '入班申请提醒',
+        content: `学生${user.user_name || user.nick_name || '未命名学生'}申请加入${classInfo.class_name || '未命名'}班级`,
+        targetOpenid: classInfo.teacher_openid,
+        notificationType: 'class_join_applied',
+        actionUrl: `/pages/teacher/pending/pending?type=application&record_id=${result._id}`,
+        relatedType: 'class_join_application',
+        relatedId: result._id,
+        senderOpenid: OPENID,
+        senderName: user.user_name || user.nick_name || '',
+        now
+      }), 'join-class class_join_applied');
+    }
 
     return {
       success: true,

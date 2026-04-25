@@ -117,5 +117,6 @@
     bindread="handleAnnouncementRead"
     bindclose="handleAnnouncementPanelClose"
     bindviewall="goToAnnouncements"
+    bindaction="handleAnnouncementAction"
   />
 </view>

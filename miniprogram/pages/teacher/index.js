@@ -487,6 +487,24 @@ Page({
     }
   },
 
+  async handleAnnouncementAction(e) {
+    const announcement = e.detail && e.detail.announcement
+    if (!announcement || !announcement._id) {
+      return
+    }
+
+    try {
+      await AnnouncementService.markRead(announcement._id)
+    } catch (error) {
+      console.error('[teacher-index] action markAnnouncementRead error:', error)
+    }
+
+    this.setData({
+      announcementVisible: false
+    })
+    AnnouncementService.openAction(announcement)
+  },
+
   handleAnnouncementPanelClose() {
     this.setData({
       announcementVisible: false

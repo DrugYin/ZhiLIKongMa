@@ -1,6 +1,7 @@
 const cloud = require('wx-server-sdk');
 const { verifyTeacherRole } = require('/opt/auth');
 const { writeOperationLog } = require('/opt/operation-log');
+const { createClassTaskNotification, safeCreateNotification } = require('/opt/notification');
 
 cloud.init({
   env: cloud.DYNAMIC_CURRENT_ENV
@@ -306,6 +307,18 @@ exports.main = async (event) => {
 
     if (taskType === 'class') {
       await adjustClassTaskStats(classId, 1, status === 'published' ? 1 : 0, now);
+
+      if (status === 'published') {
+        await safeCreateNotification(() => createClassTaskNotification(db, {
+          taskId: result._id,
+          classId,
+          className,
+          taskTitle: title,
+          senderOpenid: OPENID,
+          senderName: teacher.user_name || teacher.nick_name || '',
+          now
+        }), 'create-task class_task_published');
+      }
     }
 
     await writeOperationLog(db, {

@@ -170,6 +170,12 @@ function normalizeAnnouncementForClient(announcement, readIds) {
     end_time: announcement.end_time || null,
     publish_time: announcement.publish_time || announcement.update_time || announcement.create_time || null,
     sort_order: Number(announcement.sort_order || 100),
+    source_type: normalizeString(announcement.source_type) || 'admin',
+    notification_type: normalizeString(announcement.notification_type),
+    action_label: normalizeString(announcement.action_label),
+    action_url: normalizeString(announcement.action_url),
+    related_type: normalizeString(announcement.related_type),
+    related_id: normalizeString(announcement.related_id),
     is_read: isRead,
     should_popup: displayMode === 'always' || !isRead
   }
