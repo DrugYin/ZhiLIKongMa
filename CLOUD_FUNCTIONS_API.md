@@ -1501,6 +1501,15 @@ RankingService.getRanking({ rank_type: 'week' })
 - 写操作会校验 `users.admin_auth_uid` 对应用户是否具备 `admin` 角色，并写入 `operation_logs`
 - 删除项目时会检查 `tasks.project_code`、`classes.project_code`、`users.teacher_project_code`，若存在引用则阻止删除，建议改为停用
 
+### 后台排行榜模块
+
+- `admin-manage-rankings`：后台排行榜查询，操作 `ranking_snapshots` 集合
+- 支持 `action`: `current`、`history`、`history_detail`
+- `current` 按 `rank_type = week | month | total` 返回当前快照完整榜单
+- `history` 分页返回周榜/月榜周期历史快照摘要
+- `history_detail` 按 `snapshot_id` 返回单个历史快照完整榜单
+- 后台入口：`admin-web/src/pages/rankings/RankingsPage.vue`
+
 ## 七、当前未落地但已预留的调用入口
 
 以下方法已经在 `services/api.js` 中预留，但仓库中还没有对应云函数实现：
