@@ -28,7 +28,7 @@
         </view>
         <text class="announcement-content">{{item.content}}</text>
         <view class="announcement-footer">
-          <text class="announcement-mode">{{item.modeText}}</text>
+          <text class="announcement-mode"></text>
           <button class="read-btn" data-id="{{item._id}}" bindtap="handleRead">标记已读</button>
         </view>
       </view>
