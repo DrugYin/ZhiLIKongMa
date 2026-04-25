@@ -673,6 +673,7 @@ Web 登录
 | `admin-get-users` | 查询用户列表 | P1 |
 | `admin-get-tasks` | 查询任务列表 | P1 |
 | `admin-get-submissions` | 查询提交记录 | P1 |
+| `admin-manage-rankings` | 查询当前排行榜与历史排行榜快照 | P1 |
 | `admin-get-operation-logs` | 查询操作日志 | P0 |
 
 ### 8.6 运维动作
@@ -693,7 +694,9 @@ Web 登录
 /config
 /projects
 /users
+/classes
 /tasks
+/rankings
 /submissions
 /logs
 ```
@@ -706,7 +709,9 @@ Web 登录
 ├── 系统配置
 ├── 项目配置
 ├── 用户管理
+├── 班级管理
 ├── 任务管理
+├── 排行榜
 ├── 提交记录
 └── 操作日志
 ```
