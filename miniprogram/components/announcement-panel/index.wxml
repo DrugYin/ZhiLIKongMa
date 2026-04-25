@@ -1,0 +1,22 @@
+<view wx:if="{{visible && announcements.length}}" class="announcement-mask" catchtap="handleClose" catchtouchmove="noop">
+  <view class="announcement-dialog" catchtap="noop">
+    <view class="announcement-top">
+      <view>
+        <text class="announcement-eyebrow">公告</text>
+        <text class="announcement-title">{{announcements[currentIndex].title}}</text>
+      </view>
+      <text class="announcement-count">{{currentIndex + 1}} / {{announcements.length}}</text>
+    </view>
+
+    <scroll-view class="announcement-content" scroll-y>
+      <text>{{announcements[currentIndex].content}}</text>
+    </scroll-view>
+
+    <view class="announcement-actions">
+      <button class="ghost-btn" bindtap="handleViewAll">查看全部</button>
+      <button class="primary-btn" bindtap="handleRead">
+        {{currentIndex + 1 < announcements.length ? '下一条' : '我知道了'}}
+      </button>
+    </view>
+  </view>
+</view>

@@ -51,6 +51,12 @@ Page({
     })
   },
 
+  goToAnnouncements() {
+    wx.navigateTo({
+      url: '/pages/common/announcements/announcements'
+    })
+  },
+
   syncProfile() {
     const userInfo = AuthService.getLocalUserInfo() || {}
     const roles = Array.isArray(userInfo.roles) ? userInfo.roles : []

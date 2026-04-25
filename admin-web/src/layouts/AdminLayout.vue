@@ -58,6 +58,7 @@ const menus = [
   { path: '/users', label: '用户管理' },
   { path: '/classes', label: '班级管理' },
   { path: '/tasks', label: '任务管理' },
+  { path: '/announcements', label: '公告管理' },
   { path: '/submissions', label: '提交记录' },
   { path: '/logs', label: '操作日志' }
 ];

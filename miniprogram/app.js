@@ -1,6 +1,5 @@
 // app.js
 const AuthService = require('./services/auth')
-const Toast = require('./utils/toast')
 
 App({
 
@@ -36,27 +35,6 @@ App({
       })
     }
 
-    this.showLaunchAnnouncement()
-
-  },
-
-  showLaunchAnnouncement() {
-    if (this._launchAnnouncementShown) {
-      return
-    }
-
-    this._launchAnnouncementShown = true
-
-    setTimeout(() => {
-      Toast.showModal({
-        title: '升级公告',
-        content: '小程序已全面升级，当前可能仍存在部分 bug 和数据丢失情况。\n\n积分抽奖功能暂时关闭。\n\n如有问题，请联系微信：cg2209338565',
-        showCancel: false,
-        confirmText: '我知道了'
-      }).catch((error) => {
-        console.error('公告弹窗显示失败:', error)
-      })
-    }, 300)
   }
 
 })
