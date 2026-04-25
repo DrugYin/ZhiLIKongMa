@@ -1,6 +1,6 @@
 # 智慧控码后台管理网站
 
-该目录是智慧控码训练系统的独立后台管理网站，目标是承载运营统计、系统配置、项目配置、用户查询、任务提交查看和操作日志等管理能力。
+该目录是智慧控码训练系统的独立后台管理网站，当前已承载运营统计、系统配置、项目配置、用户管理、班级管理、任务管理、提交审核、排行榜、公告管理和操作日志等管理能力。
 
 ## 技术栈
 
@@ -56,15 +56,17 @@ admin-web/dist/
 
 - `admin-auth-check`
 - `admin-get-statistics`
-- `admin-get-config`
-- `admin-update-config`
-- `admin-get-projects`
-- `admin-update-project`
-- `admin-get-users`
-- `admin-get-tasks`
-- `admin-get-submissions`
-- `admin-get-operation-logs`
-- `admin-refresh-ranking`
+- `admin-manage-config`
+- `admin-manage-projects`
+- `admin-manage-users`
+- `admin-manage-classes`
+- `admin-manage-tasks`
+- `admin-manage-submissions`
+- `admin-manage-rankings`
+- `admin-manage-announcements`
+- `admin-manage-logs`
+
+说明：排行榜快照刷新仍由小程序侧运维云函数 `refresh-ranking-snapshots` 承担，后台当前提供排行榜查看和历史快照查询入口。
 
 ## 管理员初始化
 
@@ -105,4 +107,17 @@ admin-web/dist/
 
 ## 当前状态
 
-当前已完成前端工程骨架和接口封装，页面以占位和接口预留为主。下一步建议先实现 `admin-auth-check` 云函数，再接入真实登录与权限校验。
+当前已完成 Vue 3 后台工程、CloudBase Web Auth 登录、管理员权限校验、主布局和 11 个后台页面：
+
+- 运营概览：`admin-get-statistics`
+- 系统配置：`admin-manage-config`
+- 项目配置：`admin-manage-projects`
+- 用户管理：`admin-manage-users`
+- 班级管理：`admin-manage-classes`
+- 任务管理：`admin-manage-tasks`
+- 提交记录与后台审核：`admin-manage-submissions`
+- 排行榜：`admin-manage-rankings`
+- 公告管理：`admin-manage-announcements`
+- 操作日志：`admin-manage-logs`
+
+下一步建议优先做后台真机/云环境联调、权限矩阵细化、CloudBase 静态网站托管部署，以及生产环境管理员账号初始化。

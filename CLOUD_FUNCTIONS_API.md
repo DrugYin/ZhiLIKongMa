@@ -1,6 +1,6 @@
 # 云函数 API 文档
 
-本文档基于当前仓库代码同步整理，覆盖已经落地的用户系统、班级管理、任务管理、提交审核、排行榜、项目配置与公告管理云函数，并标注前端已接入情况与仍待实现的调用入口。
+本文档基于当前仓库代码同步整理，覆盖已经落地的用户系统、班级管理、任务管理、提交审核、排行榜、项目配置、公告管理与后台管理云函数，并标注前端已接入情况与仍待实现的调用入口。
 
 ## 通用说明
 
@@ -815,7 +815,7 @@ ClassService.getClassApplications(params)
 说明：
 
 - 当前审批通过后不会清理学生在其他班级的成员关系，多班级共存是当前实现的一部分。
-- 教师端已在班级详情页接入通过/拒绝按钮，独立审核 Tab 仍为占位页。
+- 教师端已在班级详情页和审核 Tab 接入通过/拒绝按钮，审核 Tab 同时展示任务提交与入班申请待办。
 
 ---
 
@@ -1459,6 +1459,34 @@ RankingService.getRanking({ rank_type: 'week' })
 - 写操作会校验 `users.admin_auth_uid` 对应用户是否具备 `admin` 角色，并写入 `operation_logs`
 - 后台入口：`admin-web/src/pages/announcements/AnnouncementsPage.vue`
 
+### 后台用户模块
+
+- `admin-manage-users`：后台用户查询、详情查看与用户资料/角色/后台权限字段更新，操作 `users` 集合
+- 支持 `action`: `list`、`get`、`update`
+- 列表支持关键词、角色、状态筛选，并会在后台前端解析云存储头像临时访问地址
+- 后台入口：`admin-web/src/pages/users/UsersPage.vue`
+
+### 后台班级模块
+
+- `admin-manage-classes`：后台班级维护、成员查看、成员移除与入班申请审批，操作 `classes`、`class_memberships`、`class_join_applications`
+- 支持 `action`: `list`、`get`、`create`、`update`、`delete`、`members`、`remove_member`、`applications`、`review_application`
+- 删除班级采用状态变更与关系清理策略，后台可按项目、状态、关键词查询班级
+- 后台入口：`admin-web/src/pages/classes/ClassesPage.vue`
+
+### 后台任务模块
+
+- `admin-manage-tasks`：后台任务列表、详情、新增、编辑、删除与任务提交查询，操作 `tasks`、`classes`、`projects`、`submissions`
+- 支持 `action`: `list`、`get`、`create`、`update`、`delete`、`submissions`
+- 删除任务采用软删除并同步班级任务统计，任务表单支持项目、班级、可见范围、截止时间、图片与附件
+- 后台入口：`admin-web/src/pages/tasks/TasksPage.vue`
+
+### 后台提交模块
+
+- `admin-manage-submissions`：后台提交记录查询、详情查看与后台审核，操作 `submissions`、`tasks`、`users`
+- 支持 `action`: `list`、`get`、`review`
+- 审核通过会调整学生当前积分和累计积分，驳回时积分记为 0，并写入 `operation_logs`
+- 后台入口：`admin-web/src/pages/submissions/SubmissionsPage.vue`
+
 ### 用户模块
 
 - `services/api.js` 中的 `userApi`
@@ -1510,6 +1538,13 @@ RankingService.getRanking({ rank_type: 'week' })
 - `history_detail` 按 `snapshot_id` 返回单个历史快照完整榜单
 - 后台入口：`admin-web/src/pages/rankings/RankingsPage.vue`
 
+### 后台操作日志模块
+
+- `admin-manage-logs`：后台操作日志列表与详情查询，操作 `operation_logs` 集合，并聚合用户、班级等上下文展示
+- 支持 `action`: `list`、`get`
+- 列表支持关键词、模块、操作者类型、动作和时间范围筛选
+- 后台入口：`admin-web/src/pages/logs/LogsPage.vue`
+
 ## 七、当前未落地但已预留的调用入口
 
 以下方法已经在 `services/api.js` 中预留，但仓库中还没有对应云函数实现：
@@ -1523,7 +1558,7 @@ RankingService.getRanking({ rank_type: 'week' })
 
 ---
 
-**文档版本**: v3.10.0
+**文档版本**: v3.11.0
 **最后更新**: 2026-04-25
 **编写者**: 开发团队
-**更新说明**: 同步公告管理、公告弹窗策略与小程序公告入口接入情况
+**更新说明**: 同步后台用户、班级、任务、提交、日志管理云函数与后台页面接入情况
