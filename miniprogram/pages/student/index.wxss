@@ -99,8 +99,9 @@
 }
 
 .focus-desc {
+  color: #6d7d90
   margin-top: 12rpx;
-  font-size: 30rpx;
+  font-size: 26rpx;
 }
 
 .weekly-tag-row {
