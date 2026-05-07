@@ -77,21 +77,22 @@
 
 /* ========== 文字样式 ========== */
 .hero-title,
-.section-title,
 .state-title {
   display: block;
   color: #17314a;
   font-weight: 700;
 }
 
+.section-title {
+  color: #17314a;
+  font-weight: 700;
+  font-size: 30rpx;
+}
+
 .hero-title {
   margin-top: 12rpx;
   font-size: 38rpx;
   line-height: 1.4;
-}
-
-.section-title {
-  font-size: 30rpx;
 }
 
 .state-title {

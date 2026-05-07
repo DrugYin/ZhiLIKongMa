@@ -145,11 +145,11 @@
           bindtap="goToTaskDetail"
         >
           <view class="task-top">
-            <view class="task-copy">
-              <text class="task-title">{{item.titleText}}</text>
+            <text class="task-title">{{item.titleText}}</text>
+            <view class="task-right">
               <text class="task-project">{{item.projectText}}</text>
+              <text class="scope-tag {{item.isMyTask ? 'scope-tag-active' : ''}}">{{item.scopeText}}</text>
             </view>
-            <text class="scope-tag {{item.isMyTask ? 'scope-tag-active' : ''}}">{{item.scopeText}}</text>
           </view>
 
           <view class="tag-row">

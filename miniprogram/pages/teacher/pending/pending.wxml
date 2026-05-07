@@ -5,7 +5,7 @@
       <custom-navbar placeholder="{{true}}" title="智力控码" />
     </view>
   </view>
-  <scroll-view class="content" scroll-y enhanced>
+  <scroll-view class="content" scroll-y enhanced 	enable-back-to-top>
     <view wx:if="{{loading}}" class="section-card">
       <text class="empty-title">审核记录加载中</text>
       <text class="empty-desc">正在同步学生提交、入班申请和当前审核状态。</text>
@@ -239,6 +239,11 @@
         <button class="ghost-btn" bindtap="goToTaskManage">前往任务管理</button>
       </view>
     </view>
+
+    <t-back-top
+      theme="round"
+      text="顶部"
+    ></t-back-top>
 
     <view class="footer-placeholder"></view>
     </block>
