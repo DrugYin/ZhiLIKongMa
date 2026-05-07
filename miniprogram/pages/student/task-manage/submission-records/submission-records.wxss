@@ -1,30 +1,7 @@
-.container {
-  height: 100vh;
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-  background: linear-gradient(180deg, #f7f8fa 0%, #eef2f7 100%);
-}
+/* 学生提交记录 - 页面特有样式 */
 
-.header {
-  position: relative;
-  flex-shrink: 0;
-  z-index: 20;
-  background-color: rgba(255, 255, 255, 0.96);
-}
-
-.content {
-  flex: 1;
-  min-height: 0;
-  box-sizing: border-box;
-  padding: 0rpx 24rpx;
-}
-
-.hero-card,
 .summary-card,
-.record-card,
-.state-card {
+.record-card {
   margin-top: 24rpx;
   padding: 28rpx;
   border-radius: 28rpx;
@@ -35,13 +12,6 @@
 
 .hero-card {
   background: linear-gradient(135deg, #ffffff 0%, #eef6ff 52%, #f5fbff 100%);
-}
-
-.hero-top,
-.summary-grid,
-.record-head,
-.record-meta-row {
-  display: flex;
 }
 
 .hero-top,
@@ -57,38 +27,34 @@
   min-width: 0;
 }
 
-.hero-title,
-.record-task-title,
-.record-title,
-.state-title {
-  color: #16324c;
-  font-weight: 700;
-}
-
 .hero-title {
   display: block;
   font-size: 36rpx;
   line-height: 1.4;
   word-break: break-all;
+  color: #16324c;
+  font-weight: 700;
 }
 
-.record-title,
-.state-title {
+.record-title {
   display: block;
   font-size: 30rpx;
+  color: #16324c;
+  font-weight: 700;
 }
 
 .record-task-title {
   display: block;
   font-size: 28rpx;
   line-height: 1.5;
+  color: #16324c;
+  font-weight: 700;
 }
 
 .hero-desc,
 .hero-tip,
 .record-task-meta,
 .record-time,
-.state-desc,
 .feedback-text {
   display: block;
   color: #6a7d90;
@@ -105,6 +71,7 @@
 }
 
 .summary-grid {
+  display: flex;
   flex-wrap: wrap;
   justify-content: space-between;
 }
@@ -158,6 +125,7 @@
 }
 
 .record-meta-row {
+  display: flex;
   flex-wrap: wrap;
   gap: 12rpx;
   margin-top: 18rpx;
@@ -201,10 +169,6 @@
   font-size: 22rpx;
 }
 
-.state-card {
-  text-align: center;
-}
-
 .ghost-btn,
 .load-more-btn {
   width: 100%;
@@ -230,10 +194,6 @@
   color: #1f7ae0;
   background: #ffffff;
   border: 2rpx solid rgba(31, 122, 224, 0.16);
-}
-
-.footer-placeholder {
-  height: 32rpx;
 }
 
 .detail-popup-shell {

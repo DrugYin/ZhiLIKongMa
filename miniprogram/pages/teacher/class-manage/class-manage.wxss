@@ -1,4 +1,5 @@
-/* pages/teacher/class-manage/class-manage.wxss */
+/* 教师班级管理 - 页面特有样式 */
+
 .container {
   height: 100vh;
   min-height: 100vh;
@@ -6,7 +7,6 @@
 }
 
 .header {
-  position: relative;
   width: 100%;
   z-index: 100;
 }
@@ -23,9 +23,9 @@
 }
 
 .content {
-  flex: 1; 
+  flex: 1;
   min-height: 0;
-  padding: 0rpx 24rpx 20rpx ;
+  padding: 0rpx 24rpx 20rpx;
 }
 
 .class-card,
@@ -41,8 +41,6 @@
   margin-top: 24rpx;
   margin-bottom: 24rpx;
 }
-
-
 
 .card-top {
   display: flex;

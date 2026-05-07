@@ -1,28 +1,7 @@
-.container {
-  min-height: 100vh;
-  background: linear-gradient(180deg, #f7f8fa 0%, #eef2f7 100%);
-}
-
-.header {
-  position: relative;
-  z-index: 20;
-  background-color: #ffffff;
-}
+/* 教师任务编辑 - 页面特有样式 */
 
 .content {
-  box-sizing: border-box;
-  height: calc(100vh - 96rpx);
-  padding: 0 24rpx calc(24rpx + env(safe-area-inset-bottom));
-}
-
-.hero-card,
-.summary-card,
-.form-card {
-  margin-top: 24rpx;
-  padding: 28rpx;
-  border-radius: 24rpx;
-  background-color: #ffffff;
-  box-shadow: 0 10rpx 30rpx rgba(31, 35, 41, 0.06);
+  padding: 0rpx 24rpx calc(24rpx + env(safe-area-inset-bottom));
 }
 
 .hero-card {
@@ -44,16 +23,10 @@
   gap: 16rpx;
 }
 
-.hero-title,
-.card-title,
-.summary-title,
-.block-label {
-  color: #111827;
-  font-weight: 600;
-}
-
 .hero-title {
   font-size: 36rpx;
+  color: #111827;
+  font-weight: 600;
 }
 
 .hero-desc,
@@ -68,30 +41,28 @@
   line-height: 1.7;
 }
 
+.card-title,
+.summary-title,
+.block-label {
+  color: #111827;
+  font-weight: 600;
+}
+
 .summary-title,
 .card-title {
   margin-bottom: 20rpx;
   font-size: 30rpx;
 }
 
-.summary-grid,
-.option-grid,
-.difficulty-grid,
-.picker-grid {
+.summary-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 20rpx;
 }
 
-.summary-item,
-.option-card,
-.difficulty-card,
-.picker-card {
-  border-radius: 20rpx;
-}
-
 .summary-item {
   padding: 20rpx;
+  border-radius: 20rpx;
   background-color: #f7f8fa;
 }
 
@@ -122,6 +93,20 @@
   display: block;
   margin-bottom: 18rpx;
   font-size: 28rpx;
+}
+
+.option-grid,
+.difficulty-grid,
+.picker-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 20rpx;
+}
+
+.option-card,
+.difficulty-card,
+.picker-card {
+  border-radius: 20rpx;
 }
 
 .option-card {

@@ -1,11 +1,6 @@
-/* pages/student/setting/setting.wxss */
-
-.header {
-  width: 100%;
-}
+/* 学生设置页 - 页面特有样式 */
 
 .content {
-  background-color: #f3f3f3;
   padding-top: 20rpx;
 }
 

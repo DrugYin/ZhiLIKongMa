@@ -1,17 +1,6 @@
-.container {
-  height: 100vh;
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  align-items: stretch;
-  justify-content: flex-start;
-  overflow: hidden;
-  background: linear-gradient(180deg, #f7f8fa 0%, #eef2f7 100%);
-}
+/* 教师任务管理 - 页面特有样式 */
 
 .header {
-  position: relative;
-  flex-shrink: 0;
   width: 100%;
   z-index: 100;
 }
@@ -22,9 +11,6 @@
 }
 
 .content {
-  flex: 1;
-  min-height: 0;
-  box-sizing: border-box;
   padding: 0rpx 24rpx calc(110rpx + env(safe-area-inset-bottom));
 }
 
@@ -48,9 +34,7 @@
 
 .summary-header,
 .card-top,
-.summary-grid,
 .card-footer,
-.summary-item,
 .tag-row,
 .action-group {
   display: flex;
@@ -114,6 +98,7 @@
 }
 
 .summary-grid {
+  display: flex;
   flex-wrap: wrap;
   justify-content: space-between;
   margin-top: 24rpx;
