@@ -1,7 +1,7 @@
 # 智慧控码后台管理网站项目文档
 
-**文档版本**: v1.1.0
-**最后更新**: 2026-04-21
+**文档版本**: v1.2.0
+**最后更新**: 2026-04-25
 **适用范围**: 独立后台管理网站（Web Admin）  
 **关联项目**: 智慧控码训练系统微信小程序  
 **数据来源**: 腾讯云开发 / CloudBase 文档数据库、云函数、云存储
@@ -38,17 +38,21 @@
 2. 运营统计总览。
 3. 系统配置查看与编辑。
 4. 项目配置查看与编辑。
-5. 操作日志查询。
+5. 用户、班级、任务、提交、排行榜、公告与操作日志查询。
 6. 基础部署到 CloudBase 静态网站托管。
 
-### 2.3 非目标
+### 2.3 当前进度快照
+
+截至 2026-04-25，后台管理网站已完成 Vue 3 工程、CloudBase Web Auth 登录、管理员权限校验、主布局和 11 个业务页面。后台云函数已落地 `admin-auth-check`、`admin-get-statistics`、`admin-manage-config`、`admin-manage-projects`、`admin-manage-users`、`admin-manage-classes`、`admin-manage-tasks`、`admin-manage-submissions`、`admin-manage-rankings`、`admin-manage-announcements`、`admin-manage-logs`。
+
+### 2.4 非目标
 
 第一阶段暂不做以下内容：
 
 - 不做复杂 BI 报表编辑器。
 - 不做完整 CRM 或用户画像系统。
 - 不做抽奖全量上线管理闭环。
-- 不做替代教师端任务审核的全功能后台。
+- 不做完全替代教师端的批量教务审核工作台，后台审核仅用于运营纠偏和管理处理。
 - 不直接让前端绕过云函数修改敏感数据库。
 
 ---
@@ -148,10 +152,13 @@ cloudfunctions/
 ├── admin-get-statistics/
 ├── admin-manage-config/
 ├── admin-manage-projects/
-├── admin-get-users/
-├── admin-get-tasks/
-├── admin-get-operation-logs/
-└── admin-refresh-ranking/
+├── admin-manage-users/
+├── admin-manage-classes/
+├── admin-manage-tasks/
+├── admin-manage-submissions/
+├── admin-manage-rankings/
+├── admin-manage-announcements/
+└── admin-manage-logs/
 ```
 
 ---
@@ -501,8 +508,15 @@ Web 登录
 
 ### 云函数
 
-- `admin-get-users`
-- `admin-update-user-role`
+`admin-manage-users`
+
+### 支持操作
+
+| action | 说明 |
+|--------|------|
+| `list` | 分页查询用户，支持关键词、角色、状态筛选 |
+| `get` | 查询用户详情 |
+| `update` | 更新用户资料、角色、状态与后台权限字段 |
 
 ### 验收标准
 
@@ -528,20 +542,20 @@ Web 登录
 
 ### 不在第一阶段做的事
 
-- 不代替教师审核。
-- 不批量修改学生提交状态。
+- 不做批量审核或批量修改学生提交状态。
+- 不把后台审核作为教师日常批改主入口。
 - 不直接删除提交记录。
 
 ### 云函数
 
-- `admin-get-tasks`
-- `admin-get-submissions`
+- `admin-manage-tasks`
+- `admin-manage-submissions`
 
 ### 验收标准
 
 - 管理员可以定位某个任务的提交情况。
 - 管理员可以查询待审核积压情况。
-- 系统不允许后台绕过教师审核流程直接改状态。
+- 后台审核必须通过 `admin-manage-submissions` 记录操作日志，不能直接改库绕过审计。
 
 ---
 
@@ -560,7 +574,7 @@ Web 登录
 
 ### 云函数
 
-`admin-get-operation-logs`
+`admin-manage-logs`
 
 ### 日志结构
 
@@ -670,17 +684,19 @@ Web 登录
 
 | 云函数 | 说明 | 优先级 |
 |--------|------|--------|
-| `admin-get-users` | 查询用户列表 | P1 |
-| `admin-get-tasks` | 查询任务列表 | P1 |
-| `admin-get-submissions` | 查询提交记录 | P1 |
+| `admin-manage-users` | 查询用户列表、用户详情与更新用户权限字段 | P1 |
+| `admin-manage-classes` | 班级列表、详情、成员、申请审批与班级维护 | P1 |
+| `admin-manage-tasks` | 任务列表、详情、新增、更新、删除与提交查询 | P1 |
+| `admin-manage-submissions` | 提交列表、详情与后台审核 | P1 |
 | `admin-manage-rankings` | 查询当前排行榜与历史排行榜快照 | P1 |
-| `admin-get-operation-logs` | 查询操作日志 | P0 |
+| `admin-manage-announcements` | 公告增删改查、发布与关闭 | P1 |
+| `admin-manage-logs` | 查询操作日志与日志详情 | P0 |
 
 ### 8.6 运维动作
 
 | 云函数 | 说明 | 优先级 |
 |--------|------|--------|
-| `admin-refresh-ranking` | 触发排行榜快照刷新，并保存周榜/月榜周期历史快照 | P1 |
+| `refresh-ranking-snapshots` | 触发排行榜快照刷新，并保存周榜/月榜周期历史快照 | P1 |
 
 ---
 
@@ -697,6 +713,7 @@ Web 登录
 /classes
 /tasks
 /rankings
+/announcements
 /submissions
 /logs
 ```
@@ -712,6 +729,7 @@ Web 登录
 ├── 班级管理
 ├── 任务管理
 ├── 排行榜
+├── 公告管理
 ├── 提交记录
 └── 操作日志
 ```
@@ -861,7 +879,7 @@ https://example.com/admin/#/dashboard
 
 交付物：
 
-- 可登录的后台空框架。
+- 已完成可登录的后台框架、路由守卫、主布局和管理员权限校验。
 
 ### 阶段二：运营统计
 
@@ -929,16 +947,17 @@ https://example.com/admin/#/dashboard
 
 ## 15. MVP 验收清单
 
-- [ ] 管理员可以登录后台。
-- [ ] 非管理员不能访问后台。
-- [ ] 运营概览可展示核心指标。
-- [ ] 运营概览可展示最近 7 天趋势。
+- [x] 管理员可以登录后台。
+- [x] 非管理员不能访问后台。
+- [x] 运营概览可展示核心指标。
+- [x] 运营概览可展示最近 7 天趋势。
 - [x] 系统配置可读取。
 - [x] 系统配置可新增、更新和删除。
 - [x] 配置变更会写操作日志。
 - [x] 项目列表可读取。
 - [x] 项目可新增、编辑、停用和安全删除。
-- [ ] 操作日志可查询。
+- [x] 用户、班级、任务、提交、排行榜、公告管理页面已接入真实后台云函数。
+- [x] 操作日志可查询。
 - [ ] 后台可部署到 CloudBase 静态网站托管。
 - [ ] 小程序现有业务不受后台影响。
 
@@ -974,11 +993,9 @@ https://example.com/admin/#/dashboard
 
 ## 18. 推荐下一步
 
-建议下一步先进入阶段一：
+建议下一步从“功能落地”转向“联调验收”：
 
-1. 创建 `admin-web` 项目骨架。
-2. 接入 CloudBase Web SDK。
-3. 新增 `admin-auth-check` 云函数。
-4. 跑通管理员登录和权限校验。
-
-只要登录和权限边界先稳定下来，后续运营统计和系统配置就能安全地逐步接入。
+1. 在真实 CloudBase 环境完成后台登录、管理员绑定和权限校验联调。
+2. 补齐生产环境管理员账号、Web Auth 登录方式和静态托管配置。
+3. 对用户、班级、任务、提交审核和公告模块做一轮端到端测试。
+4. 梳理只读管理员、运营管理员等细分权限矩阵。

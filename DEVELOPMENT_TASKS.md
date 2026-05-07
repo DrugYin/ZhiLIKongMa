@@ -49,7 +49,9 @@ ZhiLiKongMa/
 │   │   ├── mine/        # 我的
 │   │   ├── rank/        # 排行榜
 │   │   ├── setting/     # 设置
-│   │   └── training/    # 训练
+│   │   └── task-manage/ # 任务中心
+│   ├── common/          # 公共页面
+│   │   └── announcements/ # 通知中心
 │   └── teacher/         # 教师端页面
 │       ├── index.js     # 首页
 │       ├── class-manage/ # 班级管理
@@ -63,6 +65,10 @@ ZhiLiKongMa/
 │   ├── ranking.js       # 排行榜服务
 │   ├── storage.js       # 存储服务
 │   └── task.js          # 任务服务
+├── admin-web/           # 后台管理网站
+│   ├── src/api/         # 后台云函数封装
+│   ├── src/pages/       # 后台业务页面
+│   └── src/router/      # 后台路由
 └── utils/               # 工具函数
     ├── constant.js      # 常量定义
     ├── format.js        # 格式化
@@ -205,7 +211,7 @@ ZhiLiKongMa/
 | 2.2.4 | 教师首页 | P0 | ✅ 已接入真实统计、待处理数量与最近动态 |
 | 2.2.5 | 教师-我的页面 | P0 | ✅ 已支持角色切换，顶部资料展示 `teacher_project` |
 | 2.2.6 | 设置页面 | P1 | ✅ |
-| 2.2.7 | 训练页面 | P1 | 🟡 已接入项目下拉，任务内容待接入 |
+| 2.2.7 | 通知中心页面 | P1 | ✅ 已接入公告列表、标记已读与动作跳转 |
 | 2.2.8 | 排行榜页面 | P1 | ✅ 已完成周榜/月榜/总榜真实接口接入，并过滤 0 分用户 |
 
 #### 2.3 认证服务
@@ -491,36 +497,49 @@ ZhiLiKongMa/
 ## 阶段八：系统配置与管理后台
 
 ### 阶段目标
-实现系统参数配置、项目管理和后台管理功能。
+实现系统参数配置、项目管理和独立后台管理网站，支撑运营统计、权限校验、用户/班级/任务/提交/排行榜/公告/日志管理。
 
 ### 预计工期
 **1 周**
 
 ### 任务清单
 
-#### 8.1 系统配置云函数
+#### 8.1 后台云函数
 | 序号 | 任务 | 优先级 | 状态 |
 |------|------|--------|------|
-| 8.1.1 | admin-manage-config - 获取配置 | P0 | ✅ 已支持列表、详情与筛选 |
-| 8.1.2 | admin-manage-config - 更新配置 | P0 | ✅ 已支持新增、编辑、删除、类型校验与操作日志 |
-| 8.1.3 | get-projects - 获取项目列表 | P0 | ✅ |
-| 8.1.4 | admin-manage-projects - 创建项目 | P1 | ✅ 已支持新增与默认项目初始化 |
-| 8.1.5 | admin-manage-projects - 更新项目 | P1 | ✅ 已支持编辑、停用和安全删除 |
+| 8.1.1 | admin-auth-check - 管理员登录校验 | P0 | ✅ 已完成 Web Auth UID/手机号绑定校验 |
+| 8.1.2 | admin-get-statistics - 运营统计 | P0 | ✅ 已完成核心指标与最近 7 天趋势 |
+| 8.1.3 | admin-manage-config - 系统配置 | P0 | ✅ 已支持列表、详情、新增、编辑、删除、默认初始化与操作日志 |
+| 8.1.4 | admin-manage-projects - 项目配置 | P0 | ✅ 已支持新增、编辑、停用、安全删除与默认项目初始化 |
+| 8.1.5 | admin-manage-users - 用户管理 | P1 | ✅ 已支持列表、详情、角色/状态/后台权限字段更新 |
+| 8.1.6 | admin-manage-classes - 班级管理 | P1 | ✅ 已支持班级维护、成员、入班申请审批 |
+| 8.1.7 | admin-manage-tasks - 任务管理 | P1 | ✅ 已支持任务增删改查与任务提交查询 |
+| 8.1.8 | admin-manage-submissions - 提交管理 | P1 | ✅ 已支持提交列表、详情与后台审核 |
+| 8.1.9 | admin-manage-rankings - 排行榜管理 | P1 | ✅ 已支持当前榜单与历史快照查询 |
+| 8.1.10 | admin-manage-announcements - 公告管理 | P1 | ✅ 已支持公告增删改查、发布与关闭 |
+| 8.1.11 | admin-manage-logs - 操作日志 | P0 | ✅ 已支持日志列表、详情与筛选 |
 
-#### 8.2 前端页面开发
+#### 8.2 后台前端页面
 | 序号 | 任务 | 优先级 | 状态 |
 |------|------|--------|------|
-| 8.2.1 | 系统配置页面 | P0 | ✅ 已接入真实增删改查、搜索、分类筛选与删除确认 |
-| 8.2.2 | 积分配置页面 | P1 | ⬜ |
-| 8.2.3 | 抽奖配置页面 | P1 | ⬜ |
-| 8.2.4 | 项目管理页面 | P0 | ✅ 已接入真实增删改查、搜索、状态筛选与安全删除 |
-| 8.2.5 | 项目编辑页面 | P1 | ✅ 已合并为后台弹窗编辑 |
+| 8.2.1 | Vue 3 + Vite 后台工程 | P0 | ✅ |
+| 8.2.2 | 登录页与路由守卫 | P0 | ✅ 已接入 CloudBase Web Auth 与 `admin-auth-check` |
+| 8.2.3 | 运营概览页面 | P0 | ✅ 已接入统计卡片、趋势图和最近 7 天明细 |
+| 8.2.4 | 系统配置页面 | P0 | ✅ 已接入真实增删改查、搜索、分类筛选与删除确认 |
+| 8.2.5 | 项目管理页面 | P0 | ✅ 已接入真实增删改查、搜索、状态筛选与安全删除 |
+| 8.2.6 | 用户管理页面 | P1 | ✅ 已接入用户列表、筛选、头像解析与编辑弹窗 |
+| 8.2.7 | 班级管理页面 | P1 | ✅ 已接入班级维护、成员、申请审批 |
+| 8.2.8 | 任务管理页面 | P1 | ✅ 已接入任务维护、筛选、图片/附件字段 |
+| 8.2.9 | 提交记录页面 | P1 | ✅ 已接入提交筛选、详情与审核 |
+| 8.2.10 | 排行榜页面 | P1 | ✅ 已接入当前榜单和历史快照 |
+| 8.2.11 | 公告管理页面 | P1 | ✅ 已接入公告增删改查、发布、关闭 |
+| 8.2.12 | 操作日志页面 | P0 | ✅ 已接入日志统计、筛选与详情 |
 
 ### 配置项清单
 
 | 配置键 | 类型 | 默认值 | 说明 |
 |--------|------|--------|------|
-| points_register_gift | number | 0 | 注册赠送积分 |
+| points_register_gift | number | 50 | 注册赠送积分 |
 | points_per_task | number | 10 | 任务默认积分 |
 | points_daily_limit | number | 100 | 每日积分上限 |
 | lottery_enabled | boolean | true | 抽奖功能开关 |
@@ -529,7 +548,7 @@ ZhiLiKongMa/
 | class_max_members | number | 50 | 班级最大成员数 |
 | class_join_need_approval | boolean | true | 加入班级需要审批 |
 | task_max_submissions | number | 3 | 任务最大提交次数 |
-| task_overtime_penalty | number | 0 | 超时积分系数 |
+| task_overtime_penalty | number | 0.5 | 超时积分系数 |
 
 ### 验收标准
 - [x] 配置可正常读取和修改
@@ -542,14 +561,15 @@ ZhiLiKongMa/
 - [x] 可创建新项目（包含难度等级、分类配置）
 - [x] 可编辑现有项目信息
 - [x] 项目状态可启用/禁用
-- [ ] 项目服务有缓存机制
-- [ ] 项目选择器在各页面正常工作
+- [x] 用户、班级、任务、提交、排行榜、公告和日志页面可通过后台云函数读取真实数据
+- [ ] 后台 CloudBase 静态网站托管部署完成
+- [ ] 后台分角色权限矩阵细化
 
 ### 交付物
-1. 配置相关云函数（5个）
-2. 配置管理页面（5个）
-3. 配置服务模块
-4. 配置模块单元测试
+1. 后台相关云函数（11 个）
+2. 后台管理网站页面（11 个）
+3. 配置与项目服务模块
+4. 后台部署与联调测试记录
 
 ---
 
@@ -671,9 +691,10 @@ ZhiLiKongMa/
 
 ```
 项目总计：
-- 云函数：29 个（已实现）+ 10 个（待开发）
-- 前端页面：22 个
-- 公共组件：4 个
+- 云函数：41 个（已实现，含 11 个后台管理函数）+ 7 个（规划/预留待开发）
+- 小程序页面：22 个
+- 后台页面：11 个
+- 公共组件：5 个
 - 工具模块：7 个
 ```
 
@@ -709,10 +730,10 @@ npm run lint
 | 阶段二 | 1.5 周 | - | ✅ 认证、首页真实数据、登录协议确认与角色切换已接通 |
 | 阶段三 | 1.5 周 | - | 🟡 班级闭环已接通，含学生加入、教师审批与多班级支持 |
 | 阶段四 | 1.5 周 | - | ✅ 任务 CRUD 云函数与教师/学生任务页面已接通 |
-| 阶段五 | 1.5 周 | - | 🟡 提交与审核主流程已接通，待补提交详情接口、云函数部署与真机联调 |
+| 阶段五 | 1.5 周 | - | 🟡 提交与审核主流程已接通，待补独立提交详情接口与真机联调 |
 | 阶段六 | 1 周 | - | ⬜ 待开发 |
-| 阶段七 | 1 周 | - | 🟡 学生排行榜真实数据与快照刷新已接通，教师首页聚合已落地，班级榜与独立统计接口待开发 |
-| 阶段八 | 1 周 | - | 🟡 后台系统配置 CRUD、项目 CRUD 与 get-projects 云函数已完成 |
+| 阶段七 | 1 周 | - | 🟡 学生排行榜真实数据、快照刷新与后台排行榜查看已接通，班级榜待开发 |
+| 阶段八 | 1 周 | - | 🟡 后台 11 个页面与 11 个后台云函数已完成，待部署验收与权限细化 |
 | 阶段九 | 1 周 | - | ⬜ 待开发 |
 | 阶段十 | 0.5 周 | - | ⬜ 待开发 |
 | **总计** | **11.5 周** | - | **进行中** |
@@ -750,12 +771,22 @@ npm run lint
 | review-submission | cloudfunctions/review-submission/index.js | 教师审核提交记录 |
 | get-ranking | cloudfunctions/get-ranking/index.js | 获取学生排行榜 |
 | refresh-ranking-snapshots | cloudfunctions/refresh-ranking-snapshots/index.js | 刷新周榜/月榜/总榜排行榜快照 |
+| get-announcements | cloudfunctions/get-announcements/index.js | 获取小程序公告与标记已读 |
+| admin-auth-check | cloudfunctions/admin-auth-check/index.js | 后台管理员权限校验 |
+| admin-get-statistics | cloudfunctions/admin-get-statistics/index.js | 后台运营统计 |
 | admin-manage-config | cloudfunctions/admin-manage-config/index.js | 后台系统配置增删改查 |
 | admin-manage-projects | cloudfunctions/admin-manage-projects/index.js | 后台训练项目增删改查 |
+| admin-manage-users | cloudfunctions/admin-manage-users/index.js | 后台用户查询与更新 |
+| admin-manage-classes | cloudfunctions/admin-manage-classes/index.js | 后台班级维护与入班申请审批 |
+| admin-manage-tasks | cloudfunctions/admin-manage-tasks/index.js | 后台任务维护与提交查询 |
+| admin-manage-submissions | cloudfunctions/admin-manage-submissions/index.js | 后台提交记录查询与审核 |
+| admin-manage-rankings | cloudfunctions/admin-manage-rankings/index.js | 后台当前/历史排行榜查询 |
+| admin-manage-announcements | cloudfunctions/admin-manage-announcements/index.js | 后台公告管理 |
+| admin-manage-logs | cloudfunctions/admin-manage-logs/index.js | 后台操作日志查询 |
 
 ---
 
-**文档版本**: v3.9.0
-**最后更新**: 2026-04-21
+**文档版本**: v3.10.0
+**最后更新**: 2026-04-25
 **编写者**: 开发团队
-**更新说明**: 同步后台项目配置增删改查、项目管理云函数与阶段八进度
+**更新说明**: 同步后台管理端、公告管理、后台云函数清单与当前项目进度

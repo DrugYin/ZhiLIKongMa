@@ -1,0 +1,223 @@
+# CLAUDE.md
+
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+
+## 项目概述
+
+智慧控码训练系统是一个基于微信小程序的教育培训管理平台，支持学生和教师两种角色，提供任务发布、作业提交、审核评分、积分奖励、排行榜等功能。
+
+## 项目结构
+
+```
+ZhiLiKongMa/
+├── miniprogram/          # 微信小程序前端
+├── cloudfunctions/       # 云函数后端
+├── admin-web/            # 后台管理网站 (Vue 3)
+└── assets/               # 静态资源
+```
+
+## 技术栈
+
+### 小程序端
+- 微信小程序基础库 3.0+
+- JavaScript ES6+
+- TDesign Mini 1.x (UI 组件库)
+- Skyline 渲染引擎
+- CloudBase 云开发
+
+### 后台管理端
+- Vue 3 + Vite
+- TDesign Vue Next
+- Pinia 状态管理
+- Vue Router Hash 模式
+- ECharts 图表
+- CloudBase Web SDK
+
+### 后端
+- CloudBase 云函数
+- CloudBase 文档数据库
+- wx-server-sdk
+
+## 常用命令
+
+### 小程序开发
+```bash
+# 使用微信开发者工具打开项目
+# 项目根目录: D:\Barbuda\Project\ZhiLiKongMa
+# 小程序目录: miniprogram/
+
+# 安装依赖
+cd miniprogram
+npm install
+
+# 构建 npm (在微信开发者工具中)
+# 工具 -> 构建 npm
+```
+
+### 后台管理端开发
+```bash
+cd admin-web
+
+# 安装依赖
+npm install
+
+# 本地开发
+npm run dev
+
+# 构建生产版本
+npm run build
+
+# 预览构建结果
+npm run preview
+```
+
+### 环境变量配置
+后台管理端需要配置环境变量:
+```bash
+cp admin-web/.env.example admin-web/.env.local
+```
+
+编辑 `.env.local` 文件:
+```
+VITE_CLOUDBASE_ENV_ID=zhi-li-kong-ma-7gy2aqcr1add21a7
+VITE_CLOUDBASE_REGION=ap-shanghai
+VITE_CLOUDBASE_ACCESS_KEY=你的 Web 访问密钥
+```
+
+## 代码架构
+
+### 小程序页面结构
+```
+pages/
+├── login/                    # 登录页
+├── student/                  # 学生端
+│   ├── index.js              # 学生首页
+│   ├── class-manage/         # 班级管理
+│   ├── task-manage/          # 任务中心
+│   ├── rank/                 # 排行榜
+│   ├── mine/                 # 我的
+│   └── setting/              # 设置
+├── teacher/                  # 教师端
+│   ├── index.js              # 教师首页
+│   ├── class-manage/         # 班级管理
+│   ├── task-manage/          # 任务管理
+│   ├── pending/              # 审核页面
+│   └── mine/                 # 我的
+└── common/                   # 公共页面
+    └── announcements/        # 通知中心
+```
+
+### 服务层架构
+```
+miniprogram/services/
+├── api.js           # 云函数调用封装
+├── auth.js          # 认证服务
+├── class.js         # 班级服务
+├── task.js          # 任务服务
+├── ranking.js       # 排行榜服务
+├── storage.js       # 存储服务
+└── announcement.js  # 公告服务
+```
+
+### 云函数结构
+```
+cloudfunctions/
+├── _shared/                 # 共享模块
+│   ├── auth.js              # 认证工具
+│   ├── response.js          # 响应格式
+│   ├── membership.js        # 成员管理
+│   ├── task-access.js       # 任务权限
+│   ├── operation-log.js     # 操作日志
+│   ├── admin-operation-log.js # 管理员操作日志
+│   └── notification.js      # 通知服务
+├── login/                   # 用户登录
+├── register/                # 用户注册
+├── get-user-info/           # 获取用户信息
+├── get-user-roles/          # 获取用户角色
+├── switch-role/             # 切换角色
+├── update-user/             # 更新用户信息
+├── create-class/            # 创建班级
+├── get-classes/             # 获取班级列表
+├── get-class-detail/        # 获取班级详情
+├── join-class/              # 加入班级
+├── create-task/             # 创建任务
+├── get-tasks/               # 获取任务列表
+├── get-task-detail/         # 获取任务详情
+├── submit-task/             # 提交任务
+├── get-submissions/         # 获取提交记录
+├── review-submission/       # 审核提交
+├── get-ranking/             # 获取排行榜
+└── admin-*/                 # 管理后台云函数
+```
+
+### 后台管理端结构
+```
+admin-web/src/
+├── api/                # API 接口
+├── components/         # 公共组件
+├── layouts/            # 布局组件
+├── pages/              # 页面
+├── router/             # 路由配置
+├── stores/             # Pinia 状态管理
+├── styles/             # 样式文件
+└── utils/              # 工具函数
+```
+
+## 数据库集合
+
+主要数据集合:
+- `users` - 用户信息
+- `classes` - 班级信息
+- `tasks` - 任务信息
+- `submissions` - 提交记录
+- `rankings` - 排行榜
+- `announcements` - 公告
+- `operation_logs` - 操作日志
+- `system_config` - 系统配置
+- `projects` - 训练项目
+
+## 开发规范
+
+### 代码风格
+- 使用 ESLint 进行代码检查
+- 小程序端使用 ES6+ 语法
+- 后台管理端使用 Vue 3 Composition API
+
+### 命名规范
+- 页面文件: 小写短横线分隔 (如: `task-detail`)
+- 组件文件: 小写短横线分隔 (如: `custom-navbar`)
+- 云函数: 小写短横线分隔 (如: `get-task-detail`)
+- 变量名: 驼峰命名 (如: `userName`)
+- 常量: 大写下划线分隔 (如: `MAX_RETRY_COUNT`)
+
+### 云函数调用约定
+- 小程序端通过 `wx.cloud.callFunction` 调用
+- 后台管理端通过 `@cloudbase/js-sdk` 调用
+- 所有写操作必须通过云函数，前端不直接修改数据库
+- 管理后台云函数必须校验管理员权限
+
+### 权限控制
+- 用户角色: `student`, `teacher`, `admin`
+- 管理员权限字段: `admin_role`, `admin_status`, `admin_permissions`
+- 配置变更必须写入 `operation_logs`
+
+## 部署
+
+### 小程序部署
+使用微信开发者工具上传代码，提交审核后发布。
+
+### 后台管理端部署
+构建后部署到 CloudBase 静态网站托管:
+```bash
+cd admin-web
+npm run build
+# 将 dist/ 目录部署到 CloudBase 静态网站托管的 /admin/ 子目录
+```
+
+## 注意事项
+
+1. 云开发环境 ID: `zhi-li-kong-ma-7gy2aqcr1add21a7`
+2. 云开发区域: `ap-shanghai`
+3. 后台管理端使用 Hash 路由模式
+4. 小程序使用 Skyline 渲染引擎，需要基础库 3.0+
+5. 云函数共享模块位于 `cloudfunctions/_shared/`

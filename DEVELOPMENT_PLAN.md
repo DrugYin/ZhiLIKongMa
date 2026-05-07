@@ -26,15 +26,16 @@
 | 模块 | 功能描述 | 开发状态 |
 |------|----------|----------|
 | 用户系统 | 微信登录、注册完善资料、角色切换、资料维护 | ✅ 登录/注册、资料维护、角色切换、登录协议确认、学生/教师首页真实数据已完成 |
-| 项目系统 | 训练项目配置（编程、无人机、机器人） | 🟡 `get-projects` 云函数、ProjectService 与默认配置已完成，后台管理待开发 |
+| 项目系统 | 训练项目配置（编程、无人机、机器人） | ✅ `get-projects`、ProjectService、后台项目 CRUD、默认项目初始化与安全删除已完成 |
 | 班级系统 | 创建班级、加入班级、班级成员管理 | 🟡 班级云函数、教师端列表/详情/编辑/审批、学生端班级管理/邀请码申请/分享加入已完成，多班级关系已接入 |
 | 任务系统 | 发布任务（task）、任务分类、截止时间、积分设置 | ✅ 任务 CRUD 云函数、教师端多维筛选/班级筛选、学生端任务中心筛选、截止时间工具与素材上传已完成 |
 | 提交系统 | 学生提交作业、图片/文件上传、提交记录 | ✅ `submit-task`、`get-submissions` 云函数、学生提交页、任务内记录页与总提交记录入口已完成 |
 | 审核系统 | 教师审核批改、评分、反馈 | ✅ `review-submission` 云函数、教师审核页真实数据、任务提交审核与入班申请审批、审核弹层、反馈图片/附件与积分发放已完成 |
 | 积分系统 | 积分累计、积分消费、积分排行 | 🟡 审核发放、累计积分与学生排行已接通，积分消费、积分明细与抽奖待开发 |
 | 抽奖系统 | 积分抽奖、奖品管理 | ⬜ 待开发 |
-| 排行榜 | 学生积分排行、任务完成排行 | 🟡 学生周榜/月榜/总榜真实数据、`get-ranking` 与 `refresh-ranking-snapshots` 已完成，班级榜与更多统计待开发 |
-| 配置系统 | 后台参数配置、系统设置 | 🟡 项目配置服务、缓存与 `get-projects` 已完成，`get-config` 与后台配置待开发 |
+| 排行榜 | 学生积分排行、任务完成排行 | 🟡 学生周榜/月榜/总榜真实数据、快照刷新与后台排行榜查看已完成，班级榜待开发 |
+| 配置系统 | 后台参数配置、系统设置 | ✅ 后台系统配置 CRUD、默认配置初始化、操作日志与小程序侧配置回退已完成 |
+| 后台管理 | Web 管理端、管理员权限、运营与业务数据管理 | 🟡 Vue 3 后台、登录校验、运营概览、配置、项目、用户、班级、任务、提交、排行、公告、日志页面已完成，待部署验收 |
 
 ### 1.3 用户角色
 
@@ -170,7 +171,9 @@ ZhiLiKongMa/
 │   │   │   ├── submission-edit/ # 提交任务
 │   │   │   ├── submission-records/ # 提交记录
 │   │   │   └── task-detail/   # 任务详情
-│   │   └── training/          # 训练页面
+│   │
+│   ├── common/                # 公共页面
+│   │   └── announcements/     # 通知中心
 │   │
 │   └── teacher/               # 教师端页面
 │       ├── index.js           # 教师首页
@@ -210,6 +213,12 @@ ZhiLiKongMa/
 │   ├── toast.js               # Toast 工具
 │   ├── util.js                # 通用工具
 │   └── validate.js            # 验证工具
+│
+├── admin-web/                  # 后台管理网站
+│   ├── src/api/                # 后台云函数封装
+│   ├── src/pages/              # 运营概览、配置、项目、用户、班级、任务、提交、排行、公告、日志
+│   ├── src/router/             # Hash 路由
+│   └── src/stores/             # 登录态与应用状态
 │
 ├── .eslintrc.js               # ESLint 配置
 ├── .gitignore                 # Git 忽略文件
@@ -850,6 +859,18 @@ chore(deps): 更新依赖版本
 | review-submission | 审核提交记录 | ✅ 已完成 |
 | get-ranking | 获取排行榜 | ✅ 已完成 |
 | refresh-ranking-snapshots | 刷新周榜/月榜/总榜快照 | ✅ 已完成 |
+| get-announcements | 获取小程序公告与标记已读 | ✅ 已完成 |
+| admin-auth-check | 后台管理员权限校验 | ✅ 已完成 |
+| admin-get-statistics | 后台运营统计 | ✅ 已完成 |
+| admin-manage-config | 后台系统配置增删改查 | ✅ 已完成 |
+| admin-manage-projects | 后台训练项目增删改查 | ✅ 已完成 |
+| admin-manage-users | 后台用户查询与更新 | ✅ 已完成 |
+| admin-manage-classes | 后台班级维护与入班申请审批 | ✅ 已完成 |
+| admin-manage-tasks | 后台任务维护与提交查询 | ✅ 已完成 |
+| admin-manage-submissions | 后台提交记录查询与审核 | ✅ 已完成 |
+| admin-manage-rankings | 后台当前/历史排行榜查询 | ✅ 已完成 |
+| admin-manage-announcements | 后台公告管理 | ✅ 已完成 |
+| admin-manage-logs | 后台操作日志查询 | ✅ 已完成 |
 
 ### 7.2 待实现的云函数
 
@@ -862,9 +883,6 @@ chore(deps): 更新依赖版本
 | get-class-ranking | 班级排行榜 | P1 | ⬜ 待开发 |
 | get-statistics | 获取统计数据 | P1 | ⬜ 待开发 |
 | get-config | 获取系统配置 | P0 | ⬜ 仅前端调用入口已预留 |
-| update-config | 更新配置 | P0 | ⬜ 待开发 |
-| create-project | 创建项目 | P1 | ⬜ 待开发 |
-| update-project | 更新项目 | P1 | ⬜ 待开发 |
 
 ### 7.3 已实现云函数详细设计
 
@@ -954,7 +972,7 @@ chore(deps): 更新依赖版本
 │  │   ├── 班级详情 (class-detail)                                 │
 │  │   └── 入班确认 (join-confirm)                                 │
 │  ├── 排行榜 (student/rank)                                       │
-│  ├── 训练记录 (student/training)                                 │
+│  ├── 通知中心 (common/announcements)                             │
 │  ├── 设置 (student/setting)                                      │
 │  └── 我的 (student/mine)                                         │
 │      ├── 个人信息                                                │
@@ -1035,10 +1053,10 @@ const TEACHER_TABBAR = [
     "pages/student/class-manage/class-manage",
     "pages/student/class-manage/class-detail/class-detail",
     "pages/student/class-manage/join-confirm/join-confirm",
+    "pages/common/announcements/announcements",
     "pages/login/login",
     "pages/teacher/index",
     "pages/student/setting/setting",
-    "pages/student/training/training",
     "pages/student/rank/rank",
     "pages/teacher/pending/pending",
     "pages/teacher/class-manage/class-manage",
@@ -1377,7 +1395,7 @@ const ERROR_CODE = {
 
 ---
 
-**文档版本**: v3.7.0
-**最后更新**: 2026-04-15
+**文档版本**: v3.8.0
+**最后更新**: 2026-04-25
 **编写者**: 开发团队
-**更新说明**: 同步任务筛选与截止时间工具、审核页入班申请整合、排行榜快照云函数与最新目录结构
+**更新说明**: 同步后台管理端、公告中心、后台云函数清单与最新页面路由
