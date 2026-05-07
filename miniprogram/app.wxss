@@ -1,12 +1,11 @@
-/**app.wxss**/
+/**
+ * 智慧控码训练系统 - 全局样式
+ */
+
+/* 引入通用样式 */
+@import './styles/common.wxss';
+
+/* 全局页面背景 */
 page {
   background-color: #f3f3f3;
 }
-
-.container {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: space-between;
-  box-sizing: border-box;
-} 

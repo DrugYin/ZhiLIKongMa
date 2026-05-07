@@ -1,0 +1,232 @@
+/**
+ * 智慧控码训练系统 - 通用样式
+ * 提取自各页面的重复样式定义
+ */
+
+/* ========== 容器布局 ========== */
+.container {
+  height: 100vh;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: flex-start;
+  overflow: hidden;
+  background: linear-gradient(180deg, #f7f8fa 0%, #eef2f7 100%);
+}
+
+.header {
+  position: relative;
+  flex-shrink: 0;
+  z-index: 10;
+  background: rgba(255, 255, 255, 0.96);
+}
+
+.content {
+  flex: 1;
+  min-height: 0;
+  box-sizing: border-box;
+  padding: 0rpx 24rpx;
+}
+
+/* ========== 卡片系统 ========== */
+.hero-card,
+.section-card,
+.state-card {
+  margin-top: 24rpx;
+  padding: 28rpx;
+  border-radius: 28rpx;
+  background: rgba(255, 255, 255, 0.96);
+  border: 1rpx solid rgba(103, 126, 167, 0.08);
+  box-shadow: 0 20rpx 50rpx rgba(24, 62, 107, 0.08);
+}
+
+.hero-card {
+  background: linear-gradient(135deg, #ffffff 0%, #eef6ff 54%, #f8fbff 100%);
+}
+
+.state-card {
+  text-align: center;
+}
+
+/* ========== 头部布局 ========== */
+.hero-top,
+.section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16rpx;
+}
+
+.hero-top {
+  align-items: flex-start;
+}
+
+.hero-copy {
+  flex: 1;
+  min-width: 0;
+}
+
+.hero-eyebrow {
+  display: block;
+  color: #1f7ae0;
+  font-size: 22rpx;
+  font-weight: 600;
+  letter-spacing: 1rpx;
+}
+
+/* ========== 文字样式 ========== */
+.hero-title,
+.section-title,
+.state-title {
+  display: block;
+  color: #17314a;
+  font-weight: 700;
+}
+
+.hero-title {
+  margin-top: 12rpx;
+  font-size: 38rpx;
+  line-height: 1.4;
+}
+
+.section-title {
+  font-size: 30rpx;
+}
+
+.state-title {
+  font-size: 30rpx;
+}
+
+.hero-desc,
+.section-desc,
+.section-extra,
+.state-desc {
+  display: block;
+  color: #65788c;
+  font-size: 24rpx;
+  line-height: 1.8;
+}
+
+.hero-desc {
+  margin-top: 14rpx;
+}
+
+.section-extra {
+  font-size: 22rpx;
+}
+
+.state-desc {
+  margin-top: 14rpx;
+}
+
+/* ========== 角色标签 ========== */
+.role-tag {
+  flex-shrink: 0;
+  padding: 8rpx 18rpx;
+  border-radius: 999rpx;
+  color: #1f4f78;
+  background: rgba(31, 122, 224, 0.1);
+  font-size: 22rpx;
+  font-weight: 600;
+}
+
+/* ========== 统计网格 ========== */
+.summary-grid {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 18rpx 0;
+  margin-top: 24rpx;
+}
+
+.summary-item {
+  width: calc(50% - 10rpx);
+  box-sizing: border-box;
+  padding: 22rpx;
+  border-radius: 22rpx;
+  background: #f6f9fc;
+}
+
+.summary-label {
+  display: block;
+  color: #7b8798;
+  font-size: 22rpx;
+}
+
+.summary-value {
+  display: block;
+  margin-top: 10rpx;
+  color: #1f3349;
+  font-size: 28rpx;
+  font-weight: 700;
+  line-height: 1.5;
+}
+
+/* ========== 按钮系统 ========== */
+.primary-btn,
+.ghost-btn {
+  flex: 1;
+  height: 72rpx;
+  line-height: 72rpx;
+  padding: 0 24rpx;
+  margin: 0;
+  border-radius: 999rpx;
+  font-size: 26rpx;
+  font-weight: 600;
+}
+
+.primary-btn::after,
+.ghost-btn::after {
+  border: none;
+}
+
+.primary-btn {
+  color: #ffffff;
+  background: linear-gradient(135deg, #1f7ae0 0%, #4a8ff5 100%);
+}
+
+.ghost-btn {
+  color: #1f4f78;
+  background: #e7f1fb;
+}
+
+.hero-actions {
+  display: flex;
+  gap: 16rpx;
+  margin-top: 24rpx;
+}
+
+/* ========== 空状态 ========== */
+.empty-card {
+  margin-top: 18rpx;
+  padding: 24rpx;
+  border-radius: 22rpx;
+  background: #f7f9fc;
+}
+
+.empty-title {
+  display: block;
+  color: #17314a;
+  font-size: 28rpx;
+  font-weight: 700;
+}
+
+.empty-desc {
+  display: block;
+  margin-top: 10rpx;
+  color: #65788c;
+  font-size: 24rpx;
+  line-height: 1.8;
+}
+
+/* ========== 底部占位 ========== */
+.footer-placeholder {
+  height: 20rpx;
+}
+
+/* ========== 状态按钮 ========== */
+.state-btn {
+  width: 100%;
+  margin-top: 24rpx;
+}

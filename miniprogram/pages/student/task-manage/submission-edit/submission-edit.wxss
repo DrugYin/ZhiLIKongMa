@@ -1,31 +1,8 @@
-.container {
-  height: 100vh;
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-  background: linear-gradient(180deg, #f7f8fa 0%, #eef2f7 100%);
-}
+/* 学生提交编辑 - 页面特有样式 */
 
-.header {
-  position: relative;
-  flex-shrink: 0;
-  z-index: 20;
-  background-color: rgba(255, 255, 255, 0.96);
-}
-
-.content {
-  flex: 1;
-  min-height: 0;
-  box-sizing: border-box;
-  padding: 0rpx 24rpx;
-}
-
-.hero-card,
 .summary-card,
 .form-card,
-.tips-card,
-.state-card {
+.tips-card {
   margin-top: 24rpx;
   padding: 28rpx;
   border-radius: 28rpx;
@@ -39,29 +16,10 @@
 }
 
 .hero-top,
-.section-head,
-.meta-grid,
-.summary-meta {
-  display: flex;
-}
-
-.hero-top,
 .section-head {
   align-items: flex-start;
   justify-content: space-between;
   gap: 16rpx;
-}
-
-.hero-copy {
-  flex: 1;
-  min-width: 0;
-}
-
-.hero-title,
-.section-title,
-.state-title {
-  color: #16324c;
-  font-weight: 700;
 }
 
 .hero-title {
@@ -69,12 +27,8 @@
   font-size: 36rpx;
   line-height: 1.4;
   word-break: break-all;
-}
-
-.section-title,
-.state-title {
-  display: block;
-  font-size: 30rpx;
+  color: #16324c;
+  font-weight: 700;
 }
 
 .hero-desc,
@@ -93,21 +47,18 @@
   margin-top: 12rpx;
 }
 
-.hero-tag,
-.status-tag {
+.hero-tag {
   flex-shrink: 0;
   padding: 10rpx 18rpx;
   border-radius: 999rpx;
   font-size: 22rpx;
   font-weight: 600;
-}
-
-.hero-tag {
   color: #1f4f78;
   background: rgba(31, 122, 224, 0.1);
 }
 
 .meta-grid {
+  display: flex;
   flex-wrap: wrap;
   justify-content: space-between;
   margin-top: 22rpx;
@@ -148,6 +99,7 @@
 }
 
 .summary-meta {
+  display: flex;
   flex-wrap: wrap;
   gap: 12rpx 18rpx;
   margin-top: 16rpx;
@@ -271,10 +223,6 @@
 
 .tip-item {
   margin-top: 10rpx;
-}
-
-.state-card {
-  text-align: center;
 }
 
 .footer-placeholder {

@@ -1,48 +1,10 @@
-.container {
-  min-height: 100vh;
-  background: linear-gradient(180deg, #f7f8fa 0%, #eef2f7 100%);
-}
-
-.header {
-  position: relative;
-  z-index: 10;
-  background: rgba(255, 255, 255, 0.96);
-}
-
-.content {
-  box-sizing: border-box;
-  height: calc(100vh - 96rpx);
-  padding: 0rpx 24rpx calc(180rpx + env(safe-area-inset-bottom));
-}
-
-.profile-card,
-.section-card {
-  margin-top: 24rpx;
-  padding: 28rpx;
-  border-radius: 28rpx;
-  background: rgba(255, 255, 255, 0.96);
-  border: 1rpx solid rgba(103, 126, 167, 0.08);
-  box-shadow: 0 20rpx 50rpx rgba(24, 62, 107, 0.08);
-}
+/* 学生我的页 - 页面特有样式 */
 
 .profile-card {
+  margin-top: 12rpx;
   background: linear-gradient(135deg, #ffffff 0%, #eef6ff 54%, #f8fbff 100%);
-}
-
-.profile-top,
-.profile-main,
-.section-header,
-.hero-actions,
-.action-item {
-  display: flex;
-  align-items: center;
-}
-
-.profile-top,
-.section-header,
-.action-item {
-  justify-content: space-between;
-  gap: 16rpx;
+  padding: 24rpx;
+  border-radius: 28rpx;
 }
 
 .profile-top {
@@ -68,111 +30,19 @@
   background: #eef3f8;
 }
 
-.profile-name,
-.section-title,
-.action-title {
+.profile-name {
   display: block;
   color: #17314a;
-  font-weight: 700;
-}
-
-.profile-name {
   font-size: 34rpx;
-}
-
-.profile-meta,
-.section-extra,
-.action-desc,
-.empty-desc {
-  display: block;
-  color: #65788c;
-  font-size: 24rpx;
-  line-height: 1.8;
+  font-weight: 700;
 }
 
 .profile-meta {
-  margin-top: 10rpx;
-}
-
-.role-tag {
-  flex-shrink: 0;
-  padding: 8rpx 18rpx;
-  border-radius: 999rpx;
-  color: #1f4f78;
-  background: rgba(31, 122, 224, 0.1);
-  font-size: 22rpx;
-  font-weight: 600;
-}
-
-.summary-grid {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: space-between;
-  gap: 18rpx 0;
-  margin-top: 24rpx;
-}
-
-.summary-item {
-  width: calc(50% - 10rpx);
-  box-sizing: border-box;
-  padding: 22rpx;
-  border-radius: 22rpx;
-  background: #f6f9fc;
-}
-
-.summary-label {
-  display: block;
-  color: #7b8798;
-  font-size: 22rpx;
-}
-
-.summary-value {
   display: block;
   margin-top: 10rpx;
-  color: #1f3349;
-  font-size: 28rpx;
-  font-weight: 700;
-  line-height: 1.6;
-}
-
-.hero-actions {
-  gap: 16rpx;
-  margin-top: 24rpx;
-}
-
-.primary-btn,
-.ghost-btn {
-  flex: 1;
-  height: 72rpx;
-  line-height: 72rpx;
-  padding: 0 24rpx;
-  margin: 0;
-  border-radius: 999rpx;
-  font-size: 26rpx;
-  font-weight: 600;
-}
-
-.primary-btn::after,
-.ghost-btn::after {
-  border: none;
-}
-
-.primary-btn {
-  color: #ffffff;
-  background: linear-gradient(135deg, #1f7ae0 0%, #4a8ff5 100%);
-}
-
-.ghost-btn {
-  color: #1f4f78;
-  background: #e7f1fb;
-}
-
-.section-title {
-  font-size: 30rpx;
-}
-
-.section-extra {
-  font-size: 22rpx;
+  color: #65788c;
+  font-size: 24rpx;
+  line-height: 1.8;
 }
 
 .action-list {
@@ -180,6 +50,10 @@
 }
 
 .action-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16rpx;
   padding: 24rpx 0;
   border-bottom: 1rpx solid rgba(223, 229, 237, 0.9);
 }
@@ -195,11 +69,18 @@
 }
 
 .action-title {
+  display: block;
+  color: #17314a;
+  font-weight: 700;
   font-size: 28rpx;
 }
 
 .action-desc {
+  display: block;
   margin-top: 10rpx;
+  color: #65788c;
+  font-size: 24rpx;
+  line-height: 1.8;
 }
 
 .action-arrow {
@@ -216,26 +97,4 @@
 .action-title-danger,
 .action-arrow-danger {
   color: #d84a55;
-}
-
-.empty-card {
-  margin-top: 18rpx;
-  padding: 24rpx;
-  border-radius: 22rpx;
-  background: #f7f9fc;
-}
-
-.empty-title {
-  display: block;
-  color: #17314a;
-  font-size: 28rpx;
-  font-weight: 700;
-}
-
-.empty-desc {
-  margin-top: 10rpx;
-}
-
-.footer-placeholder {
-  height: 20rpx;
 }

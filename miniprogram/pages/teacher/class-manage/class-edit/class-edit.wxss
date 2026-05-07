@@ -1,18 +1,10 @@
-/* pages/teacher/class-manage/class-edit/class-edit.wxss */
-.container {
-  min-height: 100vh;
-  background: linear-gradient(180deg, #f7f8fa 0%, #eef2f7 100%);
-}
+/* 教师班级编辑 - 页面特有样式 */
 
 .header {
-  position: relative;
-  z-index: 20;
   background-color: #ffffff;
 }
 
 .content {
-  box-sizing: border-box;
-  height: calc(100vh - 96rpx);
   padding: 0rpx 24rpx calc(50rpx + env(safe-area-inset-bottom));
 }
 
