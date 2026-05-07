@@ -4,6 +4,19 @@
   margin-bottom: 50rpx;
 }
 
+.section-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16rpx;
+}
+
+.action-row {
+  display: flex;
+  gap: 16rpx;
+  margin-top: 18rpx;
+}
+
 .hero-title-row {
   display: flex;
   align-items: flex-start;

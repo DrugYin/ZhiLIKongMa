@@ -1,4 +1,7 @@
 /* 学生我的页 - 页面特有样式 */
+.content {
+  padding: 0rpx 24rpx calc(100rpx + env(safe-area-inset-bottom));
+}
 
 .profile-card {
   margin-top: 12rpx;
