@@ -24,14 +24,22 @@
 .filter-header,
 .task-top,
 .tab-header {
+  display: flex;
   align-items: flex-start;
   justify-content: space-between;
   gap: 16rpx;
 }
 
-.task-copy {
+.task-title {
   flex: 1;
   min-width: 0;
+}
+
+.task-right {
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+  flex-shrink: 0;
 }
 
 .task-title,
@@ -152,8 +160,7 @@
 }
 
 .task-project {
-  display: inline-flex;
-  margin-top: 14rpx;
+  flex-shrink: 0;
   padding: 8rpx 18rpx;
   border-radius: 999rpx;
   font-size: 22rpx;
