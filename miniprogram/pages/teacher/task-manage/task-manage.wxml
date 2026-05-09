@@ -5,7 +5,7 @@
     </view>
   </view>
 
-  <scroll-view class="content" scroll-y enhanced bounces="{{false}}" show-scrollbar="{{false}}" scroll-top="{{scrollTop}}" bindscroll="onScroll" bindscrolltolower="onScrollToLower">
+  <scroll-view class="content" scroll-y enhanced bounces="{{false}}" show-scrollbar="{{false}}" scroll-into-view="{{scrollIntoView}}" bindscrolltolower="onScrollToLower">
     <view wx:if="{{loading}}" class="state-card">
       <text class="state-title">任务列表加载中</text>
       <text class="state-desc">正在同步教师端任务数据，请稍候。</text>
@@ -229,7 +229,7 @@
 
   </scroll-view>
 
-  <back-top scroll-top="{{scrollTop}}" text="顶部" bind:to-top="onBackToTop" />
+  <back-top bind:to-top="onBackToTop" />
 </view>
 
 <t-fab

@@ -1,19 +1,4 @@
 Component({
-  properties: {
-    scrollTop: {
-      type: Number,
-      value: 0
-    },
-    visibilityHeight: {
-      type: Number,
-      value: 200
-    },
-    text: {
-      type: String,
-      value: '顶部'
-    }
-  },
-
   data: {
     visible: false,
     x: -1,
@@ -24,21 +9,26 @@ Component({
     DRAG_THRESHOLD: 5
   },
 
-  observers: {
-    scrollTop(val) {
-      const visible = val >= this.data.visibilityHeight
-      if (visible !== this.data.visible) {
-        this.setData({ visible })
-      }
-    }
-  },
-
   lifetimes: {
     attached() {
       const { windowWidth, windowHeight } = wx.getSystemInfoSync()
       const x = windowWidth - 60
       const y = windowHeight - 200
       this.setData({ x, y, lastX: x, lastY: y })
+
+      this._observer = this.createIntersectionObserver()
+      this._observer
+        .relativeToViewport({ top: 0 })
+        .observe('#back-top-sentinel', (res) => {
+          this.setData({ visible: res.intersectionRatio < 1 })
+        })
+    },
+
+    detached() {
+      if (this._observer) {
+        this._observer.disconnect()
+        this._observer = null
+      }
     }
   },
 

@@ -3,7 +3,7 @@
     <custom-navbar title="{{pageTitle}}" showBack="{{true}}" placeholder="{{true}}" />
   </view>
 
-  <scroll-view class="content" scroll-y enhanced bounces="{{false}}" show-scrollbar="{{false}}" scroll-top="{{scrollTop}}" bindscroll="onScroll" bindscrolltolower="onScrollToLower">
+  <scroll-view class="content" scroll-y enhanced bounces="{{false}}" show-scrollbar="{{false}}" scroll-into-view="{{scrollIntoView}}" bindscrolltolower="onScrollToLower">
     <view class="hero-card">
       <view class="hero-top">
         <view class="hero-copy">
@@ -202,7 +202,7 @@
 
   </scroll-view>
 
-  <back-top scroll-top="{{scrollTop}}" text="顶部" bind:to-top="onBackToTop" />
+  <back-top bind:to-top="onBackToTop" />
 
   <view wx:if="{{isLoggedIn && !loading}}">
     <t-tab-bar

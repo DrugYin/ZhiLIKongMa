@@ -1,3 +1,5 @@
+<view id="back-top-sentinel" class="sentinel"></view>
+
 <movable-area wx:if="{{visible}}" class="back-top-area">
   <movable-view
     class="back-top-view"
@@ -13,6 +15,6 @@
     bind:tap="onTap"
   >
     <view class="back-top-icon"></view>
-    <text class="back-top-text" wx:if="{{text}}">{{text}}</text>
+    <text class="back-top-text">顶部</text>
   </movable-view>
 </movable-area>

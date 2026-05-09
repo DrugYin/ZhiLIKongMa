@@ -81,7 +81,7 @@ const DIFFICULTY_COLOR = {
 Page({
   data: {
     loading: true,
-    scrollTop: 0,
+    scrollIntoView: '',
     tasks: [],
     displayTasks: [],
     stats: {
@@ -303,25 +303,9 @@ Page({
     this.loadTaskPage()
   },
 
-  onScroll(e) {
-    if (this._scrollingToTop) return
-    if (this._scrollTimer) return
-    const scrollTop = e.detail.scrollTop
-    this._scrollTimer = setTimeout(() => {
-      this._scrollTimer = null
-      if (!this._scrollingToTop) {
-        this.setData({ scrollTop })
-      }
-    }, 200)
-  },
-
   onBackToTop() {
-    this._scrollingToTop = true
-    clearTimeout(this._scrollTimer)
-    this._scrollTimer = null
-    this.setData({ scrollTop: 0 }, () => {
-      setTimeout(() => { this._scrollingToTop = false }, 500)
-    })
+    this.setData({ scrollIntoView: 'back-top-sentinel' })
+    setTimeout(() => this.setData({ scrollIntoView: '' }), 500)
   },
 
   async loadStats() {
