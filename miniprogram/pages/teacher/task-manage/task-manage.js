@@ -308,8 +308,9 @@ Page({
   },
 
   onBackToTop() {
-    this.setData({ scrollIntoView: 'back-top-sentinel' })
-    setTimeout(() => this.setData({ scrollIntoView: '' }), 500)
+    this.setData({ scrollIntoView: '' }, () => {
+      setTimeout(() => this.setData({ scrollIntoView: 'back-top-sentinel' }), 20)
+    })
   },
 
   async loadStats() {
