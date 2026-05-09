@@ -18,8 +18,8 @@ Component({
   lifetimes: {
     attached() {
       const { windowWidth, windowHeight } = wx.getWindowInfo()
-      const x = windowWidth - 60
-      const y = windowHeight - 200
+      const x = windowWidth - 65
+      const y = windowHeight - 210
       this.setData({ x, y, lastX: x, lastY: y })
     }
   },
@@ -43,7 +43,7 @@ Component({
 
     onTap() {
       if (this.data.moved) return
-      this.triggerEvent('toTop')
+      this.triggerEvent('to-top')
     }
   }
 })
