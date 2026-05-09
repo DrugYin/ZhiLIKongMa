@@ -342,6 +342,7 @@ Page({
         totalSubmissionsFromBackend: totalSubRes.total || 0,
         totalApplicationsFromBackend: totalApplications,
         stats: {
+          ...this.data.stats,
           total: (totalSubRes.total || 0) + totalApplications,
           pending: (pendingSubRes.total || 0) + totalApplications,
           taskPending: pendingSubRes.total || 0,

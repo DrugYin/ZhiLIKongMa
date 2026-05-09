@@ -319,6 +319,7 @@ Page({
 
       this.setData({
         stats: {
+          ...this.data.stats,
           total: totalRes.total || 0,
           published: publishedRes.total || 0,
           publicCount: publicRes.total || 0,

@@ -338,10 +338,10 @@ Page({
 
       this.setData({
         stats: {
+          ...this.data.stats,
           total: totalRes.total || 0,
           myClassCount: classRes.total || 0,
-          publicCount: publicRes.total || 0,
-          deadlineSoonCount: this.data.stats.deadlineSoonCount
+          publicCount: publicRes.total || 0
         }
       })
     } catch (error) {
