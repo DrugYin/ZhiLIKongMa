@@ -304,19 +304,23 @@ Page({
   },
 
   onScroll(e) {
+    if (this._scrollingToTop) return
     if (this._scrollTimer) return
     const scrollTop = e.detail.scrollTop
     this._scrollTimer = setTimeout(() => {
       this._scrollTimer = null
-      this.setData({ scrollTop })
-    }, 100)
+      if (!this._scrollingToTop) {
+        this.setData({ scrollTop })
+      }
+    }, 200)
   },
 
   onBackToTop() {
+    this._scrollingToTop = true
     clearTimeout(this._scrollTimer)
     this._scrollTimer = null
-    this.setData({ scrollTop: 1 }, () => {
-      setTimeout(() => this.setData({ scrollTop: 0 }), 20)
+    this.setData({ scrollTop: 0 }, () => {
+      setTimeout(() => { this._scrollingToTop = false }, 500)
     })
   },
 
