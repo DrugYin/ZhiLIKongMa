@@ -230,7 +230,7 @@
 
   </scroll-view>
 
-  <back-top visible="{{backTopVisible}}" bind:to-top="onBackToTop" />
+  <back-top visible="{{backTopVisible}}" bind:toTop="onBackToTop" />
 </view>
 
 <t-fab

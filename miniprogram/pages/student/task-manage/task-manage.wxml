@@ -203,7 +203,7 @@
 
   </scroll-view>
 
-  <back-top visible="{{backTopVisible}}" bind:to-top="onBackToTop" />
+  <back-top visible="{{backTopVisible}}" bind:toTop="onBackToTop" />
 
   <view wx:if="{{isLoggedIn && !loading}}">
     <t-tab-bar

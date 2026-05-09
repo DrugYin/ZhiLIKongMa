@@ -43,7 +43,7 @@ Component({
 
     onTap() {
       if (this.data.moved) return
-      this.triggerEvent('to-top')
+      this.triggerEvent('toTop')
     }
   }
 })
