@@ -70,7 +70,11 @@ Page({
         AuthService.updateLocalUserInfo(res.user_info)
         toast.showSuccess('登录成功')
         setTimeout(() => {
-          wx.navigateBack()
+          if (res.user_info && res.user_info.current_role === 'teacher') {
+            wx.reLaunch({ url: '/pages/teacher/index' })
+          } else {
+            wx.navigateBack()
+          }
         }, 1000)
       } else {
         this.setData({
