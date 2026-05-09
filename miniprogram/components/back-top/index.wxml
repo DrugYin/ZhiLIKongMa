@@ -1,0 +1,18 @@
+<movable-area wx:if="{{visible}}" class="back-top-area">
+  <movable-view
+    class="back-top-view"
+    x="{{x}}"
+    y="{{y}}"
+    direction="all"
+    damping="40"
+    friction="6"
+    inertia
+    catchtouchmove="noop"
+    bind:touchstart="onTouchStart"
+    bind:change="onChange"
+    bind:tap="onTap"
+  >
+    <view class="back-top-icon"></view>
+    <text class="back-top-text" wx:if="{{text}}">{{text}}</text>
+  </movable-view>
+</movable-area>

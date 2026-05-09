@@ -4,6 +4,7 @@ const RankingService = require('../../../services/ranking')
 Page({
   data: {
     loading: true,
+    scrollTop: 0,
     isLoggedIn: false,
     errorText: '',
     rankType: 'week',
@@ -49,6 +50,16 @@ Page({
 
   onPullDownRefresh() {
     this.loadRankData()
+  },
+
+  onScroll(e) {
+    this.setData({ scrollTop: e.detail.scrollTop })
+  },
+
+  onBackToTop() {
+    this.setData({ scrollTop: 1 }, () => {
+      setTimeout(() => this.setData({ scrollTop: 0 }), 20)
+    })
   },
 
   async loadRankData() {

@@ -62,6 +62,7 @@ const DIFFICULTY_COLOR = {
 Page({
   data: {
     loading: true,
+    scrollTop: 0,
     isLoggedIn: false,
     isRegistered: false,
     pageTitle: '任务中心',
@@ -317,6 +318,16 @@ Page({
 
   onScrollToLower() {
     this.loadTaskPage()
+  },
+
+  onScroll(e) {
+    this.setData({ scrollTop: e.detail.scrollTop })
+  },
+
+  onBackToTop() {
+    this.setData({ scrollTop: 1 }, () => {
+      setTimeout(() => this.setData({ scrollTop: 0 }), 20)
+    })
   },
 
   async loadStats() {

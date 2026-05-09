@@ -13,7 +13,7 @@
     </view>
   </view>
 
-  <scroll-view class="content" scroll-y enhanced>
+  <scroll-view class="content" scroll-y enhanced scroll-top="{{scrollTop}}" bindscroll="onScroll">
     <view class="hero-card">
       <text class="hero-eyebrow">学习排行</text>
       <text class="hero-title">{{rankTitle}}</text>
@@ -109,5 +109,7 @@
     </view>
 
     <view class="footer-placeholder"></view>
+
+    <back-top scroll-top="{{scrollTop}}" text="顶部" bind:to-top="onBackToTop" />
   </scroll-view>
 </view>

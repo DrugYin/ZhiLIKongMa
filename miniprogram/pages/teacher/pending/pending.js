@@ -58,6 +58,7 @@ const REVIEW_ACTION_TEXT = {
 Page({
   data: {
     loading: true,
+    scrollTop: 0,
     processingId: '',
     popupVisible: false,
     popupLoading: false,
@@ -286,6 +287,16 @@ Page({
 
   onScrollToLower() {
     this.loadNextPage()
+  },
+
+  onScroll(e) {
+    this.setData({ scrollTop: e.detail.scrollTop })
+  },
+
+  onBackToTop() {
+    this.setData({ scrollTop: 1 }, () => {
+      setTimeout(() => this.setData({ scrollTop: 0 }), 20)
+    })
   },
 
   async loadTeacherClasses() {

@@ -2,6 +2,6 @@
   "usingComponents": {
     "custom-navbar": "/components/custom-navbar/index",
     "t-fab": "tdesign-miniprogram/fab/fab",
-    "t-back-top": "tdesign-miniprogram/back-top/back-top"
+    "back-top": "/components/back-top/index"
   }
 }

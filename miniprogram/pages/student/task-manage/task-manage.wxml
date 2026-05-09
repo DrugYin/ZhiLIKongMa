@@ -3,7 +3,7 @@
     <custom-navbar title="{{pageTitle}}" showBack="{{true}}" placeholder="{{true}}" />
   </view>
 
-  <scroll-view class="content" scroll-y enhanced bounces="{{false}}" show-scrollbar="{{false}}" bindscrolltolower="onScrollToLower">
+  <scroll-view class="content" scroll-y enhanced bounces="{{false}}" show-scrollbar="{{false}}" scroll-top="{{scrollTop}}" bindscroll="onScroll" bindscrolltolower="onScrollToLower">
     <view class="hero-card">
       <view class="hero-top">
         <view class="hero-copy">
@@ -199,6 +199,8 @@
         <text class="no-more-text">没有更多任务了</text>
       </view>
     </block>
+
+    <back-top scroll-top="{{scrollTop}}" text="顶部" bind:to-top="onBackToTop" />
   </scroll-view>
 
   <view wx:if="{{isLoggedIn && !loading}}">

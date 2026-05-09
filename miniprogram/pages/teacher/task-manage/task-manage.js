@@ -81,6 +81,7 @@ const DIFFICULTY_COLOR = {
 Page({
   data: {
     loading: true,
+    scrollTop: 0,
     tasks: [],
     displayTasks: [],
     stats: {
@@ -300,6 +301,16 @@ Page({
 
   onScrollToLower() {
     this.loadTaskPage()
+  },
+
+  onScroll(e) {
+    this.setData({ scrollTop: e.detail.scrollTop })
+  },
+
+  onBackToTop() {
+    this.setData({ scrollTop: 1 }, () => {
+      setTimeout(() => this.setData({ scrollTop: 0 }), 20)
+    })
   },
 
   async loadStats() {
