@@ -167,12 +167,28 @@
         <t-row :gutter="[16, 0]">
           <t-col :span="6">
             <t-form-item label="开始时间" name="start_time">
-              <t-input v-model="form.start_time" placeholder="YYYY-MM-DD HH:mm，可为空" />
+              <t-date-picker
+                v-model="startTimeValue"
+                placeholder="选择开始时间"
+                allow-input
+                clearable
+                enable-time-picker
+                format="YYYY-MM-DD HH:mm"
+                @change="(val) => onDateTimeChange('start_time', val)"
+              />
             </t-form-item>
           </t-col>
           <t-col :span="6">
             <t-form-item label="结束时间" name="end_time">
-              <t-input v-model="form.end_time" placeholder="YYYY-MM-DD HH:mm，可为空" />
+              <t-date-picker
+                v-model="endTimeValue"
+                placeholder="选择结束时间"
+                allow-input
+                clearable
+                enable-time-picker
+                format="YYYY-MM-DD HH:mm"
+                @change="(val) => onDateTimeChange('end_time', val)"
+              />
             </t-form-item>
           </t-col>
         </t-row>
@@ -335,6 +351,26 @@ const filters = reactive({
   pageSize: 20
 });
 const form = reactive({ ...DEFAULT_FORM });
+
+function parseDateTimeString(str) {
+  if (!str) return null;
+  const d = new Date(str.replace(' ', 'T'));
+  return Number.isNaN(d.getTime()) ? null : d;
+}
+
+const startTimeValue = computed(() => parseDateTimeString(form.start_time));
+const endTimeValue = computed(() => parseDateTimeString(form.end_time));
+
+function onDateTimeChange(field, val) {
+  if (!val) {
+    form[field] = '';
+    return;
+  }
+  const d = new Date(val);
+  if (Number.isNaN(d.getTime())) return;
+  const pad = (n) => String(n).padStart(2, '0');
+  form[field] = `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
 
 const isEditing = computed(() => Boolean(form._id));
 const pagination = computed(() => ({

@@ -258,14 +258,17 @@
               </t-select>
             </t-form-item>
           </t-col>
-          <t-col :span="4">
-            <t-form-item label="截止日期" name="deadline_date">
-              <t-input v-model="form.deadline_date" placeholder="YYYY-MM-DD，可为空" />
-            </t-form-item>
-          </t-col>
-          <t-col :span="4">
-            <t-form-item label="截止时间" name="deadline_time">
-              <t-input v-model="form.deadline_time" placeholder="HH:mm，可为空" />
+          <t-col :span="8">
+            <t-form-item label="截止时间" name="deadline">
+              <t-date-picker
+                v-model="deadlineValue"
+                placeholder="选择截止日期时间"
+                allow-input
+                clearable
+                enable-time-picker
+                format="YYYY-MM-DD HH:mm"
+                @change="onDeadlineChange"
+              />
             </t-form-item>
           </t-col>
         </t-row>
@@ -645,6 +648,29 @@ const DEFAULT_FORM = {
   teacher_name: '',
   status: 'draft'
 };
+
+const deadlineValue = computed(() => {
+  if (form.deadline_date && form.deadline_time) {
+    return new Date(`${form.deadline_date}T${form.deadline_time}:00`);
+  }
+  if (form.deadline_date) {
+    return new Date(`${form.deadline_date}T00:00:00`);
+  }
+  return null;
+});
+
+function onDeadlineChange(val) {
+  if (!val) {
+    form.deadline_date = '';
+    form.deadline_time = '';
+    return;
+  }
+  const d = new Date(val);
+  if (Number.isNaN(d.getTime())) return;
+  const pad = (n) => String(n).padStart(2, '0');
+  form.deadline_date = `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+  form.deadline_time = `${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
 
 const columns = [
   { colKey: 'title', title: '任务', width: 190 },
@@ -1201,10 +1227,6 @@ function validatePayload() {
 
   if (!form.project_code) {
     throw new Error('请选择所属项目');
-  }
-
-  if ((form.deadline_date && !form.deadline_time) || (!form.deadline_date && form.deadline_time)) {
-    throw new Error('截止日期和截止时间需要同时填写');
   }
 }
 
