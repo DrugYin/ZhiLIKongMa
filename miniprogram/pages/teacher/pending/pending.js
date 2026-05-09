@@ -331,7 +331,7 @@ Page({
         count_only: true
       }
 
-      const appPromises = this.data.teacherClasses.map((classInfo) => {
+      const allAppPromises = this.data.teacherClasses.map((classInfo) => {
         return ClassService.getClassApplications({
           class_id: classInfo._id,
           status: 'all',
@@ -341,15 +341,28 @@ Page({
         }).then((r) => r.total || 0).catch(() => 0)
       })
 
-      const [totalSubRes, pendingSubRes, approvedSubRes, rejectedSubRes, ...appCounts] = await Promise.all([
+      const pendingAppPromises = this.data.teacherClasses.map((classInfo) => {
+        return ClassService.getClassApplications({
+          class_id: classInfo._id,
+          status: 'pending',
+          page: 1,
+          page_size: 1,
+          count_only: true
+        }).then((r) => r.total || 0).catch(() => 0)
+      })
+
+      const [totalSubRes, pendingSubRes, approvedSubRes, rejectedSubRes, ...restCounts] = await Promise.all([
         TaskService.getSubmissions({ ...submissionParams }),
         TaskService.getSubmissions({ ...submissionParams, status: 'pending' }),
         TaskService.getSubmissions({ ...submissionParams, status: 'approved' }),
         TaskService.getSubmissions({ ...submissionParams, status: 'rejected' }),
-        ...appPromises
+        ...allAppPromises,
+        ...pendingAppPromises
       ])
 
-      const totalApplications = appCounts.reduce((sum, count) => sum + count, 0)
+      const classCount = this.data.teacherClasses.length
+      const totalApplications = restCounts.slice(0, classCount).reduce((sum, count) => sum + count, 0)
+      const pendingApplications = restCounts.slice(classCount).reduce((sum, count) => sum + count, 0)
 
       this.setData({
         totalSubmissionsFromBackend: totalSubRes.total || 0,
@@ -357,9 +370,9 @@ Page({
         stats: {
           ...this.data.stats,
           total: (totalSubRes.total || 0) + totalApplications,
-          pending: (pendingSubRes.total || 0) + totalApplications,
+          pending: (pendingSubRes.total || 0) + pendingApplications,
           taskPending: pendingSubRes.total || 0,
-          joinPending: totalApplications,
+          joinPending: pendingApplications,
           approved: approvedSubRes.total || 0,
           rejected: rejectedSubRes.total || 0
         }
@@ -474,15 +487,7 @@ Page({
     const totalFromBackend = (this.data.totalSubmissionsFromBackend || 0) + (this.data.totalApplicationsFromBackend || 0)
 
     this.setData({
-      displayRecords,
-      stats: {
-        total: totalFromBackend || records.length,
-        pending: records.filter((item) => item.status === 'pending').length,
-        taskPending: submissionRecords.filter((item) => item.status === 'pending').length,
-        joinPending: applicationRecords.filter((item) => item.status === 'pending').length,
-        approved: records.filter((item) => item.status === 'approved').length,
-        rejected: records.filter((item) => item.status === 'rejected').length
-      }
+      displayRecords
     })
   },
 

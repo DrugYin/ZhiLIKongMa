@@ -465,7 +465,10 @@ Page({
 
     this.setData({
       displayTasks,
-      stats: this.buildStats(displayTasks),
+      stats: {
+        ...this.data.stats,
+        deadlineSoonCount: displayTasks.filter((item) => item.deadlineSoon).length
+      },
       emptyText: this.getEmptyText(currentTab, {
         projectCode,
         taskTypeValue,

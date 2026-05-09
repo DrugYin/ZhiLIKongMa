@@ -436,12 +436,6 @@ Page({
 
     this.setData({
       displayTasks,
-      stats: {
-        total: this.data.totalFromBackend || displayTasks.length,
-        published: displayTasks.filter((item) => item.status === 'published').length,
-        publicCount: displayTasks.filter((item) => item.task_type === 'public').length,
-        classCount: displayTasks.filter((item) => item.task_type === 'class').length
-      },
       emptyText: projectCode === 'all' && taskTypeValue === 'all' && classValue === 'all' && visibilityValue === 'all' && statusValue === 'all'
         ? '还没有任务，等编辑页接入后就可以从这里开始发布'
         : '当前筛选条件下暂无任务'
