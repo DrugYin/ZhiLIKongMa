@@ -5,7 +5,7 @@
       <div class="filter-bar">
         <t-input
           v-model="filters.keyword"
-          placeholder="搜索用户ID/备注"
+          placeholder="搜索用户名/备注"
           clearable
           style="width: 200px"
           @change="handleSearch"
@@ -64,6 +64,18 @@
             {{ row.type === 'income' ? '+' : '-' }}{{ row.amount }}
           </span>
         </template>
+        <template #user_openid="{ row }">
+          <div class="cell-with-sub">
+            <span class="cell-main">{{ row.user_name || '--' }}</span>
+            <span class="cell-sub">{{ row.user_openid }}</span>
+          </div>
+        </template>
+        <template #operator_openid="{ row }">
+          <div class="cell-with-sub">
+            <span class="cell-main">{{ row.operator_name || '--' }}</span>
+            <span class="cell-sub">{{ row.operator_openid }}</span>
+          </div>
+        </template>
         <template #source="{ row }">
           {{ getSourceText(row.source) }}
         </template>
@@ -95,14 +107,14 @@ const filters = reactive({
 });
 
 const columns = [
-  { colKey: 'user_openid', title: '用户ID', width: 200, ellipsis: true },
+  { colKey: 'user_openid', title: '用户', width: 200, cell: 'user_openid' },
   { colKey: 'type', title: '类型', width: 80, cell: 'type' },
   { colKey: 'amount', title: '积分', width: 100, cell: 'amount' },
   { colKey: 'before_points', title: '变动前', width: 100 },
   { colKey: 'after_points', title: '变动后', width: 100 },
   { colKey: 'source', title: '来源', width: 120, cell: 'source' },
   { colKey: 'remark', title: '备注', width: 200, ellipsis: true },
-  { colKey: 'operator_openid', title: '操作人', width: 150, ellipsis: true },
+  { colKey: 'operator_openid', title: '操作人', width: 180, cell: 'operator_openid' },
   { colKey: 'create_time', title: '时间', width: 150, cell: 'create_time' }
 ];
 
@@ -209,5 +221,21 @@ onMounted(() => {
 .amount-expense {
   color: #ff4d4f;
   font-weight: bold;
+}
+
+.cell-with-sub {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.cell-main {
+  color: #333;
+  font-size: 14px;
+}
+
+.cell-sub {
+  color: #999;
+  font-size: 12px;
 }
 </style>

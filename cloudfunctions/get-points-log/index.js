@@ -21,6 +21,8 @@ const app = tcb.init({
 const tcbAuth = app.auth()
 
 const COLLECTION_NAME = 'points_log'
+const USER_COLLECTION = 'users'
+const PAGE_SIZE_ALL = 100
 
 function success(message, data = {}) {
   return {
@@ -80,6 +82,61 @@ async function verifyAdminByUid() {
   return user
 }
 
+async function fetchAllUsers() {
+  const totalRes = await db.collection(USER_COLLECTION).count()
+  const total = totalRes.total || 0
+  const tasks = []
+
+  for (let skip = 0; skip < total; skip += PAGE_SIZE_ALL) {
+    tasks.push(
+      db.collection(USER_COLLECTION)
+        .skip(skip)
+        .limit(PAGE_SIZE_ALL)
+        .field({
+          _id: true,
+          _openid: true,
+          user_name: true,
+          nick_name: true,
+          nickname: true,
+          phone: true
+        })
+        .get()
+    )
+  }
+
+  if (!tasks.length) return []
+
+  const pages = await Promise.all(tasks)
+  return pages.reduce((result, item) => result.concat(item.data || []), [])
+}
+
+function buildUserIndexes(users = []) {
+  return users.reduce((indexes, user) => {
+    if (user._id) indexes.byId[user._id] = user
+    if (user._openid) indexes.byOpenid[user._openid] = user
+    return indexes
+  }, { byId: {}, byOpenid: {} })
+}
+
+function getUserDisplayName(user = {}) {
+  return user.user_name
+    || user.nick_name
+    || user.nickname
+    || user.phone
+    || ''
+}
+
+function enrichLogItem(item, userIndexes) {
+  const userInfo = userIndexes.byOpenid[item.user_openid]
+  const operatorInfo = userIndexes.byOpenid[item.operator_openid]
+
+  return {
+    ...item,
+    user_name: getUserDisplayName(userInfo) || '',
+    operator_name: getUserDisplayName(operatorInfo) || ''
+  }
+}
+
 exports.main = async (event = {}) => {
   try {
     const { OPENID } = cloud.getWXContext()
@@ -135,11 +192,32 @@ exports.main = async (event = {}) => {
     }
 
     if (keyword) {
-      queryConditions.push(_.or([
-        { user_openid: db.RegExp({ regexp: keyword, options: 'i' }) },
-        { remark: db.RegExp({ regexp: keyword, options: 'i' }) },
-        { source_id: db.RegExp({ regexp: keyword, options: 'i' }) }
-      ]))
+      const escapedKeyword = keyword.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+      const keywordOr = [
+        { user_openid: db.RegExp({ regexp: escapedKeyword, options: 'i' }) },
+        { remark: db.RegExp({ regexp: escapedKeyword, options: 'i' }) },
+        { source_id: db.RegExp({ regexp: escapedKeyword, options: 'i' }) }
+      ]
+
+      // 管理员搜索时支持按用户名查找
+      if (isAdmin) {
+        const nameMatchUsers = await db.collection(USER_COLLECTION)
+          .where(_.or([
+            { user_name: db.RegExp({ regexp: escapedKeyword, options: 'i' }) },
+            { nick_name: db.RegExp({ regexp: escapedKeyword, options: 'i' }) },
+            { nickname: db.RegExp({ regexp: escapedKeyword, options: 'i' }) }
+          ]))
+          .field({ _openid: true })
+          .limit(100)
+          .get()
+
+        const matchedOpenids = (nameMatchUsers.data || []).map(u => u._openid).filter(Boolean)
+        if (matchedOpenids.length > 0) {
+          keywordOr.push({ user_openid: _.in(matchedOpenids) })
+        }
+      }
+
+      queryConditions.push(_.or(keywordOr))
     }
 
     if (startTime || endTime) {
@@ -169,8 +247,17 @@ exports.main = async (event = {}) => {
       .limit(pageSize)
       .get()
 
+    let list = listRes.data || []
+
+    // 管理后台调用时关联用户名
+    if (isAdmin) {
+      const allUsers = await fetchAllUsers()
+      const userIndexes = buildUserIndexes(allUsers)
+      list = list.map(item => enrichLogItem(item, userIndexes))
+    }
+
     return success('获取积分明细成功', {
-      list: listRes.data || [],
+      list,
       total,
       page,
       page_size: pageSize
