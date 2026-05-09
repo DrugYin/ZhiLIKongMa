@@ -68,6 +68,22 @@ exports.main = async (event) => {
     const query = db.collection('class_join_applications').where(queryCondition);
 
     const totalRes = await query.count();
+
+    const countOnly = event.count_only === true || event.count_only === 'true';
+    if (countOnly) {
+      return {
+        success: true,
+        message: '获取入班申请成功',
+        data: {
+          list: [],
+          page,
+          page_size: pageSize,
+          total: totalRes.total,
+          has_more: false
+        }
+      };
+    }
+
     const listRes = await query
       .orderBy('create_time', 'desc')
       .skip((page - 1) * pageSize)

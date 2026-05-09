@@ -316,7 +316,8 @@ Page({
       const submissionParams = {
         role: 'teacher',
         page: 1,
-        page_size: 1
+        page_size: 1,
+        count_only: true
       }
 
       const appPromises = this.data.teacherClasses.map((classInfo) => {
@@ -324,7 +325,8 @@ Page({
           class_id: classInfo._id,
           status: 'all',
           page: 1,
-          page_size: 1
+          page_size: 1,
+          count_only: true
         }).then((r) => r.total || 0).catch(() => 0)
       })
 

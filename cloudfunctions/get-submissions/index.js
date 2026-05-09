@@ -91,6 +91,18 @@ exports.main = async (event) => {
 
     const query = db.collection('submissions').where(queryData)
     const totalRes = await query.count()
+
+    const countOnly = event.count_only === true || event.count_only === 'true'
+    if (countOnly) {
+      return success('获取提交记录成功', {
+        list: [],
+        page,
+        page_size: pageSize,
+        total: totalRes.total || 0,
+        has_more: false
+      })
+    }
+
     const listRes = await query
       .orderBy('submit_time', 'desc')
       .skip((page - 1) * pageSize)
