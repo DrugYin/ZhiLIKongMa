@@ -95,6 +95,7 @@ async function fetchAllUsers() {
         .field({
           _id: true,
           _openid: true,
+          admin_auth_uid: true,
           user_name: true,
           nick_name: true,
           nickname: true,
@@ -114,8 +115,9 @@ function buildUserIndexes(users = []) {
   return users.reduce((indexes, user) => {
     if (user._id) indexes.byId[user._id] = user
     if (user._openid) indexes.byOpenid[user._openid] = user
+    if (user.admin_auth_uid) indexes.byAdminUid[user.admin_auth_uid] = user
     return indexes
-  }, { byId: {}, byOpenid: {} })
+  }, { byId: {}, byOpenid: {}, byAdminUid: {} })
 }
 
 function getUserDisplayName(user = {}) {
@@ -129,6 +131,7 @@ function getUserDisplayName(user = {}) {
 function enrichLogItem(item, userIndexes) {
   const userInfo = userIndexes.byOpenid[item.user_openid]
   const operatorInfo = userIndexes.byOpenid[item.operator_openid]
+    || userIndexes.byAdminUid[item.operator_openid]
 
   return {
     ...item,
