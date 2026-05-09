@@ -14,6 +14,7 @@
   </view>
 
   <scroll-view class="content" scroll-y enhanced scroll-into-view="{{scrollIntoView}}">
+    <view id="back-top-sentinel" style="height:1rpx;"></view>
     <view class="hero-card">
       <text class="hero-eyebrow">学习排行</text>
       <text class="hero-title">{{rankTitle}}</text>
@@ -111,5 +112,5 @@
     <view class="footer-placeholder"></view>
   </scroll-view>
 
-  <back-top bind:to-top="onBackToTop" />
+  <back-top visible="{{backTopVisible}}" bind:to-top="onBackToTop" />
 </view>

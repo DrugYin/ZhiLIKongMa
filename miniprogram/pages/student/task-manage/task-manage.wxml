@@ -4,6 +4,7 @@
   </view>
 
   <scroll-view class="content" scroll-y enhanced bounces="{{false}}" show-scrollbar="{{false}}" scroll-into-view="{{scrollIntoView}}" bindscrolltolower="onScrollToLower">
+    <view id="back-top-sentinel" style="height:1rpx;"></view>
     <view class="hero-card">
       <view class="hero-top">
         <view class="hero-copy">
@@ -202,7 +203,7 @@
 
   </scroll-view>
 
-  <back-top bind:to-top="onBackToTop" />
+  <back-top visible="{{backTopVisible}}" bind:to-top="onBackToTop" />
 
   <view wx:if="{{isLoggedIn && !loading}}">
     <t-tab-bar

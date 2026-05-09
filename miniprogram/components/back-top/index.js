@@ -1,6 +1,12 @@
 Component({
+  properties: {
+    visible: {
+      type: Boolean,
+      value: false
+    }
+  },
+
   data: {
-    visible: false,
     x: -1,
     y: -1,
     lastX: -1,
@@ -11,24 +17,10 @@ Component({
 
   lifetimes: {
     attached() {
-      const { windowWidth, windowHeight } = wx.getSystemInfoSync()
+      const { windowWidth, windowHeight } = wx.getWindowInfo()
       const x = windowWidth - 60
       const y = windowHeight - 200
       this.setData({ x, y, lastX: x, lastY: y })
-
-      this._observer = this.createIntersectionObserver()
-      this._observer
-        .relativeToViewport({ top: 0 })
-        .observe('#back-top-sentinel', (res) => {
-          this.setData({ visible: res.intersectionRatio < 1 })
-        })
-    },
-
-    detached() {
-      if (this._observer) {
-        this._observer.disconnect()
-        this._observer = null
-      }
     }
   },
 

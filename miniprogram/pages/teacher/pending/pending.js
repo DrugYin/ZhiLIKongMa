@@ -126,6 +126,10 @@ Page({
   onLoad(options = {}) {
     this._routeHint = this.normalizeRouteHint(options)
     this.initPage()
+    this._observer = this.createIntersectionObserver()
+    this._observer.relativeToViewport({ top: 0 }).observe('#back-top-sentinel', (res) => {
+      this.setData({ backTopVisible: res.intersectionRatio < 1 })
+    })
   },
 
   onShow() {

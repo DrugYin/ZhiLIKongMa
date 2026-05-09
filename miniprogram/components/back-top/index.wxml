@@ -1,5 +1,3 @@
-<view id="back-top-sentinel" class="sentinel"></view>
-
 <movable-area wx:if="{{visible}}" class="back-top-area">
   <movable-view
     class="back-top-view"

@@ -6,6 +6,7 @@
     </view>
   </view>
   <scroll-view class="content" scroll-y enhanced enable-back-to-top scroll-into-view="{{scrollIntoView}}" bindscrolltolower="onScrollToLower">
+    <view id="back-top-sentinel" style="height:1rpx;"></view>
     <view wx:if="{{loading}}" class="section-card">
       <text class="empty-title">审核记录加载中</text>
       <text class="empty-desc">正在同步学生提交、入班申请和当前审核状态。</text>
@@ -251,7 +252,7 @@
     </block>
   </scroll-view>
 
-  <back-top bind:to-top="onBackToTop" />
+  <back-top visible="{{backTopVisible}}" bind:to-top="onBackToTop" />
 
   <t-popup
     visible="{{popupVisible}}"
