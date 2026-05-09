@@ -3,7 +3,7 @@
     <custom-navbar title="{{pageTitle}}" showBack="{{true}}" placeholder="{{true}}" />
   </view>
 
-  <scroll-view class="content" scroll-y enhanced bounces="{{false}}" show-scrollbar="{{false}}" scroll-into-view="{{scrollIntoView}}" bindscrolltolower="onScrollToLower">
+  <scroll-view class="content" scroll-y enhanced bounces="{{false}}" show-scrollbar="{{false}}" scroll-top="{{scrollTop}}" bindscrolltolower="onScrollToLower">
     <view id="back-top-sentinel" style="height:1rpx;"></view>
     <view class="hero-card">
       <view class="hero-top">

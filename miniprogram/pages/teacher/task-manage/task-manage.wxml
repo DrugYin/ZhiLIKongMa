@@ -5,7 +5,7 @@
     </view>
   </view>
 
-  <scroll-view class="content" scroll-y enhanced bounces="{{false}}" show-scrollbar="{{false}}" scroll-into-view="{{scrollIntoView}}" bindscrolltolower="onScrollToLower">
+  <scroll-view class="content" scroll-y enhanced bounces="{{false}}" show-scrollbar="{{false}}" scroll-top="{{scrollTop}}" bindscrolltolower="onScrollToLower">
     <view id="back-top-sentinel" style="height:1rpx;"></view>
     <view wx:if="{{loading}}" class="state-card">
       <text class="state-title">任务列表加载中</text>

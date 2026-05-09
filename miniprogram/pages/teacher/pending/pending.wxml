@@ -5,7 +5,7 @@
       <custom-navbar placeholder="{{true}}" title="智力控码" />
     </view>
   </view>
-  <scroll-view class="content" scroll-y enhanced enable-back-to-top scroll-into-view="{{scrollIntoView}}" bindscrolltolower="onScrollToLower">
+  <scroll-view class="content" scroll-y enhanced enable-back-to-top scroll-top="{{scrollTop}}" bindscrolltolower="onScrollToLower">
     <view id="back-top-sentinel" style="height:1rpx;"></view>
     <view wx:if="{{loading}}" class="section-card">
       <text class="empty-title">审核记录加载中</text>

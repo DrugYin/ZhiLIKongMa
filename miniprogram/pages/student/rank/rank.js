@@ -4,7 +4,7 @@ const RankingService = require('../../../services/ranking')
 Page({
   data: {
     loading: true,
-    scrollIntoView: '',
+    scrollTop: 0,
     isLoggedIn: false,
     errorText: '',
     rankType: 'week',
@@ -57,8 +57,8 @@ Page({
   },
 
   onBackToTop() {
-    this.setData({ scrollIntoView: '' }, () => {
-      setTimeout(() => this.setData({ scrollIntoView: 'back-top-sentinel' }), 20)
+    this.setData({ scrollTop: 99999 }, () => {
+      this.setData({ scrollTop: 0 })
     })
   },
 

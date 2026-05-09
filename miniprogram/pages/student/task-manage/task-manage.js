@@ -62,7 +62,7 @@ const DIFFICULTY_COLOR = {
 Page({
   data: {
     loading: true,
-    scrollIntoView: '',
+    scrollTop: 0,
     isLoggedIn: false,
     isRegistered: false,
     pageTitle: '任务中心',
@@ -325,8 +325,8 @@ Page({
   },
 
   onBackToTop() {
-    this.setData({ scrollIntoView: '' }, () => {
-      setTimeout(() => this.setData({ scrollIntoView: 'back-top-sentinel' }), 20)
+    this.setData({ scrollTop: 99999 }, () => {
+      this.setData({ scrollTop: 0 })
     })
   },
 
