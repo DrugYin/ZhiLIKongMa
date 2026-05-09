@@ -178,6 +178,7 @@ Page({
       })
 
       await this.loadNextPage()
+      this.loadStats()
       this.applyRouteHint()
       this._pageReady = true
     } catch (error) {
@@ -308,6 +309,50 @@ Page({
     }
 
     return result
+  },
+
+  async loadStats() {
+    try {
+      const submissionParams = {
+        role: 'teacher',
+        page: 1,
+        page_size: 1
+      }
+
+      const appPromises = this.data.teacherClasses.map((classInfo) => {
+        return ClassService.getClassApplications({
+          class_id: classInfo._id,
+          status: 'all',
+          page: 1,
+          page_size: 1
+        }).then((r) => r.total || 0).catch(() => 0)
+      })
+
+      const [totalSubRes, pendingSubRes, approvedSubRes, rejectedSubRes, ...appCounts] = await Promise.all([
+        TaskService.getSubmissions({ ...submissionParams }),
+        TaskService.getSubmissions({ ...submissionParams, status: 'pending' }),
+        TaskService.getSubmissions({ ...submissionParams, status: 'approved' }),
+        TaskService.getSubmissions({ ...submissionParams, status: 'rejected' }),
+        ...appPromises
+      ])
+
+      const totalApplications = appCounts.reduce((sum, count) => sum + count, 0)
+
+      this.setData({
+        totalSubmissionsFromBackend: totalSubRes.total || 0,
+        totalApplicationsFromBackend: totalApplications,
+        stats: {
+          total: (totalSubRes.total || 0) + totalApplications,
+          pending: (pendingSubRes.total || 0) + totalApplications,
+          taskPending: pendingSubRes.total || 0,
+          joinPending: totalApplications,
+          approved: approvedSubRes.total || 0,
+          rejected: rejectedSubRes.total || 0
+        }
+      })
+    } catch (error) {
+      console.error('[teacher-pending] loadStats error:', error)
+    }
   },
 
   formatRecord(item = {}) {

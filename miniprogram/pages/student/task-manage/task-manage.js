@@ -199,6 +199,7 @@ Page({
         'classes.value': nextClassValue
       })
       await this.loadTaskPage({ refresh: true })
+      this.loadStats()
       this._pageReady = true
     } catch (error) {
       console.error('[student-task-manage] initPage error:', error)
@@ -316,6 +317,36 @@ Page({
 
   onScrollToLower() {
     this.loadTaskPage()
+  },
+
+  async loadStats() {
+    try {
+      const baseParams = {
+        page: 1,
+        page_size: 1
+      }
+
+      if (this.data.filterClassId) {
+        baseParams.class_id = this.data.filterClassId
+      }
+
+      const [totalRes, classRes, publicRes] = await Promise.all([
+        TaskService.getTasks({ ...baseParams }),
+        TaskService.getTasks({ ...baseParams, task_type: 'class' }),
+        TaskService.getTasks({ ...baseParams, visibility: 'public' })
+      ])
+
+      this.setData({
+        stats: {
+          total: totalRes.total || 0,
+          myClassCount: classRes.total || 0,
+          publicCount: publicRes.total || 0,
+          deadlineSoonCount: this.data.stats.deadlineSoonCount
+        }
+      })
+    } catch (error) {
+      console.error('[student-task-manage] loadStats error:', error)
+    }
   },
 
   buildClassOptions(joinedClasses = []) {

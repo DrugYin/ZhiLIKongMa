@@ -150,6 +150,7 @@ Page({
         this.loadFilterClasses({ silent: true })
       ])
       await this.loadTaskPage({ refresh: true })
+      this.loadStats()
       this._pageReady = true
     } catch (error) {
       console.error('[task-manage] initPage error:', error)
@@ -299,6 +300,34 @@ Page({
 
   onScrollToLower() {
     this.loadTaskPage()
+  },
+
+  async loadStats() {
+    try {
+      const baseParams = {
+        role: 'teacher',
+        page: 1,
+        page_size: 1
+      }
+
+      const [totalRes, publishedRes, publicRes, classRes] = await Promise.all([
+        TaskService.getTasks({ ...baseParams }),
+        TaskService.getTasks({ ...baseParams, status: 'published' }),
+        TaskService.getTasks({ ...baseParams, task_type: 'public' }),
+        TaskService.getTasks({ ...baseParams, task_type: 'class' })
+      ])
+
+      this.setData({
+        stats: {
+          total: totalRes.total || 0,
+          published: publishedRes.total || 0,
+          publicCount: publicRes.total || 0,
+          classCount: classRes.total || 0
+        }
+      })
+    } catch (error) {
+      console.error('[task-manage] loadStats error:', error)
+    }
   },
 
   parseSortValue(value) {
