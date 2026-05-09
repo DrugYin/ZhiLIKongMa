@@ -1,0 +1,156 @@
+/* pages/student/points-log/points-log.wxss */
+.container {
+  min-height: 100vh;
+  background: #f5f5f5;
+  display: flex;
+  flex-direction: column;
+}
+
+.header {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+/* 筛选栏 */
+.filter-bar {
+  display: flex;
+  align-items: center;
+  padding: 16rpx 24rpx;
+  background: #fff;
+  gap: 16rpx;
+}
+
+.filter-item {
+  padding: 12rpx 32rpx;
+  border-radius: 32rpx;
+  font-size: 28rpx;
+  color: #666;
+  background: #f5f5f5;
+  transition: all 0.2s;
+}
+
+.filter-item-active {
+  color: #fff;
+  background: #1890ff;
+}
+
+/* 列表容器 */
+.list-container {
+  flex: 1;
+  height: calc(100vh - 200rpx);
+}
+
+.list-content {
+  padding: 16rpx 24rpx;
+}
+
+/* 列表项 */
+.log-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 24rpx;
+  margin-bottom: 16rpx;
+  background: #fff;
+  border-radius: 12rpx;
+}
+
+.log-left {
+  display: flex;
+  align-items: center;
+  gap: 20rpx;
+  flex: 1;
+}
+
+.log-icon {
+  width: 72rpx;
+  height: 72rpx;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 32rpx;
+  font-weight: bold;
+  color: #fff;
+}
+
+.log-icon-income {
+  background: linear-gradient(135deg, #52c41a, #73d13d);
+}
+
+.log-icon-expense {
+  background: linear-gradient(135deg, #ff4d4f, #ff7875);
+}
+
+.log-info {
+  display: flex;
+  flex-direction: column;
+  gap: 8rpx;
+  flex: 1;
+}
+
+.log-source {
+  font-size: 30rpx;
+  color: #333;
+  font-weight: 500;
+}
+
+.log-time {
+  font-size: 24rpx;
+  color: #999;
+}
+
+.log-right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 8rpx;
+}
+
+.log-amount {
+  font-size: 36rpx;
+  font-weight: bold;
+}
+
+.amount-income {
+  color: #52c41a;
+}
+
+.amount-expense {
+  color: #ff4d4f;
+}
+
+.log-balance {
+  font-size: 24rpx;
+  color: #999;
+}
+
+/* 空状态 */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 120rpx 0;
+}
+
+.empty-text {
+  font-size: 28rpx;
+  color: #999;
+}
+
+/* 加载状态 */
+.loading-state,
+.no-more-state {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 32rpx 0;
+}
+
+.loading-text,
+.no-more-text {
+  font-size: 24rpx;
+  color: #999;
+}

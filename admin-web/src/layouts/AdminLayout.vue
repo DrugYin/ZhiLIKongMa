@@ -61,6 +61,7 @@ const menus = [
   { path: '/rankings', label: '排行榜' },
   { path: '/announcements', label: '公告管理' },
   { path: '/submissions', label: '提交记录' },
+  { path: '/points-log', label: '积分明细' },
   { path: '/logs', label: '操作日志' }
 ];
 

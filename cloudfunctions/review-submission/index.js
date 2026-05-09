@@ -2,6 +2,7 @@ const cloud = require('wx-server-sdk')
 const { verifyTeacherRole } = require('/opt/auth')
 const { writeOperationLog } = require('/opt/operation-log')
 const { createSystemNotification, safeCreateNotification } = require('/opt/notification')
+const { addPointsLog, POINTS_SOURCE, POINTS_TYPE } = require('/opt/points-log')
 
 cloud.init({
   env: cloud.DYNAMIC_CURRENT_ENV
@@ -206,6 +207,28 @@ exports.main = async (event) => {
           update_time: now
         }
       })
+
+      // 记录积分变动日志（先更新后读取，避免竞态条件）
+      try {
+        const userRes = await db.collection('users').where({
+          _openid: submissionInfo.student_openid
+        }).get()
+        const afterPoints = userRes.data.length > 0 ? (userRes.data[0].points || 0) : 0
+
+        await addPointsLog(db, {
+          user_openid: submissionInfo.student_openid,
+          type: POINTS_TYPE.INCOME,
+          amount: pointsEarned,
+          before_points: afterPoints - pointsEarned,
+          after_points: afterPoints,
+          source: POINTS_SOURCE.TASK_REWARD,
+          source_id: submissionId,
+          remark: `任务审核通过奖励：${taskInfo.title || '未命名任务'}`,
+          operator_openid: OPENID
+        })
+      } catch (pointsLogError) {
+        console.error('[review-submission] 记录积分变动日志失败:', pointsLogError)
+      }
     }
 
     await writeOperationLog(db, {
