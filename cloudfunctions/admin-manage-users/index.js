@@ -6,6 +6,7 @@
 const cloud = require('wx-server-sdk')
 const tcb = require('@cloudbase/node-sdk')
 const { writeAdminOperationLog } = require('/opt/admin-operation-log')
+const { addPointsLog, POINTS_SOURCE, POINTS_TYPE } = require('/opt/points-log')
 
 cloud.init({
   env: cloud.DYNAMIC_CURRENT_ENV
@@ -347,6 +348,26 @@ async function updateUser(event = {}, admin) {
   await db.collection(COLLECTION_NAME).doc(current._id).update({
     data: payload
   })
+
+  // 记录积分变动日志
+  const pointsDelta = payload.points - (current.points || 0)
+  if (pointsDelta !== 0) {
+    try {
+      await addPointsLog(db, {
+        user_openid: current._openid,
+        type: pointsDelta > 0 ? POINTS_TYPE.INCOME : POINTS_TYPE.EXPENSE,
+        amount: Math.abs(pointsDelta),
+        before_points: current.points || 0,
+        after_points: payload.points,
+        source: POINTS_SOURCE.ADMIN_ADJUST,
+        source_id: current._id,
+        remark: `管理员修改积分：${current.points || 0} → ${payload.points}`,
+        operator_openid: admin.uid
+      })
+    } catch (pointsLogError) {
+      console.error('[admin-manage-users] 记录积分变动日志失败:', pointsLogError)
+    }
+  }
 
   await writeOperationLog('update', {
     _id: current._id,

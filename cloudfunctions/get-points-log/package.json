@@ -1,0 +1,10 @@
+{
+  "name": "get-points-log",
+  "version": "1.0.0",
+  "description": "积分变动明细查询云函数",
+  "main": "index.js",
+  "dependencies": {
+    "@cloudbase/node-sdk": "^3.12.0",
+    "wx-server-sdk": "~2.6.3"
+  }
+}

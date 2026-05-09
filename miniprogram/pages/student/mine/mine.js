@@ -32,6 +32,11 @@ Page({
         desc: '统一查看任务提交、审核状态和历史反馈'
       },
       {
+        key: 'points',
+        title: '积分明细',
+        desc: '查看积分变动记录和历史明细'
+      },
+      {
         key: 'announcement',
         title: '通知中心',
         desc: '查看系统通知、学习安排和功能更新'
@@ -100,6 +105,11 @@ Page({
       return
     }
 
+    if (key === 'points') {
+      this.goToPointsLog()
+      return
+    }
+
     if (key === 'announcement') {
       this.goToAnnouncements()
     }
@@ -108,6 +118,12 @@ Page({
   goToSubmissionRecords() {
     wx.navigateTo({
       url: '/pages/student/task-manage/submission-records/submission-records'
+    })
+  },
+
+  goToPointsLog() {
+    wx.navigateTo({
+      url: '/pages/student/points-log/points-log'
     })
   },
 

@@ -6,6 +6,7 @@
 const cloud = require('wx-server-sdk')
 const tcb = require('@cloudbase/node-sdk')
 const { writeAdminOperationLog } = require('/opt/admin-operation-log')
+const { addPointsLog, POINTS_SOURCE, POINTS_TYPE } = require('/opt/points-log')
 
 cloud.init({
   env: cloud.DYNAMIC_CURRENT_ENV
@@ -465,6 +466,35 @@ async function reviewSubmission(event = {}, admin) {
   })
 
   await adjustStudentPoints(normalizedCurrent.student_openid, pointDelta, now)
+
+  // 记录积分变动日志
+  if (pointDelta !== 0) {
+    try {
+      // 获取用户当前积分
+      const userRes = await db.collection(USER_COLLECTION).where({
+        _openid: normalizedCurrent.student_openid
+      }).get()
+      const currentPoints = userRes.data.length > 0 ? (userRes.data[0].points || 0) : 0
+      const beforePoints = currentPoints - pointDelta
+
+      await addPointsLog(db, {
+        user_openid: normalizedCurrent.student_openid,
+        type: pointDelta > 0 ? POINTS_TYPE.INCOME : POINTS_TYPE.EXPENSE,
+        amount: Math.abs(pointDelta),
+        before_points: beforePoints,
+        after_points: currentPoints,
+        source: pointDelta > 0 ? POINTS_SOURCE.ADMIN_GRANT : POINTS_SOURCE.ROLLBACK,
+        source_id: submissionId,
+        remark: pointDelta > 0
+          ? `管理员审核通过奖励：${normalizedCurrent.task_title || '未命名任务'}`
+          : `积分回滚：${normalizedCurrent.task_title || '未命名任务'}`,
+        operator_openid: admin.uid
+      })
+    } catch (pointsLogError) {
+      console.error('[admin-manage-submissions] 记录积分变动日志失败:', pointsLogError)
+    }
+  }
+
   await writeOperationLog('review', {
     ...nextSubmission,
     _id: submissionId
