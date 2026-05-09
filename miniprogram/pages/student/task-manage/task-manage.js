@@ -323,7 +323,8 @@ Page({
     try {
       const baseParams = {
         page: 1,
-        page_size: 1
+        page_size: 1,
+        count_only: true
       }
 
       if (this.data.filterClassId) {

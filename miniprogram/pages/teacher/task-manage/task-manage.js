@@ -307,7 +307,8 @@ Page({
       const baseParams = {
         role: 'teacher',
         page: 1,
-        page_size: 1
+        page_size: 1,
+        count_only: true
       }
 
       const [totalRes, publishedRes, publicRes, classRes] = await Promise.all([
