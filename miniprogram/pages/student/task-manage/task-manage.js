@@ -321,10 +321,17 @@ Page({
   },
 
   onScroll(e) {
-    this.setData({ scrollTop: e.detail.scrollTop })
+    if (this._scrollTimer) return
+    const scrollTop = e.detail.scrollTop
+    this._scrollTimer = setTimeout(() => {
+      this._scrollTimer = null
+      this.setData({ scrollTop })
+    }, 100)
   },
 
   onBackToTop() {
+    clearTimeout(this._scrollTimer)
+    this._scrollTimer = null
     this.setData({ scrollTop: 1 }, () => {
       setTimeout(() => this.setData({ scrollTop: 0 }), 20)
     })

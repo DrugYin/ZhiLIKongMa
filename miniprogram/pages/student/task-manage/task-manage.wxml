@@ -200,8 +200,9 @@
       </view>
     </block>
 
-    <back-top scroll-top="{{scrollTop}}" text="顶部" bind:to-top="onBackToTop" />
   </scroll-view>
+
+  <back-top scroll-top="{{scrollTop}}" text="顶部" bind:to-top="onBackToTop" />
 
   <view wx:if="{{isLoggedIn && !loading}}">
     <t-tab-bar

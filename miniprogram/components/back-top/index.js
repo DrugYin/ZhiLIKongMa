@@ -16,17 +16,29 @@ Component({
 
   data: {
     visible: false,
-    x: 630,
-    y: 1100,
-    lastX: 630,
-    lastY: 1100,
+    x: -1,
+    y: -1,
+    lastX: -1,
+    lastY: -1,
     moved: false,
     DRAG_THRESHOLD: 5
   },
 
   observers: {
     scrollTop(val) {
-      this.setData({ visible: val >= this.data.visibilityHeight })
+      const visible = val >= this.data.visibilityHeight
+      if (visible !== this.data.visible) {
+        this.setData({ visible })
+      }
+    }
+  },
+
+  lifetimes: {
+    attached() {
+      const { windowWidth, windowHeight } = wx.getSystemInfoSync()
+      const x = windowWidth - 60
+      const y = windowHeight - 200
+      this.setData({ x, y, lastX: x, lastY: y })
     }
   },
 
@@ -43,7 +55,7 @@ Component({
         if (dx > this.data.DRAG_THRESHOLD || dy > this.data.DRAG_THRESHOLD) {
           this.setData({ moved: true })
         }
-        this.setData({ x, y, lastX: x, lastY: y })
+        this.setData({ lastX: x, lastY: y })
       }
     },
 

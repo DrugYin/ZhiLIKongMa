@@ -227,8 +227,9 @@
       <text class="state-desc">{{emptyText}}</text>
     </view>
 
-    <back-top scroll-top="{{scrollTop}}" text="顶部" bind:to-top="onBackToTop" />
   </scroll-view>
+
+  <back-top scroll-top="{{scrollTop}}" text="顶部" bind:to-top="onBackToTop" />
 </view>
 
 <t-fab

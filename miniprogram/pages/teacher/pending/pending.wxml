@@ -247,11 +247,11 @@
       </view>
     </view>
 
-    <back-top scroll-top="{{scrollTop}}" text="顶部" bind:to-top="onBackToTop" />
-
     <view class="footer-placeholder"></view>
     </block>
   </scroll-view>
+
+  <back-top scroll-top="{{scrollTop}}" text="顶部" bind:to-top="onBackToTop" />
 
   <t-popup
     visible="{{popupVisible}}"
