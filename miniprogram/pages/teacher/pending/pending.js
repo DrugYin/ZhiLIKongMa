@@ -112,7 +112,14 @@ Page({
       feedback: ''
     },
     reviewingApplicationId: '',
-    reviewAction: ''
+    reviewAction: '',
+    page: 1,
+    pageSize: 20,
+    hasMore: true,
+    loadingMore: false,
+    teacherClasses: [],
+    totalSubmissionsFromBackend: 0,
+    totalApplicationsFromBackend: 0
   },
 
   onLoad(options = {}) {
@@ -155,26 +162,22 @@ Page({
     })
 
     try {
-      const [submissionRecords, applicationRecords] = await Promise.all([
-        this.loadAllSubmissions(),
-        this.loadAllClassApplications()
-      ])
-      const records = submissionRecords
-        .concat(applicationRecords)
-        .sort((left, right) => Number(right.sortTimestamp || 0) - Number(left.sortTimestamp || 0))
-      const classes = Array.from(new Set(records.map((item) => item.className).filter(Boolean)))
+      const teacherClasses = await this.loadTeacherClasses()
+      const classNames = teacherClasses
+        .map((c) => c.class_name)
+        .filter(Boolean)
+      const classOptions = [{ value: 'all', label: '全部班级' }]
+        .concat([...new Set(classNames)].map((name) => ({ value: name, label: name })))
 
       this.setData({
-        records,
-        classOptions: [{ value: 'all', label: '全部班级' }].concat(
-          classes.map((item) => ({
-            value: item,
-            label: item
-          }))
-        )
+        teacherClasses,
+        classOptions,
+        page: 1,
+        hasMore: true,
+        records: []
       })
 
-      this.applyFilters()
+      await this.loadNextPage()
       this.applyRouteHint()
       this._pageReady = true
     } catch (error) {
@@ -193,25 +196,95 @@ Page({
     }
   },
 
-  async loadAllSubmissions() {
-    const result = []
-    let page = 1
-    let hasMore = true
+  async loadNextPage() {
+    if (this.data.loadingMore) return
+    if (!this.data.hasMore) return
 
-    while (hasMore) {
-      const response = await TaskService.getSubmissions({
+    this.setData({ loadingMore: true })
+
+    try {
+      const promises = []
+
+      const subParams = {
         role: 'teacher',
-        page,
-        page_size: 50
+        page: this.data.page,
+        page_size: this.data.pageSize
+      }
+
+      promises.push(
+        TaskService.getSubmissions(subParams)
+          .then((r) => ({ type: 'submissions', list: r.list || [], has_more: Boolean(r.has_more), total: r.total || 0 }))
+          .catch((e) => {
+            console.error('[pending] submissions error:', e)
+            return { type: 'submissions', list: [], has_more: false, total: 0 }
+          })
+      )
+
+      const appPromises = this.data.teacherClasses.map((classInfo) => {
+        return ClassService.getClassApplications({
+          class_id: classInfo._id,
+          status: 'all',
+          page: this.data.page,
+          page_size: this.data.pageSize
+        })
+          .then((r) => ({
+            classId: classInfo._id,
+            className: classInfo.class_name,
+            list: (r.list || []).map((item) => this.formatApplicationRecord(item, classInfo)),
+            has_more: Boolean(r.has_more),
+            total: r.total || 0
+          }))
+          .catch((e) => {
+            console.error(`[pending] applications error for class ${classInfo._id}:`, e)
+            return { classId: classInfo._id, className: classInfo.class_name, list: [], has_more: false, total: 0 }
+          })
       })
-      const list = Array.isArray(response.list) ? response.list : []
 
-      result.push(...list.map((item) => this.formatRecord(item)))
-      hasMore = Boolean(response.has_more)
-      page += 1
+      promises.push(
+        Promise.all(appPromises).then((results) => ({ type: 'applications', results }))
+      )
+
+      const [subResult, appResult] = await Promise.all(promises)
+
+      const newSubmissions = subResult.list.map((item) => this.formatRecord(item))
+
+      const newApplications = []
+      let anyAppHasMore = false
+      let totalApplicationsFromBackend = 0
+
+      if (appResult.results) {
+        appResult.results.forEach(({ list, has_more, total }) => {
+          newApplications.push(...list)
+          if (has_more) anyAppHasMore = true
+          totalApplicationsFromBackend += total
+        })
+      }
+
+      const existingIds = new Set(this.data.records.map((r) => r.id))
+      const combined = [...newSubmissions, ...newApplications]
+        .filter((r) => !existingIds.has(r.id))
+        .sort((a, b) => Number(b.sortTimestamp || 0) - Number(a.sortTimestamp || 0))
+
+      const nextHasMore = subResult.has_more || anyAppHasMore
+      const totalSubmissionsFromBackend = this.data.page === 1 ? subResult.total : this.data.totalSubmissionsFromBackend
+
+      this.setData({
+        records: [...this.data.records, ...combined],
+        page: this.data.page + 1,
+        hasMore: nextHasMore,
+        totalSubmissionsFromBackend,
+        totalApplicationsFromBackend: this.data.page === 1 ? totalApplicationsFromBackend : this.data.totalApplicationsFromBackend
+      })
+      this.applyFilters()
+    } catch (error) {
+      console.error('[teacher-pending] loadNextPage error:', error)
+    } finally {
+      this.setData({ loadingMore: false })
     }
+  },
 
-    return result
+  onScrollToLower() {
+    this.loadNextPage()
   },
 
   async loadTeacherClasses() {
@@ -232,33 +305,6 @@ Page({
       result.push(...list)
       hasMore = Boolean(response.has_more)
       page += 1
-    }
-
-    return result
-  },
-
-  async loadAllClassApplications() {
-    const classes = await this.loadTeacherClasses()
-    const result = []
-
-    for (let index = 0; index < classes.length; index += 1) {
-      const classInfo = classes[index]
-      let page = 1
-      let hasMore = true
-
-      while (hasMore) {
-        const response = await ClassService.getClassApplications({
-          class_id: classInfo._id,
-          status: 'all',
-          page,
-          page_size: 50
-        })
-        const list = Array.isArray(response.list) ? response.list : []
-
-        result.push(...list.map((item) => this.formatApplicationRecord(item, classInfo)))
-        hasMore = Boolean(response.has_more)
-        page += 1
-      }
     }
 
     return result
@@ -366,10 +412,12 @@ Page({
       return matchedType && matchedStatus && matchedClass
     })
 
+    const totalFromBackend = (this.data.totalSubmissionsFromBackend || 0) + (this.data.totalApplicationsFromBackend || 0)
+
     this.setData({
       displayRecords,
       stats: {
-        total: records.length,
+        total: totalFromBackend || records.length,
         pending: records.filter((item) => item.status === 'pending').length,
         taskPending: submissionRecords.filter((item) => item.status === 'pending').length,
         joinPending: applicationRecords.filter((item) => item.status === 'pending').length,
@@ -461,7 +509,7 @@ Page({
         statusFilter: value
       },
       () => {
-        this.applyFilters()
+        this.initPage({ silent: true })
       }
     )
   },
@@ -473,7 +521,7 @@ Page({
         typeFilter: value
       },
       () => {
-        this.applyFilters()
+        this.initPage({ silent: true })
       }
     )
   },
@@ -485,7 +533,7 @@ Page({
         classFilter: value
       },
       () => {
-        this.applyFilters()
+        this.initPage({ silent: true })
       }
     )
   },

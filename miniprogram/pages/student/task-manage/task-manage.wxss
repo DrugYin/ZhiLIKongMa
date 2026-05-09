@@ -226,3 +226,17 @@
   margin-bottom: 0;
   box-shadow: 0 16rpx 40rpx rgba(24, 62, 107, 0.12);
 }
+
+.loading-more,
+.no-more {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 32rpx 0;
+}
+
+.loading-more-text,
+.no-more-text {
+  color: #97a3b7;
+  font-size: 24rpx;
+}
