@@ -74,27 +74,24 @@ Page({
     }
 
     try {
-      const requestParams = {
+      const requestParams = this.buildSubmissionParams({
         page: 1,
         page_size: this.data.pageSize
-      }
+      })
 
-      if (this.data.taskId) {
-        requestParams.task_id = this.data.taskId
-      }
-
-      const [taskInfo, submissionRes] = await Promise.all([
+      const [taskInfo, submissionRes, stats] = await Promise.all([
         this.data.taskId ? TaskService.getTaskDetail(this.data.taskId) : Promise.resolve(null),
-        TaskService.getSubmissions(requestParams)
+        TaskService.getSubmissions(requestParams),
+        this.loadStats()
       ])
 
       const records = this.formatSubmissionList(submissionRes.list)
       this.setData({
         taskInfo: taskInfo ? this.formatTaskInfo(taskInfo) : null,
         records,
-        total: Number(submissionRes.total || 0),
+        total: stats.total,
         hasMore: Boolean(submissionRes.has_more),
-        stats: this.buildStats(records, Number(submissionRes.total || 0))
+        stats
       })
       this._pageReady = true
     } catch (error) {
@@ -162,12 +159,35 @@ Page({
     }
   },
 
-  buildStats(records = [], total = 0) {
+  buildSubmissionParams(extra = {}) {
+    const params = { ...extra }
+
+    if (this.data.taskId) {
+      params.task_id = this.data.taskId
+    }
+
+    return params
+  },
+
+  async loadStats() {
+    const baseParams = this.buildSubmissionParams({
+      page: 1,
+      page_size: 1,
+      count_only: true
+    })
+
+    const [totalRes, pendingRes, approvedRes, rejectedRes] = await Promise.all([
+      TaskService.getSubmissions({ ...baseParams }),
+      TaskService.getSubmissions({ ...baseParams, status: 'pending' }),
+      TaskService.getSubmissions({ ...baseParams, status: 'approved' }),
+      TaskService.getSubmissions({ ...baseParams, status: 'rejected' })
+    ])
+
     return {
-      total,
-      pending: records.filter((item) => item.status === 'pending').length,
-      approved: records.filter((item) => item.status === 'approved').length,
-      rejected: records.filter((item) => item.status === 'rejected').length
+      total: Number(totalRes.total || 0),
+      pending: Number(pendingRes.total || 0),
+      approved: Number(approvedRes.total || 0),
+      rejected: Number(rejectedRes.total || 0)
     }
   },
 
@@ -204,14 +224,10 @@ Page({
     })
 
     try {
-      const requestParams = {
+      const requestParams = this.buildSubmissionParams({
         page: nextPage,
         page_size: this.data.pageSize
-      }
-
-      if (this.data.taskId) {
-        requestParams.task_id = this.data.taskId
-      }
+      })
 
       const submissionRes = await TaskService.getSubmissions(requestParams)
       const records = this.data.records.concat(this.formatSubmissionList(submissionRes.list))
@@ -220,8 +236,7 @@ Page({
         page: nextPage,
         records,
         total: Number(submissionRes.total || 0),
-        hasMore: Boolean(submissionRes.has_more),
-        stats: this.buildStats(records, Number(submissionRes.total || 0))
+        hasMore: Boolean(submissionRes.has_more)
       })
     } catch (error) {
       console.error('[submission-records] onLoadMore error:', error)

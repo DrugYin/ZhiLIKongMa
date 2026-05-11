@@ -342,10 +342,11 @@ Page({
         baseParams.class_id = this.data.filterClassId
       }
 
-      const [totalRes, classRes, publicRes] = await Promise.all([
+      const [totalRes, classRes, publicRes, deadlineSoonCount] = await Promise.all([
         TaskService.getTasks({ ...baseParams }),
         TaskService.getTasks({ ...baseParams, task_type: 'class' }),
-        TaskService.getTasks({ ...baseParams, visibility: 'public' })
+        TaskService.getTasks({ ...baseParams, visibility: 'public' }),
+        this.loadDeadlineSoonCount()
       ])
 
       this.setData({
@@ -353,12 +354,40 @@ Page({
           ...this.data.stats,
           total: totalRes.total || 0,
           myClassCount: classRes.total || 0,
-          publicCount: publicRes.total || 0
+          publicCount: publicRes.total || 0,
+          deadlineSoonCount
         }
       })
     } catch (error) {
       console.error('[student-task-manage] loadStats error:', error)
     }
+  },
+
+  async loadDeadlineSoonCount() {
+    let page = 1
+    let hasMore = true
+    let deadlineSoonCount = 0
+
+    while (hasMore) {
+      const params = {
+        page,
+        page_size: 50,
+        sort_by: 'deadline',
+        sort_order: 'asc'
+      }
+
+      if (this.data.filterClassId) {
+        params.class_id = this.data.filterClassId
+      }
+
+      const response = await TaskService.getTasks(params)
+      const list = Array.isArray(response.list) ? response.list : []
+      deadlineSoonCount += list.filter((item) => this.isDeadlineSoon(item)).length
+      hasMore = Boolean(response.has_more)
+      page += 1
+    }
+
+    return deadlineSoonCount
   },
 
   buildClassOptions(joinedClasses = []) {
@@ -465,10 +494,6 @@ Page({
 
     this.setData({
       displayTasks,
-      stats: {
-        ...this.data.stats,
-        deadlineSoonCount: displayTasks.filter((item) => item.deadlineSoon).length
-      },
       emptyText: this.getEmptyText(currentTab, {
         projectCode,
         taskTypeValue,
