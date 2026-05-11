@@ -351,18 +351,42 @@ Page({
         }).then((r) => r.total || 0).catch(() => 0)
       })
 
+      const approvedAppPromises = this.data.teacherClasses.map((classInfo) => {
+        return ClassService.getClassApplications({
+          class_id: classInfo._id,
+          status: 'approved',
+          page: 1,
+          page_size: 1,
+          count_only: true
+        }).then((r) => r.total || 0).catch(() => 0)
+      })
+
+      const rejectedAppPromises = this.data.teacherClasses.map((classInfo) => {
+        return ClassService.getClassApplications({
+          class_id: classInfo._id,
+          status: 'rejected',
+          page: 1,
+          page_size: 1,
+          count_only: true
+        }).then((r) => r.total || 0).catch(() => 0)
+      })
+
       const [totalSubRes, pendingSubRes, approvedSubRes, rejectedSubRes, ...appCounts] = await Promise.all([
         TaskService.getSubmissions({ ...submissionParams }),
         TaskService.getSubmissions({ ...submissionParams, status: 'pending' }),
         TaskService.getSubmissions({ ...submissionParams, status: 'approved' }),
         TaskService.getSubmissions({ ...submissionParams, status: 'rejected' }),
         ...allAppPromises,
-        ...pendingAppPromises
+        ...pendingAppPromises,
+        ...approvedAppPromises,
+        ...rejectedAppPromises
       ])
 
       const classCount = this.data.teacherClasses.length
       const totalApplications = appCounts.slice(0, classCount).reduce((sum, count) => sum + count, 0)
-      const pendingApplications = appCounts.slice(classCount).reduce((sum, count) => sum + count, 0)
+      const pendingApplications = appCounts.slice(classCount, classCount * 2).reduce((sum, count) => sum + count, 0)
+      const approvedApplications = appCounts.slice(classCount * 2, classCount * 3).reduce((sum, count) => sum + count, 0)
+      const rejectedApplications = appCounts.slice(classCount * 3).reduce((sum, count) => sum + count, 0)
 
       this.setData({
         totalSubmissionsFromBackend: totalSubRes.total || 0,
@@ -373,8 +397,8 @@ Page({
           pending: (pendingSubRes.total || 0) + pendingApplications,
           taskPending: pendingSubRes.total || 0,
           joinPending: pendingApplications,
-          approved: approvedSubRes.total || 0,
-          rejected: rejectedSubRes.total || 0
+          approved: (approvedSubRes.total || 0) + approvedApplications,
+          rejected: (rejectedSubRes.total || 0) + rejectedApplications
         }
       })
     } catch (error) {
