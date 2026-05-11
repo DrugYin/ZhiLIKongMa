@@ -351,7 +351,7 @@ Page({
         }).then((r) => r.total || 0).catch(() => 0)
       })
 
-      const [totalSubRes, pendingSubRes, approvedSubRes, rejectedSubRes, ...restCounts] = await Promise.all([
+      const [totalSubRes, pendingSubRes, approvedSubRes, rejectedSubRes, ...appCounts] = await Promise.all([
         TaskService.getSubmissions({ ...submissionParams }),
         TaskService.getSubmissions({ ...submissionParams, status: 'pending' }),
         TaskService.getSubmissions({ ...submissionParams, status: 'approved' }),
@@ -361,8 +361,8 @@ Page({
       ])
 
       const classCount = this.data.teacherClasses.length
-      const totalApplications = restCounts.slice(0, classCount).reduce((sum, count) => sum + count, 0)
-      const pendingApplications = restCounts.slice(classCount).reduce((sum, count) => sum + count, 0)
+      const totalApplications = appCounts.slice(0, classCount).reduce((sum, count) => sum + count, 0)
+      const pendingApplications = appCounts.slice(classCount).reduce((sum, count) => sum + count, 0)
 
       this.setData({
         totalSubmissionsFromBackend: totalSubRes.total || 0,
@@ -471,8 +471,6 @@ Page({
 
   applyFilters() {
     const { records, typeFilter, statusFilter, classFilter } = this.data
-    const submissionRecords = records.filter((item) => item.recordType === 'submission')
-    const applicationRecords = records.filter((item) => item.recordType === 'application')
     const displayRecords = records.filter((item) => {
       const matchedType = typeFilter === 'all' ? true : item.recordType === typeFilter
       const matchedStatus = statusFilter === 'all'
@@ -483,8 +481,6 @@ Page({
       const matchedClass = classFilter === 'all' ? true : item.className === classFilter
       return matchedType && matchedStatus && matchedClass
     })
-
-    const totalFromBackend = (this.data.totalSubmissionsFromBackend || 0) + (this.data.totalApplicationsFromBackend || 0)
 
     this.setData({
       displayRecords
