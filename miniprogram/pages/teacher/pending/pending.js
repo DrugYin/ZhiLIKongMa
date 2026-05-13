@@ -162,9 +162,11 @@ Page({
       Toast.showLoading('审核记录加载中...')
     }
 
-    this.setData({
-      loading: true
-    })
+    if (!silent) {
+      this.setData({
+        loading: true
+      })
+    }
 
     try {
       const teacherClasses = await this.loadTeacherClasses()
