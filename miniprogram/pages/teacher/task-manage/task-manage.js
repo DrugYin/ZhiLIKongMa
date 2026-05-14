@@ -480,7 +480,7 @@ Page({
 
     this.setData(nextData, () => {
       this.loadTaskPage({ refresh: true, silent: true })
-      this.loadStats()
+      this.loadStats().catch(() => {})
     })
   },
 
