@@ -101,11 +101,11 @@ Page({
     },
     stats: {
       total: 0,
-    statsLoading: true,
       myClassCount: 0,
       publicCount: 0,
       deadlineSoonCount: 0
     },
+    statsLoading: true,
     emptyText: '当前还没有可查看的任务',
     page: 1,
     pageSize: 20,
@@ -168,6 +168,7 @@ Page({
       this.setData({
         loading: false,
         isRegistered: false,
+        statsLoading: false,
         joinedClasses: [],
         joinedClassIds: [],
         tasks: [],
@@ -595,7 +596,7 @@ Page({
       currentTab: e.detail.value
     }, () => {
       this.loadTaskPage({ refresh: true })
-      this.loadStats()
+      this.loadStats().catch(() => {})
     })
   },
 
@@ -617,7 +618,7 @@ Page({
 
     this.setData(nextData, () => {
       this.loadTaskPage({ refresh: true })
-      this.loadStats()
+      this.loadStats().catch(() => {})
     })
   },
 

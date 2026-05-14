@@ -437,9 +437,21 @@ Page({
         currentFilterTotal = subAll + appAll
       }
       if (statusFilter === 'pending') {
-        currentFilterTotal = (typeFilter === 'submission' ? subPending : typeFilter === 'application' ? appPending : subPending + appPending)
+        if (typeFilter === 'submission') {
+          currentFilterTotal = subPending
+        } else if (typeFilter === 'application') {
+          currentFilterTotal = appPending
+        } else {
+          currentFilterTotal = subPending + appPending
+        }
       } else if (statusFilter === 'processed') {
-        currentFilterTotal = (typeFilter === 'submission' ? subApproved + subRejected : typeFilter === 'application' ? appApproved + appRejected : subApproved + subRejected + appApproved + appRejected)
+        if (typeFilter === 'submission') {
+          currentFilterTotal = subApproved + subRejected
+        } else if (typeFilter === 'application') {
+          currentFilterTotal = appApproved + appRejected
+        } else {
+          currentFilterTotal = subApproved + subRejected + appApproved + appRejected
+        }
       }
 
       this.setData({
