@@ -493,3 +493,32 @@
 .popup-bottom-space {
   height: 32rpx;
 }
+
+.loading-more,
+.no-more {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 32rpx 0;
+}
+
+.loading-more-text,
+.no-more-text {
+  color: #97a3b7;
+  font-size: 24rpx;
+}
+
+/* 统计骨架加载动画 */
+.skeleton-block {
+  width: 80rpx;
+  height: 34rpx;
+  margin-top: 10rpx;
+  border-radius: 8rpx;
+  background: #e8edf2;
+  animation: skeleton-pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes skeleton-pulse {
+  0%, 100% { opacity: 0.4; }
+  50% { opacity: 0.8; }
+}

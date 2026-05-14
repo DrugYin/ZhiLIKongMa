@@ -1,7 +1,29 @@
-# CLAUDE.md
+# Project Instructions
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+This file provides context for AI assistants working on this project.
 
+## Project Type: Node.js
+
+### Commands
+- Install: `npm install`
+- Test: `npm test`
+- Build: `npm run build`
+- Start: `npm start`
+
+### Version Control
+This project uses Git. See .gitignore for excluded files.
+
+
+## Guidelines
+
+- Follow existing code style and patterns
+- Write tests for new functionality
+- Keep changes focused and atomic
+- Document public APIs
+
+## Important Notes
+
+<!-- Add project-specific notes here -->
 ## 项目概述
 
 智慧控码训练系统是一个基于微信小程序的教育培训管理平台，支持学生和教师两种角色，提供任务发布、作业提交、审核评分、积分奖励、排行榜等功能。
@@ -177,6 +199,12 @@ admin-web/src/
 - `projects` - 训练项目
 
 ## 开发规范
+
+### 版本控制
+
+- 在新增功能或修复bug时创建对应的分支
+- 在验证完代码正确性后询问我是否进行合并操作
+- 提交信息使用符合规范的简体中文内容
 
 ### 代码风格
 - 使用 ESLint 进行代码检查

@@ -190,7 +190,7 @@ async function ensureTaskBuffer(state, sortField, sortOrder, pageSize) {
   state.exhausted = state.buffer.length < pageSize || state.skip >= state.count;
 }
 
-async function getStudentTaskPage(queryConfigs, sortField, sortOrder, page, pageSize) {
+async function getStudentTaskPage(queryConfigs, sortField, sortOrder, page, pageSize, countOnly) {
   if (!queryConfigs.length) {
     return {
       list: [],
@@ -206,6 +206,14 @@ async function getStudentTaskPage(queryConfigs, sortField, sortOrder, page, page
     return {
       list: [],
       total: 0,
+      hasMore: false
+    };
+  }
+
+  if (countOnly) {
+    return {
+      list: [],
+      total,
       hasMore: false
     };
   }
@@ -274,6 +282,7 @@ exports.main = async (event) => {
     const classId = normalizeString(event.class_id);
     const sortField = normalizeSortField(event.sort_by);
     const sortOrder = normalizeSortOrder(event.sort_order);
+    const countOnly = event.count_only === true || event.count_only === 'true';
 
     if (requestedRole === 'teacher') {
       const teacher = await verifyTeacherRole(db, OPENID);
@@ -304,6 +313,17 @@ exports.main = async (event) => {
 
       const query = db.collection('tasks').where(queryData);
       const totalRes = await query.count();
+
+      if (countOnly) {
+        return success('获取任务列表成功', {
+          list: [],
+          page,
+          page_size: pageSize,
+          total: totalRes.total,
+          has_more: false
+        });
+      }
+
       const listRes = await query
         .orderBy(sortField, sortOrder)
         .skip((page - 1) * pageSize)
@@ -331,7 +351,8 @@ exports.main = async (event) => {
       sortField,
       sortOrder,
       page,
-      pageSize
+      pageSize,
+      countOnly
     );
     const list = studentTaskResult.list.filter((item) => canStudentAccessTask(item, joinedClassIds));
 

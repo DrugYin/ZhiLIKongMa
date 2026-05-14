@@ -4,6 +4,7 @@
  */
 
 const cloud = require('wx-server-sdk')
+const { addPointsLog, POINTS_SOURCE, POINTS_TYPE } = require('/opt/points-log')
 
 cloud.init({
   env: cloud.DYNAMIC_CURRENT_ENV
@@ -124,6 +125,25 @@ exports.main = async (event, context) => {
       })
     } catch (logError) {
       console.error('[register] 记录日志失败:', logError)
+    }
+
+    // 6. 记录积分变动日志
+    if (registerPoints > 0) {
+      try {
+        await addPointsLog(db, {
+          user_openid: OPENID,
+          type: POINTS_TYPE.INCOME,
+          amount: registerPoints,
+          before_points: 0,
+          after_points: registerPoints,
+          source: POINTS_SOURCE.REGISTER_GIFT,
+          source_id: result._id,
+          remark: '新用户注册赠送积分',
+          operator_openid: 'system'
+        })
+      } catch (pointsLogError) {
+        console.error('[register] 记录积分变动日志失败:', pointsLogError)
+      }
     }
 
     return {

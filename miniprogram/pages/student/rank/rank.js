@@ -4,6 +4,7 @@ const RankingService = require('../../../services/ranking')
 Page({
   data: {
     loading: true,
+    scrollTop: 0,
     isLoggedIn: false,
     errorText: '',
     rankType: 'week',
@@ -22,6 +23,10 @@ Page({
 
   onLoad() {
     this.loadRankData()
+    this._observer = this.createIntersectionObserver()
+    this._observer.relativeToViewport({ top: 0 }).observe('#back-top-sentinel', (res) => {
+      this.setData({ backTopVisible: res.intersectionRatio < 1 })
+    })
   },
 
   onTabsChange(e) {
@@ -49,6 +54,12 @@ Page({
 
   onPullDownRefresh() {
     this.loadRankData()
+  },
+
+  onBackToTop() {
+    this.setData({ scrollTop: 99999 }, () => {
+      this.setData({ scrollTop: 0 })
+    })
   },
 
   async loadRankData() {

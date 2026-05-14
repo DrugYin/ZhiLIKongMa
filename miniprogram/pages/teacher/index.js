@@ -56,11 +56,15 @@ Page({
     degradeNotice: ''
   },
 
-  onLoad() {
+  async onLoad() {
     const tabBar = this.getTabBar && this.getTabBar()
     if (tabBar) {
       tabBar.changeData({ type: 'teacher' })
     }
+
+    const app = getApp()
+    await app.awaitLogin()
+
     this.initPage()
   },
 

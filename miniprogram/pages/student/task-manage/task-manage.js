@@ -62,6 +62,7 @@ const DIFFICULTY_COLOR = {
 Page({
   data: {
     loading: true,
+    scrollTop: 0,
     isLoggedIn: false,
     isRegistered: false,
     pageTitle: '任务中心',
@@ -100,11 +101,17 @@ Page({
     },
     stats: {
       total: 0,
+    statsLoading: true,
       myClassCount: 0,
       publicCount: 0,
       deadlineSoonCount: 0
     },
-    emptyText: '当前还没有可查看的任务'
+    emptyText: '当前还没有可查看的任务',
+    page: 1,
+    pageSize: 20,
+    hasMore: true,
+    loadingMore: false,
+    totalFromBackend: 0
   },
 
   onLoad(options) {
@@ -129,16 +136,22 @@ Page({
     }
 
     this.initPage()
+    this._observer = this.createIntersectionObserver()
+    this._observer.relativeToViewport({ top: 0 }).observe('#back-top-sentinel', (res) => {
+      this.setData({ backTopVisible: res.intersectionRatio < 1 })
+    })
   },
 
   onShow() {
     if (this._pageReady) {
-      this.initPage({ silent: true })
+      this.loadTaskPage({ refresh: true })
     }
   },
 
   onPullDownRefresh() {
-    this.initPage({ refreshing: true })
+    this.loadTaskPage({ refresh: true }).then(() => {
+      wx.stopPullDownRefresh()
+    })
   },
 
   async initPage({ refreshing = false, silent = false } = {}) {
@@ -180,7 +193,6 @@ Page({
         this.loadProjectOptions(),
         this.loadClassStatus()
       ])
-      const tasks = await this.loadTasks(classStatus.joinedClassIds)
       const classOptions = this.buildClassOptions(classStatus.joinedClasses)
       const nextClassValue = this.getAvailableClassFilterValue(classOptions)
 
@@ -188,12 +200,12 @@ Page({
         isRegistered: classStatus.isRegistered,
         joinedClasses: classStatus.joinedClasses,
         joinedClassIds: classStatus.joinedClassIds,
-        tasks,
         'projects.options': DEFAULT_PROJECT_OPTIONS.concat(projectOptions),
         'classes.options': classOptions,
         'classes.value': nextClassValue
       })
-      this.applyFilters()
+      await this.loadTaskPage({ refresh: true })
+      this.loadStats()
       this._pageReady = true
     } catch (error) {
       console.error('[student-task-manage] initPage error:', error)
@@ -246,28 +258,158 @@ Page({
     }
   },
 
-  async loadTasks(joinedClassIds = []) {
+  async loadTaskPage({ refresh = false } = {}) {
+    if (this.data.loadingMore) return
+    if (!refresh && !this.data.hasMore) return
+
+    if (refresh) {
+      this.setData({ page: 1, hasMore: true, tasks: [] })
+    }
+
+    this.setData({ loadingMore: true })
+
+    try {
+      const { sortBy, sortOrder } = this.parseSortValue(this.data.sorted.value)
+      const taskTypeValue = this.data.taskTypes.value
+      const visibilityValue = this.data.visibility.value
+      const classValue = this.data.classes.value
+
+      const params = {
+        page: this.data.page,
+        page_size: this.data.pageSize,
+        sort_by: sortBy,
+        sort_order: sortOrder
+      }
+
+      if (this.data.currentTab === 'mine') {
+        params.task_type = 'class'
+      } else {
+        if (this.data.filterClassId) {
+          params.class_id = this.data.filterClassId
+        } else if (taskTypeValue === 'class' && classValue !== 'all') {
+          params.class_id = classValue
+        }
+        if (taskTypeValue !== 'all' && taskTypeValue !== 'class') {
+          params.task_type = taskTypeValue
+        }
+        if (taskTypeValue === 'class') {
+          params.task_type = 'class'
+        }
+      }
+      if (visibilityValue !== 'all') {
+        params.visibility = visibilityValue
+      }
+
+      const response = await TaskService.getTasks(params)
+      const list = Array.isArray(response.list) ? response.list : []
+      const formattedNew = list.map((item) => this.formatTaskItem(item, this.data.joinedClassIds))
+
+      const newTasks = refresh ? formattedNew : [...this.data.tasks, ...formattedNew]
+      const nextHasMore = Boolean(response.has_more)
+      const totalFromBackend = refresh ? (response.total || 0) : this.data.totalFromBackend
+
+      this.setData({
+        tasks: newTasks,
+        page: this.data.page + 1,
+        hasMore: nextHasMore,
+        totalFromBackend
+      })
+      this.applyFilters()
+    } catch (error) {
+      console.error('[student-task-manage] loadTaskPage error:', error)
+      if (refresh) {
+        Toast.showToast(error.message || '任务列表加载失败')
+      }
+    } finally {
+      this.setData({ loadingMore: false })
+    }
+  },
+
+  onScrollToLower() {
+    this.loadTaskPage()
+  },
+
+  onBackToTop() {
+    this.setData({ scrollTop: 99999 }, () => {
+      this.setData({ scrollTop: 0 })
+    })
+  },
+
+  async loadStats() {
+    try {
+      const taskTypeValue = this.data.taskTypes.value
+      const visibilityValue = this.data.visibility.value
+      const classValue = this.data.classes.value
+
+      const baseParams = {
+        page: 1,
+        page_size: 1,
+        count_only: true
+      }
+
+      if (this.data.filterClassId) {
+        baseParams.class_id = this.data.filterClassId
+      }
+
+      if (this.data.currentTab === 'mine') {
+        baseParams.task_type = 'class'
+      } else if (taskTypeValue !== 'all') {
+        baseParams.task_type = taskTypeValue
+      }
+      if (visibilityValue !== 'all') {
+        baseParams.visibility = visibilityValue
+      }
+      if (taskTypeValue === 'class' && classValue !== 'all' && !this.data.filterClassId) {
+        baseParams.class_id = classValue
+      }
+
+      const [totalRes, classRes, publicRes, deadlineSoonCount] = await Promise.all([
+        TaskService.getTasks({ ...baseParams }),
+        TaskService.getTasks({ ...baseParams, task_type: 'class' }),
+        TaskService.getTasks({ ...baseParams, visibility: 'public' }),
+        this.loadDeadlineSoonCount()
+      ])
+
+      this.setData({
+        statsLoading: false,
+        stats: {
+          ...this.data.stats,
+          total: totalRes.total || 0,
+          myClassCount: classRes.total || 0,
+          publicCount: publicRes.total || 0,
+          deadlineSoonCount
+        }
+      })
+    } catch (error) {
+      console.error('[student-task-manage] loadStats error:', error)
+    }
+  },
+
+  async loadDeadlineSoonCount() {
     let page = 1
     let hasMore = true
-    const result = []
-    const maxPages = 5
+    let deadlineSoonCount = 0
 
-    while (hasMore && page <= maxPages) {
-      const response = await TaskService.getTasks({
+    while (hasMore) {
+      const params = {
         page,
         page_size: 50,
-        class_id: this.data.filterClassId || undefined,
-        sort_by: 'publish_time',
-        sort_order: 'desc'
-      })
+        sort_by: 'deadline',
+        sort_order: 'asc'
+      }
 
+      if (this.data.filterClassId) {
+        params.class_id = this.data.filterClassId
+      }
+
+      const response = await TaskService.getTasks(params)
       const list = Array.isArray(response.list) ? response.list : []
-      result.push(...list)
+      deadlineSoonCount += list.filter((item) => this.isDeadlineSoon(item)).length
       hasMore = Boolean(response.has_more)
       page += 1
     }
 
-    return result.map((item) => this.formatTaskItem(item, joinedClassIds))
+    return deadlineSoonCount
   },
 
   buildClassOptions(joinedClasses = []) {
@@ -372,11 +514,8 @@ Page({
       })
     }
 
-    displayTasks.sort((left, right) => this.compareTaskItem(left, right, sortBy, sortOrder))
-
     this.setData({
       displayTasks,
-      stats: this.buildStats(displayTasks),
       emptyText: this.getEmptyText(currentTab, {
         projectCode,
         taskTypeValue,
@@ -388,42 +527,11 @@ Page({
 
   buildStats(list = []) {
     return {
-      total: list.length,
+      total: this.data.totalFromBackend || list.length,
       myClassCount: list.filter((item) => item.isMyTask).length,
       publicCount: list.filter((item) => item.isPublicTask).length,
       deadlineSoonCount: list.filter((item) => item.deadlineSoon).length
     }
-  },
-
-  compareTaskItem(left, right, sortBy, sortOrder) {
-    const direction = sortOrder === 'asc' ? 1 : -1
-    const leftValue = this.getSortableValue(left, sortBy)
-    const rightValue = this.getSortableValue(right, sortBy)
-
-    if (leftValue === rightValue) {
-      return 0
-    }
-
-    return leftValue > rightValue ? direction : -direction
-  },
-
-  getSortableValue(item, sortBy) {
-    if (sortBy === 'difficulty' || sortBy === 'points') {
-      return Number(item[sortBy] || 0)
-    }
-
-    if (sortBy === 'deadline') {
-      const deadlineDate = taskDeadline.getTaskDeadlineDate(item)
-      return deadlineDate ? deadlineDate.getTime() : 0
-    }
-
-    const value = item[sortBy]
-    if (!value) {
-      return 0
-    }
-
-    const time = new Date(value).getTime()
-    return Number.isNaN(time) ? String(value) : time
   },
 
   getEmptyText(tab, filters = {}) {
@@ -486,7 +594,8 @@ Page({
     this.setData({
       currentTab: e.detail.value
     }, () => {
-      this.applyFilters()
+      this.loadTaskPage({ refresh: true })
+      this.loadStats()
     })
   },
 
@@ -507,7 +616,8 @@ Page({
     }
 
     this.setData(nextData, () => {
-      this.applyFilters()
+      this.loadTaskPage({ refresh: true })
+      this.loadStats()
     })
   },
 

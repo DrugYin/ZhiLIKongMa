@@ -81,6 +81,7 @@ const DIFFICULTY_COLOR = {
 Page({
   data: {
     loading: true,
+    scrollTop: 0,
     tasks: [],
     displayTasks: [],
     stats: {
@@ -113,11 +114,21 @@ Page({
     sorted: {
       value: 'update_time desc',
       options: DEFAULT_SORT_OPTIONS
-    }
+    },
+    page: 1,
+    pageSize: 20,
+    hasMore: true,
+    loadingMore: false,
+    totalFromBackend: 0,
+    statsLoading: true
   },
 
   onLoad() {
     this.initPage()
+    this._observer = this.createIntersectionObserver()
+    this._observer.relativeToViewport({ top: 0 }).observe('#back-top-sentinel', (res) => {
+      this.setData({ backTopVisible: res.intersectionRatio < 1 })
+    })
   },
 
   onShow() {
@@ -128,10 +139,7 @@ Page({
     }
 
     if (this._pageReady) {
-      Promise.all([
-        this.loadFilterClasses({ silent: true }),
-        this.loadTasks({ silent: true })
-      ]).catch((error) => {
+      this.loadTaskPage({ refresh: true, silent: true }).catch((error) => {
         console.error('[task-manage] onShow refresh error:', error)
       })
     }
@@ -145,9 +153,10 @@ Page({
     try {
       await Promise.all([
         this.loadProjects(),
-        this.loadFilterClasses({ silent: true }),
-        this.loadTasks()
+        this.loadFilterClasses({ silent: true })
       ])
+      await this.loadTaskPage({ refresh: true })
+      this.loadStats()
       this._pageReady = true
     } catch (error) {
       console.error('[task-manage] initPage error:', error)
@@ -229,52 +238,129 @@ Page({
     return options
   },
 
-  async loadTasks({ silent = false } = {}) {
-    if (!silent) {
+  async loadTaskPage({ refresh = false, silent = false } = {}) {
+    if (this.data.loadingMore) return
+    if (!refresh && !this.data.hasMore) return
+
+    if (refresh) {
+      this.setData({ page: 1, hasMore: true, tasks: [] })
+    }
+
+    this.setData({ loadingMore: true })
+
+    if (!silent && refresh) {
       Toast.showLoading('任务加载中...')
     }
 
     try {
       const sortConfig = this.parseSortValue(this.data.sorted.value)
-      const tasks = await this.fetchAllTasks(sortConfig)
-      const formattedTasks = tasks.map((item) => this.formatTaskItem(item))
+      const { taskTypes, classes, visibility, status } = this.data
+
+      const params = {
+        role: 'teacher',
+        page: this.data.page,
+        page_size: this.data.pageSize,
+        sort_by: sortConfig.sortBy,
+        sort_order: sortConfig.sortOrder
+      }
+
+      if (taskTypes.value !== 'all') {
+        params.task_type = taskTypes.value
+      }
+      if (taskTypes.value === 'class' && classes.value !== 'all') {
+        params.class_id = classes.value
+      }
+      if (visibility.value !== 'all') {
+        params.visibility = visibility.value
+      }
+      if (status.value !== 'all') {
+        params.status = status.value
+      }
+
+      const response = await TaskService.getTasks(params)
+      const list = Array.isArray(response.list) ? response.list : []
+      const formattedNew = list.map((item) => this.formatTaskItem(item))
+
+      const newTasks = refresh ? formattedNew : [...this.data.tasks, ...formattedNew]
+      const totalFromBackend = refresh ? (response.total || 0) : this.data.totalFromBackend
 
       this.setData({
-        tasks: formattedTasks
+        tasks: newTasks,
+        page: this.data.page + 1,
+        hasMore: Boolean(response.has_more),
+        totalFromBackend
       })
       this.applyFilters()
     } catch (error) {
-      console.error('[task-manage] loadTasks error:', error)
-      Toast.showToast(error.message || '任务列表加载失败')
+      console.error('[task-manage] loadTaskPage error:', error)
+      if (refresh) {
+        Toast.showToast(error.message || '任务列表加载失败')
+      }
     } finally {
-      if (!silent) {
+      this.setData({ loadingMore: false })
+      if (!silent && refresh) {
         Toast.hideLoading()
       }
     }
   },
 
-  async fetchAllTasks(sortConfig) {
-    let page = 1
-    let hasMore = true
-    const result = []
-    const maxPages = 5
+  onScrollToLower() {
+    this.loadTaskPage()
+  },
 
-    while (hasMore && page <= maxPages) {
-      const response = await TaskService.getTasks({
+  onBackToTop() {
+    this.setData({ scrollTop: 99999 }, () => {
+      this.setData({ scrollTop: 0 })
+    })
+  },
+
+  async loadStats() {
+    try {
+      const taskTypeValue = this.data.taskTypes.value
+      const classValue = this.data.classes.value
+      const visibilityValue = this.data.visibility.value
+      const statusValue = this.data.status.value
+
+      const baseParams = {
         role: 'teacher',
-        page,
-        page_size: 50,
-        sort_by: sortConfig.sortBy,
-        sort_order: sortConfig.sortOrder
+        page: 1,
+        page_size: 1,
+        count_only: true
+      }
+
+      if (taskTypeValue !== 'all') {
+        baseParams.task_type = taskTypeValue
+        if (taskTypeValue === 'class' && classValue !== 'all') {
+          baseParams.class_id = classValue
+        }
+      }
+      if (visibilityValue !== 'all') {
+        baseParams.visibility = visibilityValue
+      }
+      if (statusValue !== 'all') {
+        baseParams.status = statusValue
+      }
+
+      const [totalRes, publishedRes, publicRes, classRes] = await Promise.all([
+        TaskService.getTasks({ ...baseParams }),
+        TaskService.getTasks({ ...baseParams, status: 'published' }),
+        TaskService.getTasks({ ...baseParams, task_type: 'public' }),
+        TaskService.getTasks({ ...baseParams, task_type: 'class' })
+      ])
+
+      this.setData({
+        statsLoading: false,
+        stats: {
+          ...this.data.stats,
+          total: totalRes.total || 0,
+          published: publishedRes.total || 0,
+          publicCount: publicRes.total || 0,
+          classCount: classRes.total || 0
+        }
       })
-
-      const list = Array.isArray(response.list) ? response.list : []
-      result.push(...list)
-      hasMore = Boolean(response.has_more)
-      page += 1
+    } catch (error) {
+      console.error('[task-manage] loadStats error:', error)
     }
-
-    return result
   },
 
   parseSortValue(value) {
@@ -336,13 +422,12 @@ Page({
   },
 
   applyFilters() {
-    const { tasks, projects, taskTypes, classes, visibility, status, sorted } = this.data
+    const { tasks, projects, taskTypes, classes, visibility, status } = this.data
     const projectCode = projects.value
     const taskTypeValue = taskTypes.value
     const classValue = classes.value
     const visibilityValue = visibility.value
     const statusValue = status.value
-    const { sortBy, sortOrder } = this.parseSortValue(sorted.value)
 
     let displayTasks = tasks.slice()
 
@@ -369,51 +454,12 @@ Page({
       displayTasks = displayTasks.filter((item) => item.status === statusValue)
     }
 
-    displayTasks.sort((left, right) => this.compareTaskItem(left, right, sortBy, sortOrder))
-
     this.setData({
       displayTasks,
-      stats: {
-        total: displayTasks.length,
-        published: displayTasks.filter((item) => item.status === 'published').length,
-        publicCount: displayTasks.filter((item) => item.task_type === 'public').length,
-        classCount: displayTasks.filter((item) => item.task_type === 'class').length
-      },
       emptyText: projectCode === 'all' && taskTypeValue === 'all' && classValue === 'all' && visibilityValue === 'all' && statusValue === 'all'
         ? '还没有任务，等编辑页接入后就可以从这里开始发布'
         : '当前筛选条件下暂无任务'
     })
-  },
-
-  compareTaskItem(left, right, sortBy, sortOrder) {
-    const direction = sortOrder === 'asc' ? 1 : -1
-    const leftValue = this.getSortableValue(left, sortBy)
-    const rightValue = this.getSortableValue(right, sortBy)
-
-    if (leftValue === rightValue) {
-      return 0
-    }
-
-    return leftValue > rightValue ? direction : -direction
-  },
-
-  getSortableValue(item, sortBy) {
-    if (sortBy === 'difficulty' || sortBy === 'points') {
-      return Number(item[sortBy] || 0)
-    }
-
-    if (sortBy === 'deadline') {
-      const deadlineDate = taskDeadline.getTaskDeadlineDate(item)
-      return deadlineDate ? deadlineDate.getTime() : 0
-    }
-
-    const value = item[sortBy]
-    if (!value) {
-      return 0
-    }
-
-    const time = new Date(value).getTime()
-    return Number.isNaN(time) ? String(value) : time
   },
 
   onFilterSelect(e) {
@@ -433,7 +479,8 @@ Page({
     }
 
     this.setData(nextData, () => {
-      this.applyFilters()
+      this.loadTaskPage({ refresh: true, silent: true })
+      this.loadStats()
     })
   },
 
@@ -477,7 +524,7 @@ Page({
       await TaskService.deleteTask(taskId)
       Toast.hideLoading()
       await Toast.showSuccess('任务已删除')
-      await this.loadTasks({ silent: true })
+      await this.loadTaskPage({ refresh: true, silent: true })
     } catch (error) {
       console.error('[task-manage] onDeleteTask error:', error)
       Toast.hideLoading()

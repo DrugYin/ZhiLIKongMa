@@ -40,3 +40,7 @@ build/
 .codebuddy/
 .codex/
 copyright-application-materials/
+
+# Environment variables
+.env.local
+.deepseek/
