@@ -214,11 +214,19 @@ Page({
 
     try {
       const promises = []
+      const { classFilter, teacherClasses } = this.data
 
       const subParams = {
         role: 'teacher',
         page: this.data.page,
         page_size: this.data.pageSize
+      }
+
+      if (classFilter !== 'all') {
+        const matchedClass = teacherClasses.find(c => c.class_name === classFilter)
+        if (matchedClass) {
+          subParams.class_id = matchedClass._id
+        }
       }
 
       promises.push(
@@ -343,6 +351,14 @@ Page({
         page: 1,
         page_size: 1,
         count_only: true
+      }
+
+      // classFilter 映射为 class_id 传入 submissions 查询
+      if (classFilter !== 'all') {
+        const matchedClass = teacherClasses.find(c => c.class_name === classFilter)
+        if (matchedClass) {
+          submissionParams.class_id = matchedClass._id
+        }
       }
 
       const buildAppPromise = (classInfo, status) => {
