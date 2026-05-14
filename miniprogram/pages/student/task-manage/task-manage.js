@@ -101,6 +101,7 @@ Page({
     },
     stats: {
       total: 0,
+    statsLoading: true,
       myClassCount: 0,
       publicCount: 0,
       deadlineSoonCount: 0
@@ -280,16 +281,20 @@ Page({
         sort_order: sortOrder
       }
 
-      if (this.data.filterClassId) {
-        params.class_id = this.data.filterClassId
-      } else if (taskTypeValue === 'class' && classValue !== 'all') {
-        params.class_id = classValue
-      }
-      if (taskTypeValue !== 'all' && taskTypeValue !== 'class') {
-        params.task_type = taskTypeValue
-      }
-      if (taskTypeValue === 'class') {
+      if (this.data.currentTab === 'mine') {
         params.task_type = 'class'
+      } else {
+        if (this.data.filterClassId) {
+          params.class_id = this.data.filterClassId
+        } else if (taskTypeValue === 'class' && classValue !== 'all') {
+          params.class_id = classValue
+        }
+        if (taskTypeValue !== 'all' && taskTypeValue !== 'class') {
+          params.task_type = taskTypeValue
+        }
+        if (taskTypeValue === 'class') {
+          params.task_type = 'class'
+        }
       }
       if (visibilityValue !== 'all') {
         params.visibility = visibilityValue
@@ -332,6 +337,10 @@ Page({
 
   async loadStats() {
     try {
+      const taskTypeValue = this.data.taskTypes.value
+      const visibilityValue = this.data.visibility.value
+      const classValue = this.data.classes.value
+
       const baseParams = {
         page: 1,
         page_size: 1,
@@ -342,6 +351,18 @@ Page({
         baseParams.class_id = this.data.filterClassId
       }
 
+      if (this.data.currentTab === 'mine') {
+        baseParams.task_type = 'class'
+      } else if (taskTypeValue !== 'all') {
+        baseParams.task_type = taskTypeValue
+      }
+      if (visibilityValue !== 'all') {
+        baseParams.visibility = visibilityValue
+      }
+      if (taskTypeValue === 'class' && classValue !== 'all' && !this.data.filterClassId) {
+        baseParams.class_id = classValue
+      }
+
       const [totalRes, classRes, publicRes, deadlineSoonCount] = await Promise.all([
         TaskService.getTasks({ ...baseParams }),
         TaskService.getTasks({ ...baseParams, task_type: 'class' }),
@@ -350,6 +371,7 @@ Page({
       ])
 
       this.setData({
+        statsLoading: false,
         stats: {
           ...this.data.stats,
           total: totalRes.total || 0,
@@ -573,6 +595,7 @@ Page({
       currentTab: e.detail.value
     }, () => {
       this.loadTaskPage({ refresh: true })
+      this.loadStats()
     })
   },
 
@@ -594,6 +617,7 @@ Page({
 
     this.setData(nextData, () => {
       this.loadTaskPage({ refresh: true })
+      this.loadStats()
     })
   },
 

@@ -119,7 +119,8 @@ Page({
     pageSize: 20,
     hasMore: true,
     loadingMore: false,
-    totalFromBackend: 0
+    totalFromBackend: 0,
+    statsLoading: true
   },
 
   onLoad() {
@@ -330,6 +331,7 @@ Page({
       ])
 
       this.setData({
+        statsLoading: false,
         stats: {
           ...this.data.stats,
           total: totalRes.total || 0,
@@ -459,7 +461,7 @@ Page({
     }
 
     this.setData(nextData, () => {
-      this.loadTaskPage({ refresh: true })
+      this.loadTaskPage({ refresh: true, silent: true })
     })
   },
 
