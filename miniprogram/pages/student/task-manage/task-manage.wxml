@@ -33,19 +33,23 @@
         <view class="summary-grid">
           <view class="summary-item">
             <text class="summary-label">当前任务</text>
-            <text class="summary-value">{{stats.total}}</text>
+            <block wx:if="{{statsLoading}}"><view class="skeleton-block"></view></block>
+            <text wx:else class="summary-value">{{stats.total}}</text>
           </view>
           <view class="summary-item">
             <text class="summary-label">我的班级任务</text>
-            <text class="summary-value">{{stats.myClassCount}}</text>
+            <block wx:if="{{statsLoading}}"><view class="skeleton-block"></view></block>
+            <text wx:else class="summary-value">{{stats.myClassCount}}</text>
           </view>
           <view class="summary-item">
             <text class="summary-label">公开可见</text>
-            <text class="summary-value">{{stats.publicCount}}</text>
+            <block wx:if="{{statsLoading}}"><view class="skeleton-block"></view></block>
+            <text wx:else class="summary-value">{{stats.publicCount}}</text>
           </view>
           <view class="summary-item">
             <text class="summary-label">近期截止</text>
-            <text class="summary-value">{{stats.deadlineSoonCount}}</text>
+            <block wx:if="{{statsLoading}}"><view class="skeleton-block"></view></block>
+            <text wx:else class="summary-value">{{stats.deadlineSoonCount}}</text>
           </view>
         </view>
       </view>

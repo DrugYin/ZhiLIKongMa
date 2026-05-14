@@ -80,6 +80,7 @@ Page({
     ],
     records: [],
     displayRecords: [],
+    statsLoading: true,
     stats: {
       total: 0,
       pending: 0,
@@ -120,7 +121,8 @@ Page({
     loadingMore: false,
     teacherClasses: [],
     totalSubmissionsFromBackend: 0,
-    totalApplicationsFromBackend: 0
+    totalApplicationsFromBackend: 0,
+    currentFilterTotal: 0
   },
 
   onLoad(options = {}) {
@@ -212,11 +214,19 @@ Page({
 
     try {
       const promises = []
+      const { classFilter, teacherClasses } = this.data
 
       const subParams = {
         role: 'teacher',
         page: this.data.page,
         page_size: this.data.pageSize
+      }
+
+      if (classFilter !== 'all') {
+        const matchedClass = teacherClasses.find(c => c.class_name === classFilter)
+        if (matchedClass) {
+          subParams.class_id = matchedClass._id
+        }
       }
 
       promises.push(
@@ -326,6 +336,16 @@ Page({
 
   async loadStats() {
     try {
+      const { typeFilter, statusFilter, classFilter, teacherClasses } = this.data
+      const includeSub = typeFilter !== 'application'
+      const includeApp = typeFilter !== 'submission'
+
+      // 根据 statusFilter 决定需要哪些状态的查询
+      const needAll = statusFilter === 'all'
+      const needPending = statusFilter === 'all' || statusFilter === 'pending'
+      const needApproved = statusFilter === 'all' || statusFilter === 'processed'
+      const needRejected = statusFilter === 'all' || statusFilter === 'processed'
+
       const submissionParams = {
         role: 'teacher',
         page: 1,
@@ -333,75 +353,101 @@ Page({
         count_only: true
       }
 
-      const allAppPromises = this.data.teacherClasses.map((classInfo) => {
-        return ClassService.getClassApplications({
+      // classFilter 映射为 class_id 传入 submissions 查询
+      if (classFilter !== 'all') {
+        const matchedClass = teacherClasses.find(c => c.class_name === classFilter)
+        if (matchedClass) {
+          submissionParams.class_id = matchedClass._id
+        }
+      }
+
+      const buildAppPromise = (classInfo, status) => {
+        const params = {
           class_id: classInfo._id,
-          status: 'all',
+          status,
           page: 1,
           page_size: 1,
           count_only: true
-        }).then((r) => r.total || 0).catch(() => 0)
-      })
+        }
+        return ClassService.getClassApplications(params)
+          .then((r) => r.total || 0).catch(() => 0)
+      }
 
-      const pendingAppPromises = this.data.teacherClasses.map((classInfo) => {
-        return ClassService.getClassApplications({
-          class_id: classInfo._id,
-          status: 'pending',
-          page: 1,
-          page_size: 1,
-          count_only: true
-        }).then((r) => r.total || 0).catch(() => 0)
-      })
+      const promises = []
 
-      const approvedAppPromises = this.data.teacherClasses.map((classInfo) => {
-        return ClassService.getClassApplications({
-          class_id: classInfo._id,
-          status: 'approved',
-          page: 1,
-          page_size: 1,
-          count_only: true
-        }).then((r) => r.total || 0).catch(() => 0)
-      })
+      // submissions 查询
+      let subAll = 0, subPending = 0, subApproved = 0, subRejected = 0
+      if (includeSub) {
+        const subTotalP = TaskService.getSubmissions({ ...submissionParams }).then(r => { subAll = r.total || 0; return r })
+        const subPendingP = needPending ? TaskService.getSubmissions({ ...submissionParams, status: 'pending' }).then(r => { subPending = r.total || 0; return r }) : Promise.resolve()
+        const subApprovedP = needApproved ? TaskService.getSubmissions({ ...submissionParams, status: 'approved' }).then(r => { subApproved = r.total || 0; return r }) : Promise.resolve()
+        const subRejectedP = needRejected ? TaskService.getSubmissions({ ...submissionParams, status: 'rejected' }).then(r => { subRejected = r.total || 0; return r }) : Promise.resolve()
+        promises.push(subTotalP, subPendingP, subApprovedP, subRejectedP)
+      }
 
-      const rejectedAppPromises = this.data.teacherClasses.map((classInfo) => {
-        return ClassService.getClassApplications({
-          class_id: classInfo._id,
-          status: 'rejected',
-          page: 1,
-          page_size: 1,
-          count_only: true
-        }).then((r) => r.total || 0).catch(() => 0)
-      })
+      // applications 查询
+      let appAll = 0, appPending = 0, appApproved = 0, appRejected = 0
+      if (includeApp) {
+        const targetClasses = classFilter !== 'all'
+          ? teacherClasses.filter(c => c.class_name === classFilter)
+          : teacherClasses
 
-      const [totalSubRes, pendingSubRes, approvedSubRes, rejectedSubRes, ...appCounts] = await Promise.all([
-        TaskService.getSubmissions({ ...submissionParams }),
-        TaskService.getSubmissions({ ...submissionParams, status: 'pending' }),
-        TaskService.getSubmissions({ ...submissionParams, status: 'approved' }),
-        TaskService.getSubmissions({ ...submissionParams, status: 'rejected' }),
-        ...allAppPromises,
-        ...pendingAppPromises,
-        ...approvedAppPromises,
-        ...rejectedAppPromises
-      ])
+        const sumReduce = (results) => results.reduce((sum, count) => sum + count, 0)
 
-      const classCount = this.data.teacherClasses.length
-      const totalApplications = appCounts.slice(0, classCount).reduce((sum, count) => sum + count, 0)
-      const pendingApplications = appCounts.slice(classCount, classCount * 2).reduce((sum, count) => sum + count, 0)
-      const approvedApplications = appCounts.slice(classCount * 2, classCount * 3).reduce((sum, count) => sum + count, 0)
-      const rejectedApplications = appCounts.slice(classCount * 3).reduce((sum, count) => sum + count, 0)
+        if (needAll || needPending || needApproved || needRejected) {
+          const appAllP = needAll ? Promise.all(targetClasses.map(c => buildAppPromise(c, 'all'))).then(sumReduce).then(v => { appAll = v; return v }) : Promise.resolve()
+          const appPendingP = needPending ? Promise.all(targetClasses.map(c => buildAppPromise(c, 'pending'))).then(sumReduce).then(v => { appPending = v; return v }) : Promise.resolve()
+          const appApprovedP = needApproved ? Promise.all(targetClasses.map(c => buildAppPromise(c, 'approved'))).then(sumReduce).then(v => { appApproved = v; return v }) : Promise.resolve()
+          const appRejectedP = needRejected ? Promise.all(targetClasses.map(c => buildAppPromise(c, 'rejected'))).then(sumReduce).then(v => { appRejected = v; return v }) : Promise.resolve()
+          promises.push(appAllP, appPendingP, appApprovedP, appRejectedP)
+        }
+      }
+
+      await Promise.all(promises)
+
+      const totalSub = includeSub ? subAll : 0
+      const totalApp = includeApp ? appAll : 0
+
+      // 根据 statusFilter 修正 total（非 all 状态下 all 类查询值为 0）
+      let statsTotal
+      if (statusFilter === 'pending') {
+        statsTotal = subPending + appPending
+      } else if (statusFilter === 'processed') {
+        statsTotal = subApproved + subRejected + appApproved + appRejected
+      } else {
+        statsTotal = totalSub + totalApp
+      }
+
+      const stats = {
+        total: statsTotal,
+        pending: subPending + appPending,
+        taskPending: subPending,
+        joinPending: appPending,
+        approved: subApproved + appApproved,
+        rejected: subRejected + appRejected
+      }
+
+      // 根据当前筛选条件计算列表应显示的总条数
+      let currentFilterTotal = 0
+      if (typeFilter === 'submission') {
+        currentFilterTotal = subAll
+      } else if (typeFilter === 'application') {
+        currentFilterTotal = appAll
+      } else {
+        currentFilterTotal = subAll + appAll
+      }
+      if (statusFilter === 'pending') {
+        currentFilterTotal = (typeFilter === 'submission' ? subPending : typeFilter === 'application' ? appPending : subPending + appPending)
+      } else if (statusFilter === 'processed') {
+        currentFilterTotal = (typeFilter === 'submission' ? subApproved + subRejected : typeFilter === 'application' ? appApproved + appRejected : subApproved + subRejected + appApproved + appRejected)
+      }
 
       this.setData({
-        totalSubmissionsFromBackend: totalSubRes.total || 0,
-        totalApplicationsFromBackend: totalApplications,
-        stats: {
-          ...this.data.stats,
-          total: (totalSubRes.total || 0) + totalApplications,
-          pending: (pendingSubRes.total || 0) + pendingApplications,
-          taskPending: pendingSubRes.total || 0,
-          joinPending: pendingApplications,
-          approved: (approvedSubRes.total || 0) + approvedApplications,
-          rejected: (rejectedSubRes.total || 0) + rejectedApplications
-        }
+        statsLoading: false,
+        totalSubmissionsFromBackend: totalSub,
+        totalApplicationsFromBackend: totalApp,
+        stats,
+        currentFilterTotal
       })
     } catch (error) {
       console.error('[teacher-pending] loadStats error:', error)
