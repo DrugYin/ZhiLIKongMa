@@ -192,7 +192,20 @@ exports.main = async (event) => {
     const description = normalizeString(event.description);
     const taskType = normalizeTaskType(event.task_type);
     const difficulty = normalizeDifficulty(event.difficulty);
-    const points = normalizePoints(event.points === undefined ? 10 : event.points);
+    let defaultPoints = 10
+    if (event.points === undefined) {
+      try {
+        const configRes = await db.collection('system_config')
+          .where({ config_key: 'points_per_task' })
+          .get()
+        if (configRes.data.length > 0) {
+          defaultPoints = configRes.data[0].config_value
+        }
+      } catch (e) {
+        console.log('[create-task] 获取配置失败，使用默认值:', e.message)
+      }
+    }
+    const points = normalizePoints(event.points === undefined ? defaultPoints : event.points);
     const status = normalizeStatus(event.status);
     const category = normalizeString(event.category);
     const projectCode = normalizeString(event.project_code);
