@@ -34,6 +34,8 @@ ZhiLiKongMa/
 ├── assets/              # 静态资源（头像等）
 ├── cloudfunctions/      # 云函数目录
 ├── components/          # 公共组件
+│   ├── announcement-panel/ # 公告面板
+│   ├── back-top/        # 返回顶部
 │   ├── custom-navbar/   # 自定义导航栏
 │   ├── empty/           # 空状态组件
 │   ├── form/            # 表单组件
@@ -48,6 +50,7 @@ ZhiLiKongMa/
 │   │   ├── index.js     # 首页
 │   │   ├── mine/        # 我的
 │   │   ├── rank/        # 排行榜
+│   │   ├── points-log/  # 积分明细
 │   │   ├── setting/     # 设置
 │   │   └── task-manage/ # 任务中心
 │   ├── common/          # 公共页面
@@ -64,10 +67,11 @@ ZhiLiKongMa/
 │   ├── class.js         # 班级服务
 │   ├── ranking.js       # 排行榜服务
 │   ├── storage.js       # 存储服务
-│   └── task.js          # 任务服务
+│   ├── task.js          # 任务服务
+│   └── announcement.js  # 公告服务
 ├── admin-web/           # 后台管理网站
 │   ├── src/api/         # 后台云函数封装
-│   ├── src/pages/       # 后台业务页面
+│   ├── src/pages/       # 后台业务页面（12个）
 │   └── src/router/      # 后台路由
 └── utils/               # 工具函数
     ├── constant.js      # 常量定义
@@ -691,10 +695,10 @@ ZhiLiKongMa/
 
 ```
 项目总计：
-- 云函数：41 个（已实现，含 11 个后台管理函数）+ 7 个（规划/预留待开发）
-- 小程序页面：22 个
-- 后台页面：11 个
-- 公共组件：5 个
+- 云函数：42 个（已实现，含 11 个后台管理函数）+ 6 个（规划/预留待开发）
+- 小程序页面：23 个（含积分明细页）
+- 后台页面：12 个
+- 公共组件：6 个
 - 工具模块：7 个
 ```
 
@@ -771,6 +775,7 @@ npm run lint
 | review-submission | cloudfunctions/review-submission/index.js | 教师审核提交记录 |
 | get-ranking | cloudfunctions/get-ranking/index.js | 获取学生排行榜 |
 | refresh-ranking-snapshots | cloudfunctions/refresh-ranking-snapshots/index.js | 刷新周榜/月榜/总榜排行榜快照 |
+| get-points-log | cloudfunctions/get-points-log/index.js | 获取当前用户积分变动明细 |
 | get-announcements | cloudfunctions/get-announcements/index.js | 获取小程序公告与标记已读 |
 | admin-auth-check | cloudfunctions/admin-auth-check/index.js | 后台管理员权限校验 |
 | admin-get-statistics | cloudfunctions/admin-get-statistics/index.js | 后台运营统计 |
@@ -786,7 +791,7 @@ npm run lint
 
 ---
 
-**文档版本**: v3.10.0
-**最后更新**: 2026-04-25
+**文档版本**: v4.0.0
+**最后更新**: 2026-05-14
 **编写者**: 开发团队
-**更新说明**: 同步后台管理端、公告管理、后台云函数清单与当前项目进度
+**更新说明**: 同步积分明细云函数与页面、完善组件与工具模块清单、后台页面增至 12 个
