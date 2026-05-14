@@ -392,8 +392,18 @@ Page({
       const totalSub = includeSub ? subAll : 0
       const totalApp = includeApp ? appAll : 0
 
+      // 根据 statusFilter 修正 total（非 all 状态下 all 类查询值为 0）
+      let statsTotal
+      if (statusFilter === 'pending') {
+        statsTotal = subPending + appPending
+      } else if (statusFilter === 'processed') {
+        statsTotal = subApproved + subRejected + appApproved + appRejected
+      } else {
+        statsTotal = totalSub + totalApp
+      }
+
       const stats = {
-        total: totalSub + totalApp,
+        total: statsTotal,
         pending: subPending + appPending,
         taskPending: subPending,
         joinPending: appPending,

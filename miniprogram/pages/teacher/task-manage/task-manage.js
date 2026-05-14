@@ -316,11 +316,29 @@ Page({
 
   async loadStats() {
     try {
+      const taskTypeValue = this.data.taskTypes.value
+      const classValue = this.data.classes.value
+      const visibilityValue = this.data.visibility.value
+      const statusValue = this.data.status.value
+
       const baseParams = {
         role: 'teacher',
         page: 1,
         page_size: 1,
         count_only: true
+      }
+
+      if (taskTypeValue !== 'all') {
+        baseParams.task_type = taskTypeValue
+        if (taskTypeValue === 'class' && classValue !== 'all') {
+          baseParams.class_id = classValue
+        }
+      }
+      if (visibilityValue !== 'all') {
+        baseParams.visibility = visibilityValue
+      }
+      if (statusValue !== 'all') {
+        baseParams.status = statusValue
       }
 
       const [totalRes, publishedRes, publicRes, classRes] = await Promise.all([
@@ -462,6 +480,7 @@ Page({
 
     this.setData(nextData, () => {
       this.loadTaskPage({ refresh: true, silent: true })
+      this.loadStats()
     })
   },
 
