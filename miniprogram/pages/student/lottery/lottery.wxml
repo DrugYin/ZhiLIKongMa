@@ -1,6 +1,6 @@
 <view class="container">
   <view class="header">
-    <custom-navbar placeholder="{{true}}" title="积分抽奖" />
+    <custom-navbar showBack="{{true}}" placeholder="{{true}}" title="积分抽奖" />
   </view>
 
   <scroll-view class="content" scroll-y enhanced>
