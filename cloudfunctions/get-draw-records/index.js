@@ -1,4 +1,5 @@
 const cloud = require('wx-server-sdk')
+const { getCurrentUser } = require('/opt/auth')
 
 cloud.init({
   env: cloud.DYNAMIC_CURRENT_ENV
@@ -11,6 +12,15 @@ exports.main = async (event) => {
   const { OPENID } = cloud.getWXContext()
 
   try {
+    const user = await getCurrentUser(db, OPENID)
+    if (!user) {
+      return {
+        success: false,
+        message: '请先完成注册',
+        error_code: 401
+      }
+    }
+
     const page = Math.max(Number(event.page) || 1, 1)
     const pageSize = Math.min(Number(event.page_size) || PAGE_SIZE, 100)
 

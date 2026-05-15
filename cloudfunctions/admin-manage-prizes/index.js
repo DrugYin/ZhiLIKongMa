@@ -1,6 +1,7 @@
 const cloud = require('wx-server-sdk')
 const tcb = require('@cloudbase/node-sdk')
 const { writeAdminOperationLog } = require('/opt/admin-operation-log')
+const { DEFAULT_PRIZES } = require('/opt/prize-defaults')
 
 cloud.init({
   env: cloud.DYNAMIC_CURRENT_ENV
@@ -15,64 +16,6 @@ const auth = app.auth()
 const COLLECTION_NAME = 'prizes'
 const PRIZE_TYPES = ['physical', 'virtual', 'points']
 const STATUS_VALUES = ['active', 'disabled']
-
-const DEFAULT_PRIZES = [
-  {
-    name: '精美笔记本',
-    description: '限量版学习笔记本',
-    image: '',
-    type: 'physical',
-    stock: 100,
-    probability: 0.30,
-    value: 50,
-    status: 'active',
-    sort_order: 1
-  },
-  {
-    name: '积分大礼包',
-    description: '50 积分奖励',
-    image: '',
-    type: 'points',
-    stock: 999,
-    probability: 0.40,
-    value: 50,
-    status: 'active',
-    sort_order: 2
-  },
-  {
-    name: '无人机体验课',
-    description: '免费体验课一节',
-    image: '',
-    type: 'virtual',
-    stock: 20,
-    probability: 0.15,
-    value: 200,
-    status: 'active',
-    sort_order: 3
-  },
-  {
-    name: '编程教材',
-    description: '编程入门教材一本',
-    image: '',
-    type: 'physical',
-    stock: 30,
-    probability: 0.10,
-    value: 100,
-    status: 'active',
-    sort_order: 4
-  },
-  {
-    name: '谢谢参与',
-    description: '下次加油',
-    image: '',
-    type: 'virtual',
-    stock: 999,
-    probability: 0.05,
-    value: 0,
-    status: 'active',
-    sort_order: 5
-  }
-]
 
 function success(message, data = {}) {
   return { success: true, message, data }
@@ -131,27 +74,27 @@ function normalizeString(value) {
 function normalizePrizePayload(payload = {}) {
   const name = normalizeString(payload.name)
   if (!name) {
-    throw new Error('奖品名称不能为空')
+    return { ok: false, error: '奖品名称不能为空' }
   }
 
   const type = normalizeString(payload.type)
   if (!PRIZE_TYPES.includes(type)) {
-    throw new Error(`奖品类型必须是 ${PRIZE_TYPES.join('/')}`)
+    return { ok: false, error: `奖品类型必须是 ${PRIZE_TYPES.join('/')}` }
   }
 
   const probability = tryParseFloat(payload.probability, 0)
   if (probability < 0 || probability > 1) {
-    throw new Error('中奖概率必须在 0-1 之间')
+    return { ok: false, error: '中奖概率必须在 0-1 之间' }
   }
 
   const stock = tryParseInt(payload.stock, 0)
   if (stock < 0) {
-    throw new Error('库存不能为负数')
+    return { ok: false, error: '库存不能为负数' }
   }
 
   const value = tryParseInt(payload.value, 0)
   if (value < 0) {
-    throw new Error('奖品价值不能为负数')
+    return { ok: false, error: '奖品价值不能为负数' }
   }
 
   const sortOrder = tryParseInt(payload.sort_order, 0)
@@ -161,15 +104,18 @@ function normalizePrizePayload(payload = {}) {
     : 'active'
 
   return {
-    name,
-    description: normalizeString(payload.description),
-    image: normalizeString(payload.image),
-    type,
-    stock,
-    probability,
-    value,
-    status,
-    sort_order: sortOrder
+    ok: true,
+    data: {
+      name,
+      description: normalizeString(payload.description),
+      image: normalizeString(payload.image),
+      type,
+      stock,
+      probability,
+      value,
+      status,
+      sort_order: sortOrder
+    }
   }
 }
 
@@ -241,7 +187,9 @@ async function getPrize(event = {}) {
 
 async function createPrize(event = {}, admin) {
   const now = new Date()
-  const payload = normalizePrizePayload(event.prize || event)
+  const parsed = normalizePrizePayload(event.prize || event)
+  if (!parsed.ok) return failure(parsed.error, 400)
+  const payload = parsed.data
 
   const addRes = await db.collection(COLLECTION_NAME).add({
     data: {
@@ -279,7 +227,9 @@ async function updatePrize(event = {}, admin) {
     return failure('奖品不存在或已删除', 404)
   }
 
-  const payload = normalizePrizePayload(input)
+  const parsed = normalizePrizePayload(input)
+  if (!parsed.ok) return failure(parsed.error, 400)
+  const payload = parsed.data
 
   await db.collection(COLLECTION_NAME).doc(id).update({
     data: {

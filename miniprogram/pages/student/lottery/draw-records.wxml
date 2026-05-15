@@ -4,6 +4,10 @@
   </view>
 
   <scroll-view class="content" scroll-y enhanced bounces="{{false}}" bindscrolltolower="onReachBottom">
+    <view wx:if="{{errorMsg}}" class="error-banner">
+      <text>{{errorMsg}}</text>
+    </view>
+
     <view wx:if="{{loading}}" class="loading-container">
       <text class="loading-text">加载中...</text>
     </view>

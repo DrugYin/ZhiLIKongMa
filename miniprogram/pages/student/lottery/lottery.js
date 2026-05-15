@@ -36,12 +36,14 @@ Page({
       this.setData({ userPoints: Number(user?.points || 0) })
 
       const [configRes, prizesRes, recordsRes] = await Promise.all([
-        configApi.getConfig(),
-        lotteryApi.getPrizes(),
-        lotteryApi.getDrawRecords({ count_today: true })
+        configApi.getConfig().catch(() => null),
+        lotteryApi.getPrizes().catch(() => null),
+        lotteryApi.getDrawRecords({ count_today: true }).catch(() => null)
       ])
 
-      if (configRes.success && configRes.data) {
+      let hasError = false
+
+      if (configRes && configRes.success && configRes.data) {
         const configMap = {}
         const configs = configRes.data || []
         const defaults = configRes.defaults || {}
@@ -54,14 +56,24 @@ Page({
           dailyLimit: Number(configMap.lottery_daily_limit ?? defaults.lottery_daily_limit ?? 5),
           lotteryEnabled: rawEnabled !== false && rawEnabled !== 'false'
         })
+      } else {
+        hasError = true
       }
 
-      if (prizesRes.success && prizesRes.data) {
+      if (prizesRes && prizesRes.success && prizesRes.data) {
         this.setData({ prizes: prizesRes.data.prizes || [] })
+      } else {
+        hasError = true
       }
 
-      if (recordsRes.success && recordsRes.data) {
+      if (recordsRes && recordsRes.success && recordsRes.data) {
         this.setData({ todayCount: Number(recordsRes.data.today_count) || 0 })
+      } else {
+        hasError = true
+      }
+
+      if (hasError) {
+        this.setData({ errorMsg: '部分数据加载失败，请下拉刷新' })
       }
     } catch (e) {
       console.error('[lottery] refresh error:', e)

@@ -319,10 +319,14 @@ async function loadPrizes() {
 }
 
 async function handleSubmit() {
-  const validResult = await formRef.value?.validate();
-  if (validResult !== true) return;
-
   saving.value = true;
+
+  const validResult = await formRef.value?.validate();
+  if (validResult !== true) {
+    saving.value = false;
+    return;
+  }
+
   try {
     if (isEditing.value) {
       await updatePrize(normalizePayload());

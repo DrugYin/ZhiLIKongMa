@@ -37,7 +37,8 @@ Page({
     pageSize: 20,
     total: 0,
     hasMore: true,
-    loadingMore: false
+    loadingMore: false,
+    errorMsg: ''
   },
 
   onLoad() {
@@ -51,7 +52,7 @@ Page({
   },
 
   async loadRecords() {
-    this.setData({ loading: true, page: 1, list: [] })
+    this.setData({ loading: true, page: 1, list: [], errorMsg: '' })
     try {
       const res = await lotteryApi.getDrawRecords({ page: 1, page_size: this.data.pageSize })
       if (res.success && res.data) {
@@ -60,9 +61,14 @@ Page({
           total: res.data.total || 0,
           hasMore: Boolean(res.data.has_more)
         })
+      } else {
+        const msg = (res && res.message) || '加载失败'
+        this.setData({ errorMsg: msg })
+        wx.showToast({ title: msg, icon: 'none' })
       }
     } catch (e) {
       console.error('[draw-records] load error:', e)
+      this.setData({ errorMsg: '加载失败' })
       wx.showToast({ title: '加载失败', icon: 'none' })
     } finally {
       this.setData({ loading: false })
@@ -84,9 +90,12 @@ Page({
           total: res.data.total || 0,
           hasMore: Boolean(res.data.has_more)
         })
+      } else {
+        wx.showToast({ title: (res && res.message) || '加载失败', icon: 'none' })
       }
     } catch (e) {
       console.error('[draw-records] loadMore error:', e)
+      wx.showToast({ title: '加载失败', icon: 'none' })
     } finally {
       this.setData({ loadingMore: false })
     }

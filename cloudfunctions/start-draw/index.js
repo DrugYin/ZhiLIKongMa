@@ -71,10 +71,19 @@ function isTransactionConflictError(error) {
     || (message.includes('transaction') && message.includes('abort'))
 }
 
-async function executeDraw(openid, user, prize, costPoints, now) {
+function checkAndSelectPrize(prizes) {
+  if (!prizes.length) {
+    throw Object.assign(new Error('暂无可用奖品'), { error_code: 5003 })
+  }
+  const selected = selectPrize(prizes)
+  if (!selected) {
+    throw new Error('抽奖失败，请重试')
+  }
+  return selected
+}
+
+async function executeDraw(openid, user, costPoints, now) {
   const redeemId = generateRedeemId()
-  const isPointsPrize = (prize.type || 'virtual') === 'points'
-  const prizeValue = Number(prize.value) || 0
 
   for (let attempt = 1; attempt <= TRANSACTION_RETRY_LIMIT; attempt += 1) {
     let transaction = null
@@ -95,6 +104,18 @@ async function executeDraw(openid, user, prize, costPoints, now) {
         throw Object.assign(new Error('积分不足'), { error_code: 4001 })
       }
 
+      const prizesRes = await transaction.collection('prizes')
+        .where({ status: 'active', stock: db.command.gt(0) })
+        .get()
+      const prize = checkAndSelectPrize(prizesRes.data || [])
+
+      const prizeDoc = await transaction.collection('prizes').doc(prize._id).get()
+      if (!prizeDoc.data || Number(prizeDoc.data.stock) <= 0) {
+        throw new Error('奖品库存不足')
+      }
+
+      const isPointsPrize = (prize.type || 'virtual') === 'points'
+      const prizeValue = Number(prize.value) || 0
       const afterCostPoints = currentPoints - costPoints
       const netPoints = isPointsPrize ? afterCostPoints + prizeValue : afterCostPoints
 
@@ -252,30 +273,8 @@ exports.main = async () => {
       }
     }
 
-    const prizesRes = await db.collection('prizes')
-      .where({ status: 'active', stock: db.command.gt(0) })
-      .get()
-    const availablePrizes = prizesRes.data || []
-
-    if (!availablePrizes.length) {
-      return {
-        success: false,
-        message: '暂无可用奖品',
-        error_code: 5003
-      }
-    }
-
-    const selectedPrize = selectPrize(availablePrizes)
-    if (!selectedPrize) {
-      return {
-        success: false,
-        message: '抽奖失败，请重试',
-        error_code: 500
-      }
-    }
-
     const now = new Date()
-    const result = await executeDraw(OPENID, user, selectedPrize, costPoints, now)
+    const result = await executeDraw(OPENID, user, costPoints, now)
 
     return {
       success: true,

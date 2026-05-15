@@ -30,6 +30,7 @@ Component({
       this.initCanvas()
     },
     detached() {
+      this._destroyed = true
       this.stopAnimation()
     }
   },
@@ -147,6 +148,7 @@ Component({
       const startAngle = this._currentAngle
 
       const animStep = () => {
+        if (this._destroyed) return
         const elapsed = Date.now() - startTime
         const progress = Math.min(elapsed / duration, 1)
         const eased = 1 - Math.pow(1 - progress, 3)
