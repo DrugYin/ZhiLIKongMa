@@ -63,6 +63,7 @@ const menus = [
   { path: '/submissions', label: '提交记录' },
   { path: '/points-log', label: '积分明细' },
   { path: '/prizes', label: '奖品管理' },
+  { path: '/draw-records', label: '抽奖记录' },
   { path: '/logs', label: '操作日志' }
 ];
 

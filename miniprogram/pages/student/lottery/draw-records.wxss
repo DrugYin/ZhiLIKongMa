@@ -77,6 +77,25 @@
   color: #97a3b7;
 }
 
+.record-redeem-id {
+  display: block;
+  font-size: 30rpx;
+  font-weight: 600;
+  color: #6BCB77;
+  margin-top: 4rpx;
+  font-family: monospace;
+}
+
+.record-redeem-tag {
+  display: block;
+  font-size: 22rpx;
+  color: #97a3b7;
+}
+
+.record-redeem-tag.redeemed {
+  color: #6BCB77;
+}
+
 .loading-more,
 .no-more {
   text-align: center;

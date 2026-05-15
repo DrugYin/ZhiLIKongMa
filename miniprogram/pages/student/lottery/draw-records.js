@@ -18,11 +18,14 @@ function decorateItem(item) {
   const typeLabel = TYPE_MAP[item.prize_type] || item.prize_type || '虚拟'
   const statusLabel = STATUS_MAP[item.status] || item.status || '已抽中'
   const timeLabel = formatTimeStr(item.create_time)
+  const isRedeemed = item.is_redeemed
   return {
     ...item,
     _meta: `${timeLabel} / ${typeLabel} / ${statusLabel}`,
     _cost: `-${item.points_cost || 0}`,
-    _value: item.prize_value ? `￥${item.prize_value}` : ''
+    _value: item.prize_value ? `￥${item.prize_value}` : '',
+    _redeemTag: isRedeemed ? '已兑奖' : '未兑奖',
+    _redeemClass: isRedeemed ? 'redeemed' : ''
   }
 }
 

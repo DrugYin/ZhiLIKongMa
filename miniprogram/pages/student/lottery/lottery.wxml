@@ -44,7 +44,7 @@
           loading="{{drawing}}"
           bindtap="onDrawTap"
         >
-          {{drawing ? '抽奖中...' : (getDisabledReason() === 'no_prizes' ? '暂无奖品' : (getDisabledReason() === 'no_points' ? '积分不足' : (getDisabledReason() === 'limit' ? '今日次数已用完' : '开始抽奖')))}}
+          {{drawing ? '抽奖中...' : (getDisabledReason() === 'disabled' ? '活动未开放' : (getDisabledReason() === 'no_prizes' ? '暂无奖品' : (getDisabledReason() === 'no_points' ? '积分不足' : (getDisabledReason() === 'limit' ? '今日次数已用完' : '开始抽奖'))))}}
         </button>
       </view>
 

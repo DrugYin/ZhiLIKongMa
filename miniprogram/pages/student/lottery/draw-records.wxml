@@ -14,8 +14,10 @@
           <view class="record-left">
             <text class="record-name">{{item.prize_name}}</text>
             <text class="record-meta">{{item._meta}}</text>
+            <text wx:if="{{item.redeem_id}}" class="record-redeem-id">兑奖码：{{item.redeem_id}}</text>
           </view>
           <view class="record-right">
+            <text class="record-redeem-tag {{item._redeemClass}}">{{item._redeemTag}}</text>
             <text class="record-cost">{{item._cost}}</text>
             <text class="record-value" wx:if="{{item._value}}">{{item._value}}</text>
           </view>

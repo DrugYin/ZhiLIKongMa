@@ -9,6 +9,7 @@ Page({
     userPoints: 0,
     costPoints: 10,
     dailyLimit: 5,
+    lotteryEnabled: true,
     todayCount: 0,
     drawing: false,
     showResult: false,
@@ -44,13 +45,14 @@ Page({
         const configMap = {}
         const configs = configRes.data || []
         const defaults = configRes.defaults || {}
-        console.log('configs:', configs, 'defaults:', defaults)
         for (const item of configs) {
           configMap[item.key] = item.value
         }
+        const rawEnabled = configMap.lottery_enabled ?? defaults.lottery_enabled ?? true
         this.setData({
           costPoints: Number(configMap.lottery_cost_points ?? defaults.lottery_cost_points ?? 10),
-          dailyLimit: Number(configMap.lottery_daily_limit ?? defaults.lottery_daily_limit ?? 5)
+          dailyLimit: Number(configMap.lottery_daily_limit ?? defaults.lottery_daily_limit ?? 5),
+          lotteryEnabled: rawEnabled !== false && rawEnabled !== 'false'
         })
       }
 
@@ -75,6 +77,7 @@ Page({
 
   getDisabledReason() {
     if (this.data.loading) return 'loading'
+    if (!this.data.lotteryEnabled) return 'disabled'
     if (!this.data.prizes.length) return 'no_prizes'
     if (this.data.userPoints < this.data.costPoints) return 'no_points'
     if (this.getRemainingDraws() <= 0) return 'limit'
@@ -86,6 +89,7 @@ Page({
     const reason = this.getDisabledReason()
     if (reason) {
       const map = {
+        disabled: '抽奖活动暂未开放',
         no_prizes: '暂无可用奖品',
         no_points: `积分不足，需要 ${this.data.costPoints} 积分`,
         limit: `今日次数已用完（每日 ${this.data.dailyLimit} 次）`

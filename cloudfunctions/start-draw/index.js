@@ -55,6 +55,15 @@ function selectPrize(prizes) {
   return prizes[prizes.length - 1]
 }
 
+function generateRedeemId() {
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'
+  let id = ''
+  for (let i = 0; i < 8; i++) {
+    id += chars.charAt(Math.floor(Math.random() * chars.length))
+  }
+  return id
+}
+
 function isTransactionConflictError(error) {
   const message = String(error && (error.message || error.errMsg || error) || '').toLowerCase()
   return message.includes('conflict')
@@ -63,6 +72,10 @@ function isTransactionConflictError(error) {
 }
 
 async function executeDraw(openid, user, prize, costPoints, now) {
+  const redeemId = generateRedeemId()
+  const isPointsPrize = (prize.type || 'virtual') === 'points'
+  const prizeValue = Number(prize.value) || 0
+
   for (let attempt = 1; attempt <= TRANSACTION_RETRY_LIMIT; attempt += 1) {
     let transaction = null
 
@@ -82,11 +95,12 @@ async function executeDraw(openid, user, prize, costPoints, now) {
         throw Object.assign(new Error('积分不足'), { error_code: 4001 })
       }
 
-      const afterPoints = currentPoints - costPoints
+      const afterCostPoints = currentPoints - costPoints
+      const netPoints = isPointsPrize ? afterCostPoints + prizeValue : afterCostPoints
 
       await userRef.update({
         data: {
-          points: afterPoints,
+          points: netPoints,
           update_time: now
         }
       })
@@ -106,9 +120,12 @@ async function executeDraw(openid, user, prize, costPoints, now) {
           prize_name: prize.name,
           prize_image: prize.image || '',
           prize_type: prize.type || 'virtual',
-          prize_value: Number(prize.value) || 0,
+          prize_value: prizeValue,
           points_cost: costPoints,
           status: 'drawn',
+          is_redeemed: isPointsPrize,
+          redeem_id: redeemId,
+          ...(isPointsPrize ? { redeem_time: now, redeem_operator: 'system' } : {}),
           create_time: now,
           update_time: now
         }
@@ -120,7 +137,7 @@ async function executeDraw(openid, user, prize, costPoints, now) {
           type: 'expense',
           amount: costPoints,
           before_points: currentPoints,
-          after_points: afterPoints,
+          after_points: afterCostPoints,
           source: POINTS_SOURCE.LOTTERY_COST,
           source_id: drawRecordRes._id,
           remark: `抽奖消耗 - ${prize.name}`,
@@ -128,6 +145,23 @@ async function executeDraw(openid, user, prize, costPoints, now) {
           create_time: now
         }
       })
+
+      if (isPointsPrize && prizeValue > 0) {
+        await transaction.collection('points_log').add({
+          data: {
+            user_openid: openid,
+            type: 'income',
+            amount: prizeValue,
+            before_points: afterCostPoints,
+            after_points: netPoints,
+            source: 'lottery_reward',
+            source_id: drawRecordRes._id,
+            remark: `抽奖获得积分 - ${prize.name}`,
+            operator_openid: 'system',
+            create_time: now
+          }
+        })
+      }
 
       await transaction.commit()
 
@@ -137,11 +171,13 @@ async function executeDraw(openid, user, prize, costPoints, now) {
           name: prize.name,
           image: prize.image || '',
           type: prize.type || 'virtual',
-          value: Number(prize.value) || 0
+          value: prizeValue
         },
         points_before: currentPoints,
-        points_after: afterPoints,
-        points_cost: costPoints
+        points_after: netPoints,
+        points_cost: costPoints,
+        is_redeemed: isPointsPrize,
+        redeem_id: redeemId
       }
     } catch (error) {
       if (transaction) {

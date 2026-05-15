@@ -49,6 +49,9 @@ exports.main = async (event) => {
       prize_value: item.prize_value,
       points_cost: item.points_cost,
       status: item.status,
+      is_redeemed: item.is_redeemed || false,
+      redeem_id: item.redeem_id || '',
+      redeem_time: item.redeem_time || null,
       create_time: item.create_time
     }))
 
