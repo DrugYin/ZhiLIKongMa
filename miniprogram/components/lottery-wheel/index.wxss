@@ -1,33 +1,4 @@
-.wheel-container {
-  position: relative;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
 .wheel-canvas {
   border-radius: 50%;
   box-shadow: 0 8rpx 24rpx rgba(0,0,0,0.12);
-}
-
-.wheel-center {
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  margin-left: -60rpx;
-  margin-top: -60rpx;
-  z-index: 10;
-}
-
-.center-text {
-  width: 120rpx;
-  height: 120rpx;
-  border-radius: 50%;
-  background: #fff;
-  font-size: 28rpx;
-  font-weight: 600;
-  color: #333;
-  line-height: 120rpx;
-  text-align: center;
-  box-shadow: 0 4rpx 12rpx rgba(0,0,0,0.15);
 }

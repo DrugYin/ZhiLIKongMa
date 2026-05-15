@@ -1,7 +1,1 @@
-<view class="wheel-container" style="width:{{size}}px;height:{{size}}px;">
-  <canvas type="2d" id="wheel-canvas" class="wheel-canvas" style="width:{{size}}px;height:{{size}}px;" />
-  <view class="wheel-center">
-    <view class="center-text" wx:if="{{!spinning}}">抽奖</view>
-    <view class="center-text" wx:else>旋转中</view>
-  </view>
-</view>
+<canvas type="2d" id="wheel-canvas" class="wheel-canvas" style="width:{{size}}px;height:{{size}}px;" />

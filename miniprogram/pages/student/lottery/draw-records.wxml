@@ -3,7 +3,7 @@
     <custom-navbar showBack="{{true}}" placeholder="{{true}}" title="抽奖记录" />
   </view>
 
-  <scroll-view class="content" scroll-y enhanced bindscrolltolower="onReachBottom">
+  <scroll-view class="content" scroll-y enhanced bounces="{{false}}" bindscrolltolower="onReachBottom">
     <view wx:if="{{loading}}" class="loading-container">
       <text class="loading-text">加载中...</text>
     </view>

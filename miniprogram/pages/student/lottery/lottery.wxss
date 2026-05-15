@@ -9,6 +9,7 @@
 }
 
 .points-card {
+  margin-top: 28rpx;
   display: flex;
   justify-content: space-around;
   background: #fff;

@@ -62,6 +62,7 @@ Component({
 
       if (!len) {
         ctx.fillStyle = '#e8edf2'
+        ctx.beginPath()
         ctx.arc(r, r, r - 4, 0, 2 * Math.PI)
         ctx.fill()
         ctx.fillStyle = '#97a3b7'
@@ -99,6 +100,32 @@ Component({
         ctx.fillText(prizes[i].name || '', r * 0.58, 0)
         ctx.restore()
       }
+
+      this.drawCenter(r)
+    },
+
+    drawCenter(r) {
+      const ctx = this._ctx
+      const centerR = 48
+
+      ctx.beginPath()
+      ctx.arc(r, r, centerR, 0, 2 * Math.PI)
+      ctx.fillStyle = '#fff'
+      ctx.fill()
+      ctx.closePath()
+
+      ctx.beginPath()
+      ctx.arc(r, r, centerR, 0, 2 * Math.PI)
+      ctx.strokeStyle = 'rgba(0,0,0,0.06)'
+      ctx.lineWidth = 2
+      ctx.stroke()
+      ctx.closePath()
+
+      ctx.fillStyle = '#333'
+      ctx.font = 'bold 14px sans-serif'
+      ctx.textAlign = 'center'
+      ctx.textBaseline = 'middle'
+      ctx.fillText(this.data.spinning ? '旋转中' : '抽奖', r, r)
     },
 
     startSpin(targetIndex) {
