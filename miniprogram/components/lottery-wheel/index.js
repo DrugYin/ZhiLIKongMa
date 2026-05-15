@@ -43,7 +43,7 @@ Component({
           if (!res[0] || !res[0].node) return
           this._canvas = res[0].node
           this._ctx = this._canvas.getContext('2d')
-          const dpr = wx.getSystemInfoSync().pixelRatio
+          const dpr = wx.getWindowInfo().pixelRatio
           this._canvas.width = this.data.size * dpr
           this._canvas.height = this.data.size * dpr
           this._ctx.scale(dpr, dpr)

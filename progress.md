@@ -11,14 +11,17 @@
 - [x] 创建 `findings.md` 调研记录
 - [x] 创建 `progress.md` 进度日志
 - [x] 确认 6 个关键决策点（A B A A A A）
-- [x] 开始阶段 6.1 实现
+- [x] 开始阶段 6.2 实现
 
 ### 当前状态
 - 分支: `feature/stage-6-lottery-system`
-- 阶段 6.1 云函数已完成：
-  - `cloudfunctions/get-prizes/` — 奖品列表查询 + 默认示例奖品
-  - `cloudfunctions/start-draw/` — 核心抽奖逻辑（事务、概率、限制）
-  - `cloudfunctions/get-draw-records/` — 抽奖记录分页查询
+- 阶段 6.1 云函数已完成并部署
+- 阶段 6.2 前端完成：
+  - `components/lottery-wheel/` — Canvas 2D 转盘组件
+  - `pages/student/lottery/lottery` — 抽奖主页面（先调云函数再转盘定位）
+  - `pages/student/lottery/draw-records` — 抽奖记录页
+  - `app.json` 注册路由
+  - 学生首页添加抽奖快捷入口
 
 ### 决策记录
 | # | 决策 | 选择 |
