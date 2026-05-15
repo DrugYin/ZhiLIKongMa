@@ -14,6 +14,22 @@ exports.main = async (event) => {
     const page = Math.max(Number(event.page) || 1, 1)
     const pageSize = Math.min(Number(event.page_size) || PAGE_SIZE, 100)
 
+    let todayCount = null
+    if (event.count_today) {
+      const today = new Date()
+      today.setHours(0, 0, 0, 0)
+      const tomorrow = new Date(today)
+      tomorrow.setDate(tomorrow.getDate() + 1)
+
+      const todayCountRes = await db.collection('draw_records')
+        .where({
+          student_openid: OPENID,
+          create_time: db.command.gte(today).and(db.command.lt(tomorrow))
+        })
+        .count()
+      todayCount = todayCountRes.total
+    }
+
     const totalRes = await db.collection('draw_records')
       .where({ student_openid: OPENID })
       .count()
@@ -36,16 +52,22 @@ exports.main = async (event) => {
       create_time: item.create_time
     }))
 
+    const result = {
+      list,
+      total: totalRes.total,
+      page,
+      page_size: pageSize,
+      has_more: page * pageSize < totalRes.total
+    }
+
+    if (todayCount !== null) {
+      result.today_count = todayCount
+    }
+
     return {
       success: true,
       message: '获取抽奖记录成功',
-      data: {
-        list,
-        total: totalRes.total,
-        page,
-        page_size: pageSize,
-        has_more: page * pageSize < totalRes.total
-      }
+      data: result
     }
   } catch (error) {
     console.error('[get-draw-records] Error:', error)

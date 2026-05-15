@@ -1,4 +1,4 @@
-const { lotteryApi } = require('../../../services/api')
+const { lotteryApi, configApi } = require('../../../services/api')
 const { getUserInfo } = require('../../../services/storage')
 
 Page({
@@ -33,12 +33,32 @@ Page({
       const user = getUserInfo()
       this.setData({ userPoints: Number(user?.points || 0) })
 
-      const [prizesRes] = await Promise.all([
-        lotteryApi.getPrizes()
+      const [configRes, prizesRes, recordsRes] = await Promise.all([
+        configApi.getConfig(),
+        lotteryApi.getPrizes(),
+        lotteryApi.getDrawRecords({ count_today: true })
       ])
+
+      if (configRes.success && configRes.data) {
+        const configMap = {}
+        const configs = configRes.data || []
+        const defaults = configRes.defaults || {}
+        console.log('configs:', configs, 'defaults:', defaults)
+        for (const item of configs) {
+          configMap[item.key] = item.value
+        }
+        this.setData({
+          costPoints: Number(configMap.lottery_cost_points ?? defaults.lottery_cost_points ?? 10),
+          dailyLimit: Number(configMap.lottery_daily_limit ?? defaults.lottery_daily_limit ?? 5)
+        })
+      }
 
       if (prizesRes.success && prizesRes.data) {
         this.setData({ prizes: prizesRes.data.prizes || [] })
+      }
+
+      if (recordsRes.success && recordsRes.data) {
+        this.setData({ todayCount: Number(recordsRes.data.today_count) || 0 })
       }
     } catch (e) {
       console.error('[lottery] refresh error:', e)
@@ -84,6 +104,7 @@ Page({
     try {
       const res = await lotteryApi.startDraw()
       if (!res.success) {
+        this.setData({ drawing: false })
         wx.showToast({ title: res.message || '抽奖失败', icon: 'none' })
         if (res.error_code === 4001 || res.error_code === 4002 || res.error_code === 5002) {
           await this.refreshAll()
