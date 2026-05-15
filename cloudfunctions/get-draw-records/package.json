@@ -1,0 +1,9 @@
+{
+  "name": "get-draw-records",
+  "version": "1.0.0",
+  "description": "Get draw records cloud function",
+  "main": "index.js",
+  "dependencies": {
+    "wx-server-sdk": "^2.6.3"
+  }
+}
