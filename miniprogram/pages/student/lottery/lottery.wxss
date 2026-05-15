@@ -1,0 +1,155 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  overflow: hidden;
+}
+
+.content {
+  flex: 1;
+  min-height: 0;
+  padding: 24rpx;
+}
+
+.loading-container {
+  padding: 100rpx 0;
+  text-align: center;
+}
+
+.loading-text {
+  color: #97a3b7;
+  font-size: 28rpx;
+}
+
+.points-card {
+  display: flex;
+  justify-content: space-around;
+  background: #fff;
+  border-radius: 16rpx;
+  padding: 24rpx;
+  margin-bottom: 24rpx;
+  box-shadow: 0 2rpx 12rpx rgba(0,0,0,0.06);
+}
+
+.points-item {
+  text-align: center;
+}
+
+.points-label {
+  display: block;
+  font-size: 22rpx;
+  color: #97a3b7;
+  margin-bottom: 8rpx;
+}
+
+.points-value {
+  font-size: 36rpx;
+  font-weight: 700;
+  color: #4D96FF;
+}
+
+.points-value.cost {
+  color: #FF6B6B;
+}
+
+.error-banner {
+  background: #FFF3F3;
+  border-radius: 12rpx;
+  padding: 16rpx 24rpx;
+  margin-bottom: 24rpx;
+  color: #FF6B6B;
+  font-size: 24rpx;
+  text-align: center;
+}
+
+.wheel-section {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 32rpx;
+}
+
+.action-section {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 24rpx;
+}
+
+.draw-btn {
+  width: 360rpx;
+  height: 88rpx;
+  border-radius: 44rpx;
+  background: linear-gradient(135deg, #FF6B6B, #FF8C32);
+  color: #fff;
+  font-size: 32rpx;
+  font-weight: 600;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.draw-btn[disabled] {
+  background: #d3dbe3;
+  color: #97a3b7;
+}
+
+.link-section {
+  display: flex;
+  justify-content: center;
+  gap: 48rpx;
+}
+
+.link-item {
+  font-size: 26rpx;
+  color: #4D96FF;
+  padding: 8rpx;
+}
+
+.modal-mask {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0,0,0,0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 999;
+}
+
+.modal-card {
+  width: 560rpx;
+  background: #fff;
+  border-radius: 24rpx;
+  padding: 48rpx 32rpx 32rpx;
+  text-align: center;
+}
+
+.modal-title {
+  display: block;
+  font-size: 36rpx;
+  font-weight: 700;
+  color: #FF6B6B;
+  margin-bottom: 16rpx;
+}
+
+.modal-prize-name {
+  display: block;
+  font-size: 32rpx;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 16rpx;
+}
+
+.modal-detail {
+  display: block;
+  font-size: 24rpx;
+  color: #97a3b7;
+  line-height: 1.6;
+}
+
+.modal-btn {
+  margin-top: 32rpx;
+  width: 100%;
+}

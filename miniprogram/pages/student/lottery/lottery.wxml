@@ -1,0 +1,67 @@
+<view class="container">
+  <view class="header">
+    <custom-navbar placeholder="{{true}}" title="积分抽奖" />
+  </view>
+
+  <scroll-view class="content" scroll-y enhanced>
+    <view wx:if="{{loading}}" class="loading-container">
+      <text class="loading-text">加载中...</text>
+    </view>
+
+    <block wx:else>
+      <view class="points-card">
+        <view class="points-item">
+          <text class="points-label">当前积分</text>
+          <text class="points-value">{{userPoints}}</text>
+        </view>
+        <view class="points-item">
+          <text class="points-label">消耗积分</text>
+          <text class="points-value cost">{{costPoints}}</text>
+        </view>
+        <view class="points-item">
+          <text class="points-label">今日剩余</text>
+          <text class="points-value">{{dailyLimit - todayCount}} / {{dailyLimit}}</text>
+        </view>
+      </view>
+
+      <view wx:if="{{errorMsg}}" class="error-banner">
+        <text>{{errorMsg}}</text>
+      </view>
+
+      <view class="wheel-section">
+        <lottery-wheel
+          prizes="{{prizes}}"
+          disabled="{{drawing}}"
+          id="wheel"
+          bind:result="onWheelResult"
+        />
+      </view>
+
+      <view class="action-section">
+        <button
+          class="draw-btn"
+          disabled="{{getDisabledReason() || drawing}}"
+          loading="{{drawing}}"
+          bindtap="onDrawTap"
+        >
+          {{drawing ? '抽奖中...' : (getDisabledReason() === 'no_prizes' ? '暂无奖品' : (getDisabledReason() === 'no_points' ? '积分不足' : (getDisabledReason() === 'limit' ? '今日次数已用完' : '开始抽奖')))}}
+        </button>
+      </view>
+
+      <view class="link-section">
+        <text class="link-item" bindtap="goToRecords">抽奖记录</text>
+        <text class="link-item" bindtap="goToPointsLog">积分明细</text>
+      </view>
+    </block>
+  </scroll-view>
+
+  <view wx:if="{{showResult}}" class="modal-mask" catchtouchmove="preventScroll">
+    <view class="modal-card">
+      <text class="modal-title">恭喜中奖</text>
+      <text class="modal-prize-name">{{resultInfo.name}}</text>
+      <text class="modal-detail">消耗 {{resultInfo.points_cost}} 积分</text>
+      <text class="modal-detail">积分 {{resultInfo.points_before}} → {{resultInfo.points_after}}</text>
+      <button class="primary-btn modal-btn" bindtap="onCloseResult">知道了</button>
+    </view>
+  </view>
+</view>

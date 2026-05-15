@@ -64,6 +64,12 @@ Page({
         desc: '统一查看所有任务的历史提交'
       },
       {
+        key: 'lottery',
+        mark: '奖',
+        title: '积分抽奖',
+        desc: '消耗积分参与抽奖活动'
+      },
+      {
         key: 'announcement',
         mark: '通',
         title: '通知中心',
@@ -546,6 +552,11 @@ Page({
 
     if (key === 'rank') {
       this.goToRank()
+      return
+    }
+
+    if (key === 'lottery') {
+      wx.navigateTo({ url: '/pages/student/lottery/lottery' })
       return
     }
 
