@@ -28,6 +28,7 @@
 }
 
 .record-card {
+  margin-top: 24rpx;
   display: flex;
   align-items: center;
   justify-content: space-between;

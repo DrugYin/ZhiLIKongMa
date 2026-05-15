@@ -28,7 +28,7 @@
         <text>{{errorMsg}}</text>
       </view>
 
-      <view class="wheel-section">
+      <view wx:if="{{!showResult}}" class="wheel-section">
         <lottery-wheel
           prizes="{{prizes}}"
           disabled="{{!prizes.length || loading}}"

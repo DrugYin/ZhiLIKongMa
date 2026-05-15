@@ -1,5 +1,6 @@
 const { lotteryApi, configApi } = require('../../../services/api')
 const { getUserInfo } = require('../../../services/storage')
+const AuthService = require('../../../services/auth')
 
 Page({
   data: {
@@ -149,6 +150,11 @@ Page({
         points_after: result.points_after
       },
       showResult: true
+    })
+    AuthService.getUserInfo().then(userInfo => {
+      AuthService.updateLocalUserInfo(userInfo)
+    }).catch(e => {
+      console.error('[lottery] sync cache error:', e)
     })
   },
 

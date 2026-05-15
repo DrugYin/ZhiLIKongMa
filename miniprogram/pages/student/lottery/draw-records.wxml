@@ -13,11 +13,11 @@
         <view wx:for="{{list}}" wx:key="_id" class="record-card">
           <view class="record-left">
             <text class="record-name">{{item.prize_name}}</text>
-            <text class="record-meta">{{formatTime(item.create_time)}} / {{getTypeTag(item.prize_type)}} / {{getStatusText(item.status)}}</text>
+            <text class="record-meta">{{item._meta}}</text>
           </view>
           <view class="record-right">
-            <text class="record-cost">-{{item.points_cost}}</text>
-            <text class="record-value" wx:if="{{item.prize_value}}">￥{{item.prize_value}}</text>
+            <text class="record-cost">{{item._cost}}</text>
+            <text class="record-value" wx:if="{{item._value}}">{{item._value}}</text>
           </view>
         </view>
       </view>
