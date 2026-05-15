@@ -1,0 +1,44 @@
+<view class="container">
+  <view class="header">
+    <custom-navbar showBack="{{true}}" placeholder="{{true}}" title="抽奖记录" />
+  </view>
+
+  <scroll-view class="content" scroll-y enhanced bounces="{{false}}" bindscrolltolower="onReachBottom">
+    <view wx:if="{{errorMsg}}" class="error-banner">
+      <text>{{errorMsg}}</text>
+    </view>
+
+    <view wx:if="{{loading}}" class="loading-container">
+      <text class="loading-text">加载中...</text>
+    </view>
+
+    <block wx:elif="{{list.length}}">
+      <view class="record-list">
+        <view wx:for="{{list}}" wx:key="_id" class="record-card">
+          <view class="record-left">
+            <text class="record-name">{{item.prize_name}}</text>
+            <text class="record-meta">{{item._meta}}</text>
+            <text wx:if="{{item.redeem_id}}" class="record-redeem-id">兑奖码：{{item.redeem_id}}</text>
+          </view>
+          <view class="record-right">
+            <text class="record-redeem-tag {{item._redeemClass}}">{{item._redeemTag}}</text>
+            <text class="record-cost">{{item._cost}}</text>
+            <text class="record-value" wx:if="{{item._value}}">{{item._value}}</text>
+          </view>
+        </view>
+      </view>
+
+      <view wx:if="{{loadingMore}}" class="loading-more">
+        <text>加载中...</text>
+      </view>
+      <view wx:elif="{{!hasMore}}" class="no-more">
+        <text>没有更多了</text>
+      </view>
+    </block>
+
+    <view wx:else class="empty-container">
+      <text class="empty-text">还没有抽奖记录</text>
+      <text class="empty-desc">快去参与抽奖吧</text>
+    </view>
+  </scroll-view>
+</view>

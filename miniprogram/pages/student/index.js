@@ -64,6 +64,12 @@ Page({
         desc: '统一查看所有任务的历史提交'
       },
       {
+        key: 'lottery',
+        mark: '奖',
+        title: '积分抽奖',
+        desc: '消耗积分参与抽奖活动'
+      },
+      {
         key: 'announcement',
         mark: '通',
         title: '通知中心',
@@ -255,8 +261,7 @@ Page({
           weeklyTaskCount: 0,
           submittedCount: 0,
           latestTask: null,
-          hasPendingTask: false,
-          fallbackToAllTasks: false
+          hasPendingTask: false
         }
       }
 
@@ -283,22 +288,17 @@ Page({
       }
 
       const weeklyTasks = taskList.filter((item) => this.isCurrentWeekTask(item))
-      const sourceTasks = weeklyTasks.length ? weeklyTasks : taskList
-      const submittedCount = sourceTasks.filter((item) => submissionTaskIds.has(item._id)).length
-      const pendingTasks = sourceTasks
+      const submittedCount = weeklyTasks.filter((item) => submissionTaskIds.has(item._id)).length
+      const pendingTasks = weeklyTasks
         .filter((item) => !submissionTaskIds.has(item._id))
         .sort((left, right) => this.getTaskReferenceTime(right) - this.getTaskReferenceTime(left))
-      const sortedSourceTasks = sourceTasks
-        .slice()
-        .sort((left, right) => this.getTaskReferenceTime(right) - this.getTaskReferenceTime(left))
-      const latestTask = pendingTasks[0] || sortedSourceTasks[0] || null
+      const latestTask = pendingTasks[0] || null
 
       return {
-        weeklyTaskCount: sourceTasks.length,
+        weeklyTaskCount: weeklyTasks.length,
         submittedCount,
         latestTask: latestTask ? this.formatWeeklyTask(latestTask) : null,
-        hasPendingTask: pendingTasks.length > 0,
-        fallbackToAllTasks: !weeklyTasks.length && taskList.length > 0
+        hasPendingTask: pendingTasks.length > 0
       }
     } catch (error) {
       console.error('[student-index] loadWeeklyTaskSummary error:', error)
@@ -377,25 +377,6 @@ Page({
       }
     }
 
-    if (weeklyTaskSummary.fallbackToAllTasks) {
-      return {
-        title: latestTask.titleText,
-        description: '当前没有稳定命中“本周任务”时间范围，先展示已加入班级里最新的待跟进任务。',
-        taskId: latestTask.taskId,
-        deadlineText: latestTask.deadlineText,
-        progressText: `${submittedCount} / ${weeklyTaskCount}`,
-        progressPercent,
-        assistantText: latestTask.projectText,
-        projectText: latestTask.projectText,
-        classText: latestTask.classText,
-        statusText: weeklyTaskSummary.hasPendingTask ? '最新任务' : '已提交任务',
-        statusStyle: weeklyTaskSummary.hasPendingTask
-          ? 'color:#1f7ae0;background:rgba(31, 122, 224, 0.12);'
-          : 'color:#2f8f57;background:rgba(47, 143, 87, 0.12);',
-        weeklyTaskCount,
-        submittedCount
-      }
-    }
 
     if (!weeklyTaskSummary.hasPendingTask) {
       return {
@@ -456,12 +437,18 @@ Page({
   },
 
   isCurrentWeekTask(item = {}) {
+    // 排除截止时间已过的任务，避免将过期任务推送到首页
+    const deadline = taskDeadline.getTaskDeadlineDate(item)
+    if (deadline && deadline.getTime() < Date.now()) {
+      return false
+    }
+
     const { start, end } = this.getCurrentWeekRange()
     const candidateDates = [
       this.parseTaskDate(item.publish_time),
       this.parseTaskDate(item.create_time),
       this.parseTaskDate(item.update_time),
-      taskDeadline.getTaskDeadlineDate(item)
+      deadline
     ].filter(Boolean)
 
     return candidateDates.some((date) => this.isDateInRange(date, start, end))
@@ -565,6 +552,11 @@ Page({
 
     if (key === 'rank') {
       this.goToRank()
+      return
+    }
+
+    if (key === 'lottery') {
+      wx.navigateTo({ url: '/pages/student/lottery/lottery' })
       return
     }
 

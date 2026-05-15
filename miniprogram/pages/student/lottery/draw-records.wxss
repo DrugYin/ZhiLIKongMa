@@ -1,0 +1,117 @@
+.loading-container,
+.empty-container {
+  padding: 100rpx 0;
+  text-align: center;
+}
+
+.loading-text {
+  color: #97a3b7;
+  font-size: 28rpx;
+}
+
+.empty-text {
+  display: block;
+  font-size: 30rpx;
+  color: #333;
+  margin-bottom: 12rpx;
+}
+
+.empty-desc {
+  font-size: 24rpx;
+  color: #97a3b7;
+}
+
+.record-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16rpx;
+}
+
+.record-card {
+  margin-top: 24rpx;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #fff;
+  border-radius: 16rpx;
+  padding: 24rpx;
+  box-shadow: 0 2rpx 8rpx rgba(0,0,0,0.04);
+}
+
+.record-left {
+  flex: 1;
+  overflow: hidden;
+}
+
+.record-name {
+  display: block;
+  font-size: 30rpx;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 6rpx;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.record-meta {
+  font-size: 22rpx;
+  color: #97a3b7;
+}
+
+.record-right {
+  text-align: right;
+  flex-shrink: 0;
+  margin-left: 16rpx;
+}
+
+.record-cost {
+  display: block;
+  font-size: 28rpx;
+  font-weight: 600;
+  color: #FF6B6B;
+}
+
+.record-value {
+  font-size: 22rpx;
+  color: #97a3b7;
+}
+
+.record-redeem-id {
+  display: block;
+  font-size: 30rpx;
+  font-weight: 600;
+  color: #6BCB77;
+  margin-top: 4rpx;
+  font-family: monospace;
+}
+
+.record-redeem-tag {
+  display: block;
+  font-size: 22rpx;
+  color: #97a3b7;
+}
+
+.record-redeem-tag.redeemed {
+  color: #6BCB77;
+}
+
+.loading-more,
+.no-more {
+  text-align: center;
+  padding: 24rpx 0;
+  color: #97a3b7;
+  font-size: 24rpx;
+}
+
+.error-banner {
+  margin: 16rpx 24rpx;
+  padding: 16rpx 24rpx;
+  background: #FFF3E0;
+  border-radius: 12rpx;
+}
+
+.error-banner text {
+  color: #E65100;
+  font-size: 24rpx;
+}

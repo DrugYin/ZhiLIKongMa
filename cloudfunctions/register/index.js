@@ -56,7 +56,7 @@ exports.main = async (event, context) => {
     }
 
     // 3. 获取注册赠送积分配置
-    let registerPoints = 0 // 默认值
+    let registerPoints = 50 // 默认值
     try {
       const configRes = await db.collection('system_config')
         .where({ config_key: 'points_register_gift' })

@@ -1441,6 +1441,64 @@ RankingService.getRanking({ rank_type: 'week' })
 - 当前前端无直接调用入口
 - `get-ranking` 已自动消费快照结果
 
+## 五、积分明细
+
+### `get-points-log`
+
+功能：获取当前用户的积分变动明细，包括入账（审核通过、注册奖励等）和出账记录。
+
+入参：
+
+```js
+{
+  page_size: 20,
+  page_index: 1,
+  type: 'income'  // 可选: 'income' | 'expense' | 不传则全部
+}
+```
+
+说明：
+
+- 按时间倒序返回最新记录
+- 返回结果包含 `total`、`page_index`、`page_size`、`total_pages`
+- 积分变动记录格式：`{ type: 'income|expense', source: 'submission|register|other', description, points, create_time }`
+
+返回示例：
+
+```js
+{
+  success: true,
+  data: {
+    total: 45,
+    page_index: 1,
+    page_size: 20,
+    total_pages: 3,
+    list: [
+      {
+        type: 'income',
+        source: 'submission',
+        description: '完成任务「智能路灯」获得积分',
+        points: 10,
+        create_time: '2026-05-14T10:30:00.000Z'
+      }
+    ]
+  }
+}
+```
+
+前端调用：
+
+```js
+userApi.getPointsLog(data)
+```
+
+前端现状：
+
+- 学生端 `/pages/student/points-log/points-log` 已接入积分明细列表、类型筛选和分页
+- 后台管理端 `/admin-web/src/pages/points-log/PointsLogPage.vue` 已接入管理端积分明细查询
+
+---
+
 ## 六、前端封装对照
 
 ### 公告模块
@@ -1558,7 +1616,7 @@ RankingService.getRanking({ rank_type: 'week' })
 
 ---
 
-**文档版本**: v3.11.0
-**最后更新**: 2026-04-25
+**文档版本**: v3.12.0
+**最后更新**: 2026-05-14
 **编写者**: 开发团队
-**更新说明**: 同步后台用户、班级、任务、提交、日志管理云函数与后台页面接入情况
+**更新说明**: 新增积分明细云函数文档，同步后台页面接入情况

@@ -1,0 +1,6 @@
+{
+  "navigationBarTitleText": "抽奖记录",
+  "usingComponents": {
+    "custom-navbar": "/components/custom-navbar/index"
+  }
+}

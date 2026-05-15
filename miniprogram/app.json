@@ -10,6 +10,8 @@
     "pages/student/class-manage/class-detail/class-detail",
     "pages/student/class-manage/join-confirm/join-confirm",
     "pages/student/points-log/points-log",
+    "pages/student/lottery/lottery",
+    "pages/student/lottery/draw-records",
     "pages/common/announcements/announcements",
     "pages/login/login",
     "pages/teacher/index",

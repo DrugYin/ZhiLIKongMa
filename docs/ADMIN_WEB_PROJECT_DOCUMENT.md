@@ -1,7 +1,7 @@
 # 智慧控码后台管理网站项目文档
 
-**文档版本**: v1.2.0
-**最后更新**: 2026-04-25
+**文档版本**: v1.3.0
+**最后更新**: 2026-05-14
 **适用范围**: 独立后台管理网站（Web Admin）  
 **关联项目**: 智慧控码训练系统微信小程序  
 **数据来源**: 腾讯云开发 / CloudBase 文档数据库、云函数、云存储
@@ -43,7 +43,7 @@
 
 ### 2.3 当前进度快照
 
-截至 2026-04-25，后台管理网站已完成 Vue 3 工程、CloudBase Web Auth 登录、管理员权限校验、主布局和 11 个业务页面。后台云函数已落地 `admin-auth-check`、`admin-get-statistics`、`admin-manage-config`、`admin-manage-projects`、`admin-manage-users`、`admin-manage-classes`、`admin-manage-tasks`、`admin-manage-submissions`、`admin-manage-rankings`、`admin-manage-announcements`、`admin-manage-logs`。
+截至 2026-05-14，后台管理网站已完成 Vue 3 工程、CloudBase Web Auth 登录、管理员权限校验、主布局和 12 个业务页面（运营概览、系统配置、项目配置、用户管理、班级管理、任务管理、提交记录、排行榜、公告管理、积分明细、操作日志、登录）。后台云函数已落地 `admin-auth-check`、`admin-get-statistics`、`admin-manage-config`、`admin-manage-projects`、`admin-manage-users`、`admin-manage-classes`、`admin-manage-tasks`、`admin-manage-submissions`、`admin-manage-rankings`、`admin-manage-announcements`、`admin-manage-logs`。
 
 ### 2.4 非目标
 
@@ -118,9 +118,16 @@ admin-web/
 │   ├── api/
 │   │   ├── cloudbase.js
 │   │   ├── admin.js
+│   │   ├── announcements.js
+│   │   ├── classes.js
 │   │   ├── config.js
 │   │   ├── dashboard.js
-│   │   └── projects.js
+│   │   ├── logs.js
+│   │   ├── projects.js
+│   │   ├── rankings.js
+│   │   ├── submissions.js
+│   │   ├── tasks.js
+│   │   └── users.js
 │   ├── router/
 │   │   └── index.js
 │   ├── stores/

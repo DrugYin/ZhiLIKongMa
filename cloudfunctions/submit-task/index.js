@@ -12,7 +12,7 @@ cloud.init({
 
 const db = cloud.database()
 const PAGE_SIZE = 100
-const DEFAULT_MAX_SUBMISSIONS = 5
+const DEFAULT_MAX_SUBMISSIONS = 3
 const TRANSACTION_RETRY_LIMIT = 3
 
 async function getSubmissionCount(taskId, openid) {

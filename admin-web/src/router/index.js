@@ -13,6 +13,8 @@ import SubmissionsPage from '@/pages/submissions/SubmissionsPage.vue';
 import LogsPage from '@/pages/logs/LogsPage.vue';
 import AnnouncementsPage from '@/pages/announcements/AnnouncementsPage.vue';
 import PointsLogPage from '@/pages/points-log/PointsLogPage.vue';
+import PrizesPage from '@/pages/prizes/PrizesPage.vue';
+import DrawRecordsPage from '@/pages/draw-records/DrawRecordsPage.vue';
 
 const routes = [
   {
@@ -36,6 +38,8 @@ const routes = [
       { path: 'announcements', name: 'announcements', component: AnnouncementsPage, meta: { title: '公告管理' } },
       { path: 'submissions', name: 'submissions', component: SubmissionsPage, meta: { title: '提交记录' } },
       { path: 'points-log', name: 'points-log', component: PointsLogPage, meta: { title: '积分明细' } },
+      { path: 'prizes', name: 'prizes', component: PrizesPage, meta: { title: '奖品管理' } },
+      { path: 'draw-records', name: 'draw-records', component: DrawRecordsPage, meta: { title: '抽奖记录' } },
       { path: 'logs', name: 'logs', component: LogsPage, meta: { title: '操作日志' } }
     ]
   }

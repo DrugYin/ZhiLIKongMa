@@ -47,7 +47,18 @@ exports.main = async (event) => {
     const classTime = String(event.class_time || '').trim();
     const location = String(event.location || '').trim();
     const description = String(event.description || '').trim();
-    const maxMembers = Number(event.max_members || 50);
+    let maxMembers = Number(event.max_members || 0);
+    if (!event.max_members) {
+      try {
+        const configRes = await db.collection('system_config')
+          .where({ config_key: 'class_max_members' })
+          .get()
+        maxMembers = configRes.data.length > 0 ? configRes.data[0].config_value : 50
+      } catch (e) {
+        console.log('[create-class] 获取配置失败，使用默认值:', e.message)
+        maxMembers = 50
+      }
+    }
 
     if (!className) {
       return {

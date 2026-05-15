@@ -1,0 +1,1 @@
+<canvas type="2d" id="wheel-canvas" class="wheel-canvas" style="width:{{size}}px;height:{{size}}px;" />
