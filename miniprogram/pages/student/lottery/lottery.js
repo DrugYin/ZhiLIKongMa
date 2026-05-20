@@ -180,7 +180,7 @@ Page({
   },
 
   goToRecords() {
-    wx.navigateTo({ url: '/pages/student/lottery/draw-records' })
+    wx.navigateTo({ url: '/pages/student/lottery/draw-records/draw-records' })
   },
 
   goToPointsLog() {
