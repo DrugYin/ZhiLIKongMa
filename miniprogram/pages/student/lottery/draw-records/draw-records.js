@@ -1,4 +1,4 @@
-const { lotteryApi } = require('../../../services/api')
+const { lotteryApi } = require('../../../../services/api')
 
 const STATUS_MAP = { drawn: '已抽中', claimed: '已领取', expired: '已过期' }
 const TYPE_MAP = { physical: '实物', virtual: '虚拟', points: '积分' }
