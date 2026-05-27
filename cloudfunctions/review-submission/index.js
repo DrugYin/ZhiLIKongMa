@@ -3,6 +3,7 @@ const { verifyTeacherRole } = require('/opt/auth')
 const { writeOperationLog } = require('/opt/operation-log')
 const { createSystemNotification, safeCreateNotification } = require('/opt/notification')
 const { addPointsLog, POINTS_SOURCE, POINTS_TYPE } = require('/opt/points-log')
+const { normalizeString } = require('/opt/utils')
 
 cloud.init({
   env: cloud.DYNAMIC_CURRENT_ENV
@@ -28,10 +29,6 @@ async function getTaskById(taskId) {
   } catch (error) {
     return null
   }
-}
-
-function normalizeString(value) {
-  return String(value || '').trim()
 }
 
 function normalizeStatus(value) {

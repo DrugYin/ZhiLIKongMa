@@ -5,6 +5,8 @@ const { canStudentAccessTask } = require('/opt/task-access')
 const { failure, success } = require('/opt/response')
 const { writeOperationLog } = require('/opt/operation-log')
 const { createSystemNotification, safeCreateNotification } = require('/opt/notification')
+const { normalizeString } = require('/opt/utils')
+const { getConfigValue } = require('/opt/config')
 
 cloud.init({
   env: cloud.DYNAMIC_CURRENT_ENV
@@ -31,26 +33,6 @@ async function getTaskById(taskId) {
   } catch (error) {
     return null
   }
-}
-
-async function getConfigValue(configKey, defaultValue) {
-  try {
-    const res = await db.collection('system_config').where({
-      config_key: configKey
-    }).limit(1).get()
-
-    if (res.data.length > 0 && res.data[0].config_value !== undefined) {
-      return res.data[0].config_value
-    }
-  } catch (error) {
-    console.error('[submit-task] getConfigValue error:', error)
-  }
-
-  return defaultValue
-}
-
-function normalizeString(value) {
-  return String(value || '').trim()
 }
 
 function normalizeImages(images) {
@@ -350,7 +332,7 @@ exports.main = async (event) => {
     }
 
     const now = new Date()
-    const configLimit = Number(await getConfigValue('task_max_submissions', DEFAULT_MAX_SUBMISSIONS))
+    const configLimit = Number(await getConfigValue(db, 'task_max_submissions', DEFAULT_MAX_SUBMISSIONS))
     const maxSubmissions = Number(taskInfo.max_submissions || configLimit || DEFAULT_MAX_SUBMISSIONS)
     const initialSubmissionCount = await getSubmissionCount(taskId, OPENID)
 

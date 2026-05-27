@@ -3,6 +3,7 @@ const { getCurrentUser, verifyTeacherRole } = require('/opt/auth');
 const { chunkList, getAllMembershipsByStudent, buildJoinedClassIds } = require('/opt/membership');
 const { canStudentAccessTask } = require('/opt/task-access');
 const { success, failure } = require('/opt/response');
+const { normalizeString } = require('/opt/utils');
 
 cloud.init({
   env: cloud.DYNAMIC_CURRENT_ENV
@@ -23,10 +24,6 @@ const ALLOWED_SORT_FIELDS = new Set([
   'difficulty',
   'points'
 ]);
-
-function normalizeString(value) {
-  return String(value || '').trim();
-}
 
 function normalizeTaskType(value) {
   const taskType = normalizeString(value);

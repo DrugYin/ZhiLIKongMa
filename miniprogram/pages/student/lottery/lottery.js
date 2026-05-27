@@ -1,6 +1,5 @@
 const { lotteryApi, configApi } = require('../../../services/api')
 const { getUserInfo } = require('../../../services/storage')
-const AuthService = require('../../../services/auth')
 
 Page({
   data: {
@@ -15,7 +14,8 @@ Page({
     showResult: false,
     resultPrize: null,
     resultInfo: {},
-    errorMsg: ''
+    errorMsg: '',
+    disabledReason: ''
   },
 
   async onLoad() {
@@ -80,6 +80,7 @@ Page({
       this.setData({ errorMsg: '加载失败，请下拉刷新' })
     } finally {
       this.setData({ loading: false })
+      this._updateDisabledReason()
     }
   },
 
@@ -87,18 +88,19 @@ Page({
     return Math.max(this.data.dailyLimit - this.data.todayCount, 0)
   },
 
-  getDisabledReason() {
-    if (this.data.loading) return 'loading'
-    if (!this.data.lotteryEnabled) return 'disabled'
-    if (!this.data.prizes.length) return 'no_prizes'
-    if (this.data.userPoints < this.data.costPoints) return 'no_points'
-    if (this.getRemainingDraws() <= 0) return 'limit'
-    return ''
+  _updateDisabledReason() {
+    let reason = ''
+    if (this.data.loading) reason = 'loading'
+    else if (!this.data.lotteryEnabled) reason = 'disabled'
+    else if (!this.data.prizes.length) reason = 'no_prizes'
+    else if (this.data.userPoints < this.data.costPoints) reason = 'no_points'
+    else if (this.getRemainingDraws() <= 0) reason = 'limit'
+    this.setData({ disabledReason: reason })
   },
 
   onDrawTap() {
     if (this.data.drawing) return
-    const reason = this.getDisabledReason()
+    const reason = this.data.disabledReason
     if (reason) {
       const map = {
         disabled: '抽奖活动暂未开放',
@@ -167,16 +169,11 @@ Page({
       },
       showResult: true
     })
-    AuthService.getUserInfo().then(userInfo => {
-      AuthService.updateLocalUserInfo(userInfo)
-    }).catch(e => {
-      console.error('[lottery] sync cache error:', e)
-    })
+    this._updateDisabledReason()
   },
 
   onCloseResult() {
     this.setData({ showResult: false })
-    this.refreshAll()
   },
 
   goToRecords() {

@@ -211,6 +211,7 @@ import { computed, onMounted, reactive, ref } from 'vue';
 import { MessagePlugin } from 'tdesign-vue-next';
 import PageHeader from '@/components/PageHeader.vue';
 import { getOperationLogDetail, getOperationLogs } from '@/api/logs';
+import { formatDateTime } from '@/utils/format';
 
 const moduleOptions = [
   { label: '系统配置', value: 'system_config' },
@@ -295,26 +296,6 @@ function resetSummary(data = {}) {
   summary.total = data.total || 0;
   summary.modules = data.modules || {};
   summary.actor_types = data.actor_types || {};
-}
-
-function formatDateTime(value) {
-  if (!value) {
-    return '--';
-  }
-
-  const date = value instanceof Date ? value : new Date(value);
-  if (Number.isNaN(date.getTime())) {
-    return String(value);
-  }
-
-  return date.toLocaleString('zh-CN', {
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-    hour: '2-digit',
-    minute: '2-digit',
-    hour12: false
-  });
 }
 
 function getModuleLabel(moduleName) {

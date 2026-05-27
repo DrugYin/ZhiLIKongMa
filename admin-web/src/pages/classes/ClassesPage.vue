@@ -339,6 +339,8 @@ import {
 } from '@/api/classes';
 import { getProjects } from '@/api/projects';
 import { getUsers } from '@/api/users';
+import { formatDateTime } from '@/utils/format';
+import { useTablePage } from '@/composables/useTablePage';
 
 const DEFAULT_FORM = {
   _id: '',
@@ -391,29 +393,19 @@ const rules = {
   status: [{ required: true, message: '请选择状态' }]
 };
 
-const loading = ref(false);
 const saving = ref(false);
 const detailLoading = ref(false);
 const formDialogVisible = ref(false);
 const detailDialogVisible = ref(false);
 const formRef = ref(null);
-const classRows = ref([]);
 const projectOptions = ref([]);
 const teacherOptions = ref([]);
-const total = ref(0);
 const selectedClass = ref(null);
 const detailTab = ref('members');
 const memberRows = ref([]);
 const memberTotal = ref(0);
 const applicationRows = ref([]);
 const applicationTotal = ref(0);
-const filters = reactive({
-  keyword: '',
-  project_code: '',
-  status: '',
-  page: 1,
-  pageSize: 20
-});
 const memberFilters = reactive({
   page: 1,
   pageSize: 10
@@ -426,13 +418,31 @@ const applicationFilters = reactive({
 const form = reactive(createDefaultForm());
 
 const isEditing = computed(() => Boolean(form._id));
-const pagination = computed(() => ({
-  current: filters.page,
-  pageSize: filters.pageSize,
-  total: total.value,
-  showJumper: true,
-  pageSizeOptions: [10, 20, 50, 100]
-}));
+const {
+  filters,
+  list: classRows,
+  loading,
+  pagination,
+  loadData: loadClasses,
+  handleSearch,
+  handlePageChange
+} = useTablePage({
+  initialFilters: {
+    keyword: '',
+    project_code: '',
+    status: ''
+  },
+  request: ({ filters: query, pagination: page }) => getClasses({
+    keyword: query.keyword.trim(),
+    project_code: query.project_code,
+    status: query.status,
+    page: page.page,
+    page_size: page.page_size
+  }),
+  onError: (error) => {
+    MessagePlugin.error(error.message || '班级列表加载失败');
+  }
+});
 const memberPagination = computed(() => ({
   current: memberFilters.page,
   pageSize: memberFilters.pageSize,
@@ -531,21 +541,6 @@ function getApplicationStatusTheme(status) {
   return map[status] || 'default';
 }
 
-function formatDateTime(value) {
-  if (!value) {
-    return '--';
-  }
-
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) {
-    return '--';
-  }
-
-  return date.toLocaleString('zh-CN', {
-    hour12: false
-  });
-}
-
 async function loadProjects() {
   try {
     const data = await getProjects({ status: 'active' });
@@ -567,36 +562,6 @@ async function loadTeachers() {
   } catch (error) {
     MessagePlugin.warning(error.message || '教师列表加载失败');
   }
-}
-
-async function loadClasses() {
-  loading.value = true;
-  try {
-    const data = await getClasses({
-      keyword: filters.keyword.trim(),
-      project_code: filters.project_code,
-      status: filters.status,
-      page: filters.page,
-      page_size: filters.pageSize
-    });
-    classRows.value = data.list || [];
-    total.value = data.total || 0;
-  } catch (error) {
-    MessagePlugin.error(error.message || '班级列表加载失败');
-  } finally {
-    loading.value = false;
-  }
-}
-
-function handleSearch() {
-  filters.page = 1;
-  loadClasses();
-}
-
-function handlePageChange(pageInfo) {
-  filters.page = pageInfo.current || 1;
-  filters.pageSize = pageInfo.pageSize || filters.pageSize;
-  loadClasses();
 }
 
 function openCreateDialog() {

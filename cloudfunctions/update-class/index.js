@@ -1,6 +1,7 @@
 const cloud = require('wx-server-sdk');
 const { verifyTeacherRole } = require('/opt/auth');
 const { writeOperationLog } = require('/opt/operation-log');
+const { getConfigValue } = require('/opt/config');
 
 cloud.init({
   env: cloud.DYNAMIC_CURRENT_ENV
@@ -83,15 +84,7 @@ exports.main = async (event) => {
     const description = String(event.description || '').trim();
     let maxMembers = Number(event.max_members || 0);
     if (!event.max_members) {
-      try {
-        const configRes = await db.collection('system_config')
-          .where({ config_key: 'class_max_members' })
-          .get()
-        maxMembers = configRes.data.length > 0 ? configRes.data[0].config_value : 50
-      } catch (e) {
-        console.log('[update-class] 获取配置失败，使用默认值:', e.message)
-        maxMembers = 50
-      }
+      maxMembers = await getConfigValue(db, 'class_max_members', 50)
     }
 
     if (!className) {

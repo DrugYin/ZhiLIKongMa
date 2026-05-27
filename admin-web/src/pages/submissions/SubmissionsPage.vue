@@ -347,6 +347,7 @@ import { getClasses } from '@/api/classes';
 import { getProjects } from '@/api/projects';
 import { getSubmissionDetail, getSubmissions, reviewSubmission } from '@/api/submissions';
 import { isCloudFileID, isWebURL, resolveCloudFileURLs } from '@/api/cloudbase';
+import { formatDateTime } from '@/utils/format';
 
 const columns = [
   { colKey: 'task', title: '任务', width: 220 },
@@ -412,26 +413,6 @@ function resetSummary(data = {}) {
   summary.approved = data.approved || 0;
   summary.rejected = data.rejected || 0;
   summary.overtime = data.overtime || 0;
-}
-
-function formatDateTime(value) {
-  if (!value) {
-    return '--';
-  }
-
-  const date = value instanceof Date ? value : new Date(value);
-  if (Number.isNaN(date.getTime())) {
-    return String(value);
-  }
-
-  return date.toLocaleString('zh-CN', {
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-    hour: '2-digit',
-    minute: '2-digit',
-    hour12: false
-  });
 }
 
 function formatFileSize(size) {

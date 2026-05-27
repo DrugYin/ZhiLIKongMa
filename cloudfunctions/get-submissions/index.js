@@ -3,6 +3,7 @@ const { getCurrentUser, verifyTeacherRole } = require('/opt/auth')
 const { getAllMembershipsByStudent, buildJoinedClassIds } = require('/opt/membership')
 const { canStudentAccessTask } = require('/opt/task-access')
 const { success, failure } = require('/opt/response')
+const { normalizeString } = require('/opt/utils')
 
 cloud.init({
   env: cloud.DYNAMIC_CURRENT_ENV
@@ -18,10 +19,6 @@ async function getTaskById(taskId) {
   } catch (error) {
     return null
   }
-}
-
-function normalizeString(value) {
-  return String(value || '').trim()
 }
 
 exports.main = async (event) => {

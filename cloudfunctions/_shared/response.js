@@ -1,4 +1,4 @@
-function success(message, data) {
+function success(message, data = {}) {
   return {
     success: true,
     message,

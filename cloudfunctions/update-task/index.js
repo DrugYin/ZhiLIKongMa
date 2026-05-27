@@ -2,6 +2,7 @@ const cloud = require('wx-server-sdk');
 const { verifyTeacherRole } = require('/opt/auth');
 const { writeOperationLog } = require('/opt/operation-log');
 const { createClassTaskNotification, safeCreateNotification } = require('/opt/notification');
+const { normalizeString } = require('/opt/utils');
 
 cloud.init({
   env: cloud.DYNAMIC_CURRENT_ENV
@@ -34,10 +35,6 @@ async function getOwnedClass(openid, classId) {
 
 function hasField(source, key) {
   return Object.prototype.hasOwnProperty.call(source, key);
-}
-
-function normalizeString(value) {
-  return String(value || '').trim();
 }
 
 function normalizeImages(images) {
