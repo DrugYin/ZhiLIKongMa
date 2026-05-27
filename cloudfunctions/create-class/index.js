@@ -8,6 +8,22 @@ cloud.init({
 });
 
 const db = cloud.database();
+const CONFIG_CACHE_TTL = 30 * 1000;
+const configCache = new Map();
+
+async function getCachedConfigValue(configKey, defaultValue) {
+  const cached = configCache.get(configKey);
+  if (cached && cached.expiresAt > Date.now()) {
+    return cached.value;
+  }
+
+  const value = await getConfigValue(db, configKey, defaultValue);
+  configCache.set(configKey, {
+    value,
+    expiresAt: Date.now() + CONFIG_CACHE_TTL
+  });
+  return value;
+}
 
 function generateClassCode() {
   const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
@@ -50,7 +66,7 @@ exports.main = async (event) => {
     const description = String(event.description || '').trim();
     let maxMembers = Number(event.max_members || 0);
     if (!event.max_members) {
-      maxMembers = await getConfigValue(db, 'class_max_members', 50)
+      maxMembers = await getCachedConfigValue('class_max_members', 50)
     }
 
     if (!className) {
