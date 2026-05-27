@@ -9,18 +9,20 @@ cloud.init({
 const db = cloud.database()
 const TRANSACTION_RETRY_LIMIT = 3
 
-async function getConfigValue(key, defaultValue) {
+async function getConfigValues(keys, defaults) {
   try {
     const res = await db.collection('system_config')
-      .where({ config_key: key })
+      .where({ config_key: db.command.in(keys) })
       .get()
-    if (res.data.length > 0) {
-      return res.data[0].config_value
+    const map = {}
+    for (const doc of (res.data || [])) {
+      map[doc.config_key] = doc.config_value
     }
+    return keys.map((key, i) => map[key] !== undefined ? map[key] : defaults[i])
   } catch (e) {
-    console.log(`[start-draw] 获取 ${key} 失败，使用默认值:`, e.message)
+    console.log('[start-draw] 批量获取配置失败，使用默认值:', e.message)
+    return defaults
   }
-  return defaultValue
 }
 
 async function getTodayDrawCount(openid) {
@@ -109,11 +111,6 @@ async function executeDraw(openid, user, costPoints, now) {
         .get()
       const prize = checkAndSelectPrize(prizesRes.data || [])
 
-      const prizeDoc = await transaction.collection('prizes').doc(prize._id).get()
-      if (!prizeDoc.data || Number(prizeDoc.data.stock) <= 0) {
-        throw new Error('奖品库存不足')
-      }
-
       const isPointsPrize = (prize.type || 'virtual') === 'points'
       const prizeValue = Number(prize.value) || 0
       const afterCostPoints = currentPoints - costPoints
@@ -126,12 +123,15 @@ async function executeDraw(openid, user, costPoints, now) {
         }
       })
 
-      await transaction.collection('prizes').doc(prize._id).update({
+      const stockUpdateRes = await transaction.collection('prizes').doc(prize._id).update({
         data: {
           stock: db.command.inc(-1),
           update_time: now
         }
       })
+      if (stockUpdateRes.updated === 0) {
+        throw new Error('奖品库存不足')
+      }
 
       const drawRecordRes = await transaction.collection('draw_records').add({
         data: {
@@ -243,7 +243,17 @@ exports.main = async () => {
       }
     }
 
-    const lotteryEnabled = await getConfigValue('lottery_enabled', true)
+    const [configValues, todayCount] = await Promise.all([
+      getConfigValues(
+        ['lottery_enabled', 'lottery_cost_points', 'lottery_daily_limit'],
+        [true, 10, 5]
+      ),
+      getTodayDrawCount(OPENID)
+    ])
+
+    const [lotteryEnabled, costPointsRaw, dailyLimit] = configValues
+    const costPoints = Number(costPointsRaw) || 10
+
     if (!lotteryEnabled) {
       return {
         success: false,
@@ -251,9 +261,6 @@ exports.main = async () => {
         error_code: 5001
       }
     }
-
-    const costPoints = Number(await getConfigValue('lottery_cost_points', 10))
-    const dailyLimit = Number(await getConfigValue('lottery_daily_limit', 5))
 
     const currentPoints = Number(user.points) || 0
     if (currentPoints < costPoints) {
@@ -264,7 +271,6 @@ exports.main = async () => {
       }
     }
 
-    const todayCount = await getTodayDrawCount(OPENID)
     if (todayCount >= dailyLimit) {
       return {
         success: false,
