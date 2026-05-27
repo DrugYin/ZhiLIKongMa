@@ -108,6 +108,16 @@ function normalizeTempFileURLResponse(response) {
   return [];
 }
 
+function getProperty(source, paths) {
+  for (const path of paths) {
+    const value = path.reduce((current, key) => current?.[key], source);
+    if (value !== undefined && value !== null && value !== '') {
+      return value;
+    }
+  }
+  return '';
+}
+
 function getCachedTempFileURL(fileID) {
   const cached = tempFileURLCache.get(fileID);
   if (!cached || cached.expiresAt <= Date.now()) {
@@ -186,14 +196,15 @@ export async function resolveImageURL(value, maxAge = 3600) {
 }
 
 function normalizeUploadFileResponse(response) {
-  return response?.fileID
-    || response?.fileId
-    || response?.fileid
-    || response?.data?.fileID
-    || response?.data?.fileId
-    || response?.result?.fileID
-    || response?.result?.fileId
-    || '';
+  return getProperty(response, [
+    ['fileID'],
+    ['fileId'],
+    ['fileid'],
+    ['data', 'fileID'],
+    ['data', 'fileId'],
+    ['result', 'fileID'],
+    ['result', 'fileId']
+  ]);
 }
 
 export async function uploadCloudFile(file, cloudPath, onUploadProgress) {

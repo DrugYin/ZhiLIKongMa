@@ -52,6 +52,14 @@
 - `PointsLogPage.vue` 接入 `PageHeader`、`MessagePlugin`、`formatDateTime` 和积分日志 API 模块
 - 新增阶段四静态回归测试
 
+**阶段五：低优先级清理**（分支 `codex-phase-5-low-priority-cleanup`）
+- `normalizeUploadFileResponse` 改用 `getProperty` 路径读取工具
+- `lottery-wheel` 动画调度改用 canvas `requestAnimationFrame`
+- `create-class`、`update-class` 添加 30 秒配置缓存
+- 清理 `empty`、`loading`、`custom-navbar`、`points-log` 中的自描述注释和空数据块
+- 同步更新 `cloudfunctions/_shared.zip`
+- 新增阶段五静态回归测试
+
 ---
 
 ## 待办
@@ -84,8 +92,8 @@
 - [x] 4.5 `PointsLogPage.vue` 风格统一
 
 ### 阶段五：低优先级清理
-- [ ] 5.1 字符串常量枚举化
-- [ ] 5.2 `normalizeUploadFileResponse` 简化
-- [ ] 5.3 `lottery-wheel` 使用 `requestAnimationFrame`
-- [ ] 5.4 配置查询缓存
-- [ ] 5.5 删除不必要注释
+- [x] 5.1 字符串常量枚举化
+- [x] 5.2 `normalizeUploadFileResponse` 简化
+- [x] 5.3 `lottery-wheel` 使用 `requestAnimationFrame`
+- [x] 5.4 配置查询缓存
+- [x] 5.5 删除不必要注释
