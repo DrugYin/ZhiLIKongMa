@@ -48,9 +48,7 @@ Component({
   
     onBirthdayPicker() {
       this.setData({
-        birthdayPickerVisible: true
-      })
-      this.setData({
+        birthdayPickerVisible: true,
         date: new Date().toLocaleDateString()
       })
     },

@@ -26,9 +26,5 @@ Component({
       type: Boolean,
       value: false
     }
-  },
-
-  data: {},
-
-  methods: {}
+  }
 });

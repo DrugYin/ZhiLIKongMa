@@ -1,23 +1,11 @@
 const { lotteryApi } = require('../../../../services/api')
-
-const STATUS_MAP = { drawn: '已抽中', claimed: '已领取', expired: '已过期' }
-const TYPE_MAP = { physical: '实物', virtual: '虚拟', points: '积分' }
-
-function pad(n) {
-  return String(n).padStart(2, '0')
-}
-
-function formatTimeStr(time) {
-  if (!time) return ''
-  const d = new Date(time)
-  if (Number.isNaN(d.getTime())) return ''
-  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`
-}
+const { formatDate } = require('../../../../utils/format')
+const { DRAW_RECORD_STATUS_TEXT, PRIZE_TYPE_TEXT } = require('../../../../utils/constant')
 
 function decorateItem(item) {
-  const typeLabel = TYPE_MAP[item.prize_type] || item.prize_type || '虚拟'
-  const statusLabel = STATUS_MAP[item.status] || item.status || '已抽中'
-  const timeLabel = formatTimeStr(item.create_time)
+  const typeLabel = PRIZE_TYPE_TEXT[item.prize_type] || item.prize_type || '虚拟'
+  const statusLabel = DRAW_RECORD_STATUS_TEXT[item.status] || item.status || '已抽中'
+  const timeLabel = item.create_time ? formatDate(item.create_time, 'YYYY-MM-DD HH:mm') : ''
   const isRedeemed = item.is_redeemed
   return {
     ...item,
