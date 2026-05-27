@@ -44,6 +44,14 @@
 - 合并生日选择器中的两次 `setData`
 - 新增小程序常量回归测试
 
+**阶段四：云函数效率优化**（分支 `codex-phase-4-efficiency-polish`）
+- `admin-manage-draw-records` 下推关键词过滤，列表限制降为 200，并将人工兑奖改为条件更新
+- `admin-manage-prizes` 下推状态/关键词过滤，列表限制降为 200，并批量查询默认奖品是否存在
+- `get-prizes` 增加软删除过滤
+- 新增 `admin-web/src/api/points-log.js`
+- `PointsLogPage.vue` 接入 `PageHeader`、`MessagePlugin`、`formatDateTime` 和积分日志 API 模块
+- 新增阶段四静态回归测试
+
 ---
 
 ## 待办
@@ -69,11 +77,11 @@
 - [x] 3.5 `form.js` 合并 `setData`
 
 ### 阶段四：云函数效率优化
-- [ ] 4.1 admin 列表查询下推过滤
-- [ ] 4.2 `seedDefaultPrizes` 批量查询
-- [ ] 4.3 `redeemRecord` 原子更新
-- [ ] 4.4 `get-prizes` 添加软删除过滤
-- [ ] 4.5 `PointsLogPage.vue` 风格统一
+- [x] 4.1 admin 列表查询下推过滤
+- [x] 4.2 `seedDefaultPrizes` 批量查询
+- [x] 4.3 `redeemRecord` 原子更新
+- [x] 4.4 `get-prizes` 添加软删除过滤
+- [x] 4.5 `PointsLogPage.vue` 风格统一
 
 ### 阶段五：低优先级清理
 - [ ] 5.1 字符串常量枚举化

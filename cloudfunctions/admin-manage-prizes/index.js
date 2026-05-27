@@ -10,8 +10,10 @@ cloud.init({
 })
 
 const db = cloud.database()
+const _ = db.command
 
 const COLLECTION_NAME = 'prizes'
+const LIMIT = 200
 const PRIZE_TYPES = ['physical', 'virtual', 'points']
 const STATUS_VALUES = ['active', 'disabled']
 
@@ -78,12 +80,6 @@ function normalizePrizeDoc(doc = {}) {
   }
 }
 
-function matchKeyword(item, keyword) {
-  if (!keyword) return true
-  const searchText = [item.name, item.description, item.type].join(' ').toLowerCase()
-  return searchText.includes(keyword.toLowerCase())
-}
-
 async function getPrizeById(id) {
   if (!id) return null
   try {
@@ -97,18 +93,32 @@ async function getPrizeById(id) {
 async function listPrizes(event = {}) {
   const keyword = normalizeString(event.keyword)
   const status = normalizeString(event.status)
+  const where = {
+    is_deleted: _.neq(true)
+  }
+
+  if (STATUS_VALUES.includes(status)) {
+    where.status = status
+  }
+
+  const queryConditions = [where]
+  if (keyword) {
+    const escapedKeyword = keyword.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+    queryConditions.push(_.or([
+      { name: db.RegExp({ regexp: escapedKeyword, options: 'i' }) },
+      { description: db.RegExp({ regexp: escapedKeyword, options: 'i' }) },
+      { type: db.RegExp({ regexp: escapedKeyword, options: 'i' }) }
+    ]))
+  }
 
   const res = await db.collection(COLLECTION_NAME)
-    .where({ is_deleted: db.command.neq(true) })
+    .where(queryConditions.length > 1 ? _.and(queryConditions) : where)
     .orderBy('sort_order', 'asc')
     .orderBy('create_time', 'desc')
-    .limit(1000)
+    .limit(LIMIT)
     .get()
 
-  const list = (res.data || [])
-    .map(normalizePrizeDoc)
-    .filter((item) => !status || item.status === status)
-    .filter((item) => matchKeyword(item, keyword))
+  const list = (res.data || []).map(normalizePrizeDoc)
 
   return success('获取奖品列表成功', {
     list,
@@ -268,13 +278,18 @@ async function togglePrizeStatus(event = {}, admin) {
 
 async function seedDefaultPrizes(admin) {
   const results = []
+  const defaultNames = DEFAULT_PRIZES.map((item) => item.name)
+  const existingRes = await db.collection(COLLECTION_NAME)
+    .where({
+      name: db.command.in(defaultNames),
+      is_deleted: db.command.neq(true)
+    })
+    .field({ name: true })
+    .get()
+  const existingNames = new Set((existingRes.data || []).map((item) => item.name))
 
   for (const item of DEFAULT_PRIZES) {
-    const existing = await db.collection(COLLECTION_NAME)
-      .where({ name: item.name, is_deleted: db.command.neq(true) })
-      .count()
-
-    if (existing.total > 0) {
+    if (existingNames.has(item.name)) {
       results.push({ name: item.name, status: 'exists' })
       continue
     }
