@@ -36,7 +36,7 @@ const POINTS_TYPE = {
  * @param {string} [options.remark] - 备注说明
  * @param {string} [options.operator_openid] - 操作人 openid
  */
-async function addPointsLog(db, options) {
+async function addPointsLog(dbOrTx, options) {
   const {
     user_openid,
     type,
@@ -55,7 +55,8 @@ async function addPointsLog(db, options) {
   }
 
   try {
-    await db.collection(POINTS_LOG_COLLECTION).add({
+    const createTime = typeof dbOrTx.serverDate === 'function' ? dbOrTx.serverDate() : new Date()
+    await dbOrTx.collection(POINTS_LOG_COLLECTION).add({
       data: {
         user_openid,
         type,
@@ -66,7 +67,7 @@ async function addPointsLog(db, options) {
         source_id: source_id || '',
         remark: remark || '',
         operator_openid: operator_openid || 'system',
-        create_time: db.serverDate()
+        create_time: createTime
       }
     })
   } catch (err) {

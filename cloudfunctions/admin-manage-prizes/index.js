@@ -1,75 +1,19 @@
 const cloud = require('wx-server-sdk')
-const tcb = require('@cloudbase/node-sdk')
 const { writeAdminOperationLog } = require('/opt/admin-operation-log')
 const { DEFAULT_PRIZES } = require('/opt/prize-defaults')
+const { success, failure } = require('/opt/response')
+const { verifyAdmin, hasRole } = require('/opt/admin-auth')
+const { normalizeString, tryParseInt, tryParseFloat } = require('/opt/utils')
 
 cloud.init({
   env: cloud.DYNAMIC_CURRENT_ENV
 })
 
 const db = cloud.database()
-const app = tcb.init({
-  env: process.env.TCB_ENV || process.env.SCB_ENV || process.env.CLOUDBASE_ENV || 'zhi-li-kong-ma-7gy2aqcr1add21a7'
-})
-const auth = app.auth()
 
 const COLLECTION_NAME = 'prizes'
 const PRIZE_TYPES = ['physical', 'virtual', 'points']
 const STATUS_VALUES = ['active', 'disabled']
-
-function success(message, data = {}) {
-  return { success: true, message, data }
-}
-
-function failure(message, errorCode, extra = {}) {
-  return { success: false, message, error_code: errorCode, ...extra }
-}
-
-function hasRole(user, role) {
-  return Array.isArray(user.roles) && user.roles.includes(role)
-}
-
-function tryParseInt(value, fallback) {
-  const n = parseInt(value, 10)
-  return Number.isNaN(n) ? fallback : n
-}
-
-function tryParseFloat(value, fallback) {
-  const n = parseFloat(value)
-  return Number.isNaN(n) ? fallback : n
-}
-
-async function getCallerUid() {
-  const identity = auth.getUserInfo() || {}
-  return identity.uid || identity.user_id || identity.sub || ''
-}
-
-async function verifyAdmin() {
-  const uid = await getCallerUid()
-  if (!uid) {
-    return failure('请先登录', 401)
-  }
-
-  const res = await db.collection('users')
-    .where({ admin_auth_uid: uid })
-    .limit(1)
-    .get()
-  const user = res.data[0]
-
-  if (!user || !hasRole(user, 'admin')) {
-    return failure('当前账号没有后台管理员权限', 403)
-  }
-
-  if (user.status === 'disabled' || user.admin_status === 'disabled') {
-    return failure('当前管理员账号已被禁用', 403)
-  }
-
-  return { success: true, uid, user }
-}
-
-function normalizeString(value) {
-  return String(value || '').trim()
-}
 
 function normalizePrizePayload(payload = {}) {
   const name = normalizeString(payload.name)
@@ -348,7 +292,7 @@ async function seedDefaultPrizes(admin) {
 
 exports.main = async (event = {}) => {
   try {
-    const adminCheck = await verifyAdmin()
+    const adminCheck = await verifyAdmin(db)
     if (!adminCheck.success) return adminCheck
 
     const action = normalizeString(event.action || 'list')
