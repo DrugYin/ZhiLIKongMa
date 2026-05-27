@@ -159,6 +159,7 @@
 import { computed, onMounted, reactive, ref } from 'vue';
 import { MessagePlugin } from 'tdesign-vue-next';
 import PageHeader from '@/components/PageHeader.vue';
+import { formatDateTime } from '@/utils/format';
 import {
   createConfig,
   deleteConfig,
@@ -318,21 +319,6 @@ function formatConfigValue(value) {
 
 function getValueTypeLabel(value) {
   return valueTypeOptions.find((item) => item.value === value)?.label || '字符串';
-}
-
-function formatDateTime(value) {
-  if (!value) {
-    return '--';
-  }
-
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) {
-    return '--';
-  }
-
-  return date.toLocaleString('zh-CN', {
-    hour12: false
-  });
 }
 
 async function loadConfig() {

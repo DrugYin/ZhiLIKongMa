@@ -28,6 +28,14 @@
 - 同步更新 `cloudfunctions/_shared.zip`
 - 新增 `tests/shared-modules.test.js` 作为共享模块回归测试
 
+**阶段二：前端工具函数统一**（分支 `codex-phase-2-admin-web-utils`）
+- 在 `admin-web/src/utils/format.js` 统一 `formatDateTime` 和 0-1 输入语义的 `formatPercent`
+- 新增 `admin-web/src/constants/prize.js`，统一奖品类型/状态选项和标签
+- 新增 `admin-web/src/composables/useTablePage.js`，封装列表页 loading、筛选、分页、请求流程
+- 清理 11 个管理页面中的本地 `formatDateTime`
+- 迁移用户、班级两个主列表页面接入 `useTablePage`
+- 新增 admin-web 工具与组合式函数测试
+
 ---
 
 ## 待办
@@ -40,10 +48,10 @@
 - [x] 1.5 改造 `addPointsLog` 支持事务
 
 ### 阶段二：前端工具函数统一
-- [ ] 2.1 统一 `formatDateTime`
-- [ ] 2.2 统一 `formatPercent` 语义
-- [ ] 2.3 新建 `@/constants/prize.js`
-- [ ] 2.4 提取 `useTablePage` 组合式函数
+- [x] 2.1 统一 `formatDateTime`
+- [x] 2.2 统一 `formatPercent` 语义
+- [x] 2.3 新建 `@/constants/prize.js`
+- [x] 2.4 提取 `useTablePage` 组合式函数（已迁移用户、班级主列表，其余复杂页面可后续分批接入）
 
 ### 阶段三：小程序代码统一
 - [ ] 3.1 复用 `utils/format.js`

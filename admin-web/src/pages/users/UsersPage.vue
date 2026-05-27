@@ -259,11 +259,13 @@
 </template>
 
 <script setup>
-import { computed, onMounted, reactive, ref } from 'vue';
+import { onMounted, reactive, ref } from 'vue';
 import { MessagePlugin } from 'tdesign-vue-next';
 import PageHeader from '@/components/PageHeader.vue';
 import { getProjects } from '@/api/projects';
 import { getUsers, updateUser } from '@/api/users';
+import { formatDateTime } from '@/utils/format';
+import { useTablePage } from '@/composables/useTablePage';
 
 const DEFAULT_FORM = {
   _id: '',
@@ -313,29 +315,37 @@ const rules = {
   current_role: [{ required: true, message: '请选择当前角色' }]
 };
 
-const loading = ref(false);
 const saving = ref(false);
 const dialogVisible = ref(false);
 const formRef = ref(null);
-const userRows = ref([]);
 const projectOptions = ref([]);
-const total = ref(0);
-const filters = reactive({
-  keyword: '',
-  role: '',
-  status: '',
-  page: 1,
-  pageSize: 20
-});
 const form = reactive(createDefaultForm());
 
-const pagination = computed(() => ({
-  current: filters.page,
-  pageSize: filters.pageSize,
-  total: total.value,
-  showJumper: true,
-  pageSizeOptions: [10, 20, 50, 100]
-}));
+const {
+  filters,
+  list: userRows,
+  loading,
+  pagination,
+  loadData: loadUsers,
+  handleSearch,
+  handlePageChange
+} = useTablePage({
+  initialFilters: {
+    keyword: '',
+    role: '',
+    status: ''
+  },
+  request: ({ filters: query, pagination: page }) => getUsers({
+    keyword: query.keyword.trim(),
+    role: query.role,
+    status: query.status,
+    page: page.page,
+    page_size: page.page_size
+  }),
+  onError: (error) => {
+    MessagePlugin.error(error.message || '用户列表加载失败');
+  }
+});
 
 function createDefaultForm() {
   return {
@@ -428,21 +438,6 @@ function normalizePayload() {
   };
 }
 
-function formatDateTime(value) {
-  if (!value) {
-    return '--';
-  }
-
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) {
-    return '--';
-  }
-
-  return date.toLocaleString('zh-CN', {
-    hour12: false
-  });
-}
-
 async function loadProjects() {
   try {
     const data = await getProjects({
@@ -452,36 +447,6 @@ async function loadProjects() {
   } catch (error) {
     MessagePlugin.warning(error.message || '项目列表加载失败，教师项目只能手动维护');
   }
-}
-
-async function loadUsers() {
-  loading.value = true;
-  try {
-    const data = await getUsers({
-      keyword: filters.keyword.trim(),
-      role: filters.role,
-      status: filters.status,
-      page: filters.page,
-      page_size: filters.pageSize
-    });
-    userRows.value = data.list || [];
-    total.value = data.total || 0;
-  } catch (error) {
-    MessagePlugin.error(error.message || '用户列表加载失败');
-  } finally {
-    loading.value = false;
-  }
-}
-
-function handleSearch() {
-  filters.page = 1;
-  loadUsers();
-}
-
-function handlePageChange(pageInfo) {
-  filters.page = pageInfo.current || 1;
-  filters.pageSize = pageInfo.pageSize || filters.pageSize;
-  loadUsers();
 }
 
 function openEditDialog(row) {

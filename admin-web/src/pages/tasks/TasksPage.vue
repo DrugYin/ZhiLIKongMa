@@ -618,6 +618,7 @@ import {
   updateTask
 } from '@/api/tasks';
 import { getUsers } from '@/api/users';
+import { formatDateTime } from '@/utils/format';
 import {
   isCloudFileID,
   isWebURL,
@@ -1143,21 +1144,6 @@ function formatDeadline(row) {
   }
 
   return '--';
-}
-
-function formatDateTime(value) {
-  if (!value) {
-    return '--';
-  }
-
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) {
-    return '--';
-  }
-
-  return date.toLocaleString('zh-CN', {
-    hour12: false
-  });
 }
 
 function syncProjectInfo(projectCode) {

@@ -270,6 +270,7 @@ import {
   updateAnnouncement
 } from '@/api/announcements';
 import { getUsers } from '@/api/users';
+import { formatDateTime } from '@/utils/format';
 
 const DEFAULT_FORM = {
   _id: '',
@@ -608,21 +609,6 @@ function getUserOptionLabel(user) {
 
 function getRoleText(roles = []) {
   return roles.map(getRoleLabel).join('、') || '无角色';
-}
-
-function formatDateTime(value) {
-  if (!value) {
-    return '';
-  }
-
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) {
-    return '';
-  }
-
-  return date.toLocaleString('zh-CN', {
-    hour12: false
-  });
 }
 
 function formatInputDateTime(value) {

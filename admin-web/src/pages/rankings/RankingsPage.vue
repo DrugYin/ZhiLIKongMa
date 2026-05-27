@@ -235,7 +235,7 @@ import { computed, onMounted, reactive, ref } from 'vue';
 import { MessagePlugin } from 'tdesign-vue-next';
 import PageHeader from '@/components/PageHeader.vue';
 import { getCurrentRanking, getRankingHistory, getRankingHistoryDetail } from '@/api/rankings';
-import { formatNumber } from '@/utils/format';
+import { formatNumber, formatDateTime } from '@/utils/format';
 
 const activeTab = ref('current');
 const currentRankType = ref('week');
@@ -331,21 +331,6 @@ function getRankTheme(rank) {
   }
 
   return 'default';
-}
-
-function formatDateTime(value) {
-  if (!value) {
-    return '--';
-  }
-
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) {
-    return '--';
-  }
-
-  return date.toLocaleString('zh-CN', {
-    hour12: false
-  });
 }
 
 function getPeriodText(snapshot) {

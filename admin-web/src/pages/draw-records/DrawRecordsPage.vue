@@ -87,12 +87,8 @@ import { computed, onMounted, reactive, ref } from 'vue';
 import { MessagePlugin } from 'tdesign-vue-next';
 import PageHeader from '@/components/PageHeader.vue';
 import { getDrawRecordList, redeemDrawRecord } from '@/api/draw-records';
-
-const typeOptions = [
-  { label: '实物', value: 'physical' },
-  { label: '虚拟', value: 'virtual' },
-  { label: '积分', value: 'points' }
-];
+import { getPrizeTypeLabel } from '@/constants/prize';
+import { formatDateTime } from '@/utils/format';
 
 const columns = [
   { colKey: 'student_name', title: '学生', width: 120, ellipsis: true },
@@ -120,16 +116,7 @@ const pagination = computed(() => ({
   total: recordRows.value.length
 }));
 
-function getTypeLabel(type) {
-  return typeOptions.find((item) => item.value === type)?.label || type || '--';
-}
-
-function formatDateTime(value) {
-  if (!value) return '';
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return '';
-  return date.toLocaleString('zh-CN', { hour12: false });
-}
+const getTypeLabel = getPrizeTypeLabel;
 
 async function loadRecords() {
   loading.value = true;
