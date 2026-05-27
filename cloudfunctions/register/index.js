@@ -5,6 +5,7 @@
 
 const cloud = require('wx-server-sdk')
 const { addPointsLog, POINTS_SOURCE, POINTS_TYPE } = require('/opt/points-log')
+const { getConfigValue } = require('/opt/config')
 
 cloud.init({
   env: cloud.DYNAMIC_CURRENT_ENV
@@ -56,17 +57,7 @@ exports.main = async (event, context) => {
     }
 
     // 3. 获取注册赠送积分配置
-    let registerPoints = 50 // 默认值
-    try {
-      const configRes = await db.collection('system_config')
-        .where({ config_key: 'points_register_gift' })
-        .get()
-      if (configRes.data.length > 0) {
-        registerPoints = configRes.data[0].config_value
-      }
-    } catch (e) {
-      console.log('[register] 获取配置失败，使用默认值:', e.message)
-    }
+    const registerPoints = await getConfigValue(db, 'points_register_gift', 50)
 
     // 4. 创建用户记录
     const now = new Date()

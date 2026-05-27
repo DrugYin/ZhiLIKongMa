@@ -2,6 +2,8 @@ const cloud = require('wx-server-sdk');
 const { verifyTeacherRole } = require('/opt/auth');
 const { writeOperationLog } = require('/opt/operation-log');
 const { createClassTaskNotification, safeCreateNotification } = require('/opt/notification');
+const { normalizeString } = require('/opt/utils');
+const { getConfigValue } = require('/opt/config');
 
 cloud.init({
   env: cloud.DYNAMIC_CURRENT_ENV
@@ -30,10 +32,6 @@ async function getOwnedClass(openid, classId) {
   } catch (error) {
     return null;
   }
-}
-
-function normalizeString(value) {
-  return String(value || '').trim();
 }
 
 function normalizeImages(images) {
@@ -194,16 +192,7 @@ exports.main = async (event) => {
     const difficulty = normalizeDifficulty(event.difficulty);
     let defaultPoints = 10
     if (event.points === undefined) {
-      try {
-        const configRes = await db.collection('system_config')
-          .where({ config_key: 'points_per_task' })
-          .get()
-        if (configRes.data.length > 0) {
-          defaultPoints = configRes.data[0].config_value
-        }
-      } catch (e) {
-        console.log('[create-task] 获取配置失败，使用默认值:', e.message)
-      }
+      defaultPoints = await getConfigValue(db, 'points_per_task', 10)
     }
     const points = normalizePoints(event.points === undefined ? defaultPoints : event.points);
     const status = normalizeStatus(event.status);

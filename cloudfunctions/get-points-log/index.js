@@ -5,8 +5,10 @@
  */
 
 const cloud = require('wx-server-sdk')
-const tcb = require('@cloudbase/node-sdk')
 const { getCurrentUser } = require('/opt/auth')
+const { success, failure } = require('/opt/response')
+const { verifyAdmin, hasRole } = require('/opt/admin-auth')
+const { normalizeString } = require('/opt/utils')
 
 cloud.init({
   env: cloud.DYNAMIC_CURRENT_ENV
@@ -15,34 +17,9 @@ cloud.init({
 const db = cloud.database()
 const _ = db.command
 
-const app = tcb.init({
-  env: process.env.TCB_ENV || process.env.SCB_ENV || process.env.CLOUDBASE_ENV || 'zhi-li-kong-ma-7gy2aqcr1add21a7'
-})
-const tcbAuth = app.auth()
-
 const COLLECTION_NAME = 'points_log'
 const USER_COLLECTION = 'users'
 const PAGE_SIZE_ALL = 100
-
-function success(message, data = {}) {
-  return {
-    success: true,
-    message,
-    data
-  }
-}
-
-function failure(message, errorCode) {
-  return {
-    success: false,
-    message,
-    error_code: errorCode
-  }
-}
-
-function normalizeString(value) {
-  return String(value || '').trim()
-}
 
 function normalizePage(value) {
   const page = Number(value || 1)
@@ -55,31 +32,6 @@ function normalizePageSize(value) {
     return 20
   }
   return Math.min(pageSize, 100)
-}
-
-function hasRole(user, role) {
-  return Array.isArray(user.roles) && user.roles.includes(role)
-}
-
-async function getCallerUid() {
-  const identity = tcbAuth.getUserInfo() || {}
-  return identity.uid || identity.user_id || identity.sub || ''
-}
-
-async function verifyAdminByUid() {
-  const uid = await getCallerUid()
-  if (!uid) return null
-
-  const res = await db.collection('users')
-    .where({ admin_auth_uid: uid })
-    .limit(1)
-    .get()
-  const user = res.data[0]
-
-  if (!user || !hasRole(user, 'admin')) return null
-  if (user.status === 'disabled' || user.admin_status === 'disabled') return null
-
-  return user
 }
 
 async function fetchAllUsers() {
@@ -163,8 +115,8 @@ exports.main = async (event = {}) => {
       isAdmin = hasRole(currentUser, 'admin')
     } else {
       // 管理后台调用，通过 tcb auth 验证管理员身份
-      const adminUser = await verifyAdminByUid()
-      if (!adminUser) {
+      const adminCheck = await verifyAdmin(db)
+      if (!adminCheck.success) {
         return failure('无管理员权限', 403)
       }
       isAdmin = true

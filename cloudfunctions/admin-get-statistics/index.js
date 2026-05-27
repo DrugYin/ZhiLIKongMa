@@ -4,7 +4,8 @@
  */
 
 const cloud = require('wx-server-sdk')
-const tcb = require('@cloudbase/node-sdk')
+const { success, failure } = require('/opt/response')
+const { verifyAdmin, hasRole } = require('/opt/admin-auth')
 
 cloud.init({
   env: cloud.DYNAMIC_CURRENT_ENV
@@ -12,10 +13,6 @@ cloud.init({
 
 const db = cloud.database()
 const _ = db.command
-const app = tcb.init({
-  env: process.env.TCB_ENV || process.env.SCB_ENV || process.env.CLOUDBASE_ENV || 'zhi-li-kong-ma-7gy2aqcr1add21a7'
-})
-const auth = app.auth()
 
 const PAGE_SIZE = 100
 const CHINA_UTC_OFFSET_HOURS = 8
@@ -23,23 +20,6 @@ const RANGE_DAYS_MAP = {
   '7d': 7,
   '14d': 14,
   '30d': 30
-}
-
-function success(message, data) {
-  return {
-    success: true,
-    message,
-    data
-  }
-}
-
-function failure(message, errorCode, extra = {}) {
-  return {
-    success: false,
-    message,
-    error_code: errorCode,
-    ...extra
-  }
 }
 
 function normalizeRangeType(value) {
@@ -152,55 +132,6 @@ async function fetchAll(collectionName, queryData = {}, fields = {}) {
   }
 }
 
-function hasRole(user, role) {
-  return Array.isArray(user.roles) && user.roles.includes(role)
-}
-
-async function getCallerUid() {
-  const identity = auth.getUserInfo() || {}
-  return identity.uid || identity.user_id || identity.sub || ''
-}
-
-async function verifyAdmin() {
-  const uid = await getCallerUid()
-  if (!uid) {
-    return {
-      success: false,
-      message: '请先登录',
-      error_code: 401
-    }
-  }
-
-  const res = await db.collection('users')
-    .where({
-      admin_auth_uid: uid
-    })
-    .limit(1)
-    .get()
-  const user = res.data[0]
-
-  if (!user || !hasRole(user, 'admin')) {
-    return {
-      success: false,
-      message: '当前账号没有后台管理员权限',
-      error_code: 403
-    }
-  }
-
-  if (user.status === 'disabled' || user.admin_status === 'disabled') {
-    return {
-      success: false,
-      message: '当前管理员账号已被禁用',
-      error_code: 403
-    }
-  }
-
-  return {
-    success: true,
-    user
-  }
-}
-
 function sumPoints(submissions = []) {
   return submissions.reduce((sum, item) => sum + Number(item.points_earned || 0), 0)
 }
@@ -266,7 +197,7 @@ function buildTrend(dayRanges, submissions = []) {
 
 exports.main = async (event = {}) => {
   try {
-    const adminCheck = await verifyAdmin()
+    const adminCheck = await verifyAdmin(db)
     if (!adminCheck.success) {
       return adminCheck
     }

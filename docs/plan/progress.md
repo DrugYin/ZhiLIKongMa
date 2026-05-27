@@ -19,16 +19,25 @@
 - 创建 `docs/plan/findings.md`：问题详情和根因分析
 - 创建 `docs/plan/progress.md`：本文件
 
+**阶段一：云函数共享模块提取**（分支 `codex-phase-1-cloudfunctions-shared`）
+- 新增 `_shared/admin-auth.js`，统一 `verifyAdmin`、`hasRole`、`getCallerUid`
+- 新增 `_shared/utils.js`，统一 `normalizeString`、`tryParseInt`、`tryParseFloat`
+- 新增 `_shared/config.js`，统一配置读取
+- 统一云函数 `success`/`failure` 引用 `_shared/response.js`
+- 改造 `_shared/points-log.js` 支持数据库实例或事务上下文，并迁移 `start-draw`
+- 同步更新 `cloudfunctions/_shared.zip`
+- 新增 `tests/shared-modules.test.js` 作为共享模块回归测试
+
 ---
 
 ## 待办
 
 ### 阶段一：云函数共享模块提取
-- [ ] 1.1 新建 `_shared/admin-auth.js`
-- [ ] 1.2 统一 `success`/`failure` 引用
-- [ ] 1.3 新建 `_shared/utils.js`
-- [ ] 1.4 新建 `_shared/config.js`
-- [ ] 1.5 改造 `addPointsLog` 支持事务
+- [x] 1.1 新建 `_shared/admin-auth.js`
+- [x] 1.2 统一 `success`/`failure` 引用
+- [x] 1.3 新建 `_shared/utils.js`
+- [x] 1.4 新建 `_shared/config.js`
+- [x] 1.5 改造 `addPointsLog` 支持事务
 
 ### 阶段二：前端工具函数统一
 - [ ] 2.1 统一 `formatDateTime`

@@ -1,6 +1,7 @@
 const cloud = require('wx-server-sdk')
 const { getCurrentUser } = require('/opt/auth')
-const { POINTS_SOURCE } = require('/opt/points-log')
+const { getConfigValues } = require('/opt/config')
+const { addPointsLog, POINTS_SOURCE, POINTS_TYPE } = require('/opt/points-log')
 
 cloud.init({
   env: cloud.DYNAMIC_CURRENT_ENV
@@ -8,22 +9,6 @@ cloud.init({
 
 const db = cloud.database()
 const TRANSACTION_RETRY_LIMIT = 3
-
-async function getConfigValues(keys, defaults) {
-  try {
-    const res = await db.collection('system_config')
-      .where({ config_key: db.command.in(keys) })
-      .get()
-    const map = {}
-    for (const doc of (res.data || [])) {
-      map[doc.config_key] = doc.config_value
-    }
-    return keys.map((key, i) => map[key] !== undefined ? map[key] : defaults[i])
-  } catch (e) {
-    console.log('[start-draw] 批量获取配置失败，使用默认值:', e.message)
-    return defaults
-  }
-}
 
 async function getTodayDrawCount(openid) {
   const today = new Date()
@@ -152,35 +137,29 @@ async function executeDraw(openid, user, costPoints, now) {
         }
       })
 
-      await transaction.collection('points_log').add({
-        data: {
-          user_openid: openid,
-          type: 'expense',
-          amount: costPoints,
-          before_points: currentPoints,
-          after_points: afterCostPoints,
-          source: POINTS_SOURCE.LOTTERY_COST,
-          source_id: drawRecordRes._id,
-          remark: `抽奖消耗 - ${prize.name}`,
-          operator_openid: 'system',
-          create_time: now
-        }
+      await addPointsLog(transaction, {
+        user_openid: openid,
+        type: POINTS_TYPE.EXPENSE,
+        amount: costPoints,
+        before_points: currentPoints,
+        after_points: afterCostPoints,
+        source: POINTS_SOURCE.LOTTERY_COST,
+        source_id: drawRecordRes._id,
+        remark: `抽奖消耗 - ${prize.name}`,
+        operator_openid: 'system'
       })
 
       if (isPointsPrize && prizeValue > 0) {
-        await transaction.collection('points_log').add({
-          data: {
-            user_openid: openid,
-            type: 'income',
-            amount: prizeValue,
-            before_points: afterCostPoints,
-            after_points: netPoints,
-            source: 'lottery_reward',
-            source_id: drawRecordRes._id,
-            remark: `抽奖获得积分 - ${prize.name}`,
-            operator_openid: 'system',
-            create_time: now
-          }
+        await addPointsLog(transaction, {
+          user_openid: openid,
+          type: POINTS_TYPE.INCOME,
+          amount: prizeValue,
+          before_points: afterCostPoints,
+          after_points: netPoints,
+          source: 'lottery_reward',
+          source_id: drawRecordRes._id,
+          remark: `抽奖获得积分 - ${prize.name}`,
+          operator_openid: 'system'
         })
       }
 
@@ -245,6 +224,7 @@ exports.main = async () => {
 
     const [configValues, todayCount] = await Promise.all([
       getConfigValues(
+        db,
         ['lottery_enabled', 'lottery_cost_points', 'lottery_daily_limit'],
         [true, 10, 5]
       ),

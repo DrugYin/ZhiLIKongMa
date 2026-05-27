@@ -1,6 +1,7 @@
 const cloud = require('wx-server-sdk')
 const { getCurrentUser } = require('/opt/auth')
 const { success, failure } = require('/opt/response')
+const { normalizeString } = require('/opt/utils')
 
 cloud.init({
   env: cloud.DYNAMIC_CURRENT_ENV
@@ -11,10 +12,6 @@ const _ = db.command
 const PAGE_SIZE = 100
 const ALLOWED_RANK_TYPES = new Set(['week', 'month', 'total'])
 const CHINA_UTC_OFFSET_HOURS = 8
-
-function normalizeString(value) {
-  return String(value || '').trim()
-}
 
 function normalizeRankType(value) {
   const rankType = normalizeString(value)

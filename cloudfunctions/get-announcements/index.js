@@ -4,6 +4,8 @@
  */
 
 const cloud = require('wx-server-sdk')
+const { success, failure } = require('/opt/response')
+const { normalizeString } = require('/opt/utils')
 
 cloud.init({
   env: cloud.DYNAMIC_CURRENT_ENV
@@ -16,27 +18,6 @@ const ANNOUNCEMENT_COLLECTION = 'announcements'
 const READ_COLLECTION = 'announcement_reads'
 const USER_COLLECTION = 'users'
 const PAGE_SIZE = 100
-
-function success(message, data = {}) {
-  return {
-    success: true,
-    message,
-    data
-  }
-}
-
-function failure(message, errorCode, extra = {}) {
-  return {
-    success: false,
-    message,
-    error_code: errorCode,
-    ...extra
-  }
-}
-
-function normalizeString(value) {
-  return String(value || '').trim()
-}
 
 function normalizePage(value) {
   const page = Number(value || 1)
