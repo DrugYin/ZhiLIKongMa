@@ -24,32 +24,34 @@ exports.main = async (event) => {
     const page = Math.max(Number(event.page) || 1, 1)
     const pageSize = Math.min(Number(event.page_size) || PAGE_SIZE, 100)
 
-    let todayCount = null
+    const baseWhere = { student_openid: OPENID }
+
+    const tasks = [
+      db.collection('draw_records').where(baseWhere).count(),
+      db.collection('draw_records').where(baseWhere)
+        .orderBy('create_time', 'desc')
+        .skip((page - 1) * pageSize)
+        .limit(pageSize)
+        .get()
+    ]
+
     if (event.count_today) {
       const today = new Date()
       today.setHours(0, 0, 0, 0)
       const tomorrow = new Date(today)
       tomorrow.setDate(tomorrow.getDate() + 1)
-
-      const todayCountRes = await db.collection('draw_records')
-        .where({
-          student_openid: OPENID,
+      tasks.push(
+        db.collection('draw_records').where({
+          ...baseWhere,
           create_time: db.command.gte(today).and(db.command.lt(tomorrow))
-        })
-        .count()
-      todayCount = todayCountRes.total
+        }).count()
+      )
     }
 
-    const totalRes = await db.collection('draw_records')
-      .where({ student_openid: OPENID })
-      .count()
-
-    const res = await db.collection('draw_records')
-      .where({ student_openid: OPENID })
-      .orderBy('create_time', 'desc')
-      .skip((page - 1) * pageSize)
-      .limit(pageSize)
-      .get()
+    const results = await Promise.all(tasks)
+    const totalRes = results[0]
+    const res = results[1]
+    const todayCount = event.count_today ? results[2].total : null
 
     const list = (res.data || []).map(item => ({
       _id: item._id,
