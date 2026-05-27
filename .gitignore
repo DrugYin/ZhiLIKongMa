@@ -39,8 +39,8 @@ build/
 .agents/
 .codebuddy/
 .codex/
-copyright-application-materials/
-docs/plan/
+# copyright-application-materials/
+# docs/plan/
 
 # Environment variables
 .env.local
