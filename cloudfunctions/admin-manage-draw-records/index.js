@@ -9,9 +9,10 @@ cloud.init({
 })
 
 const db = cloud.database()
+const _ = db.command
 
 const COLLECTION_NAME = 'draw_records'
-const LIMIT = 1000
+const LIMIT = 200
 
 function normalizeRecord(doc = {}) {
   return {
@@ -31,32 +32,34 @@ function normalizeRecord(doc = {}) {
   }
 }
 
-function matchKeyword(record, keyword) {
-  if (!keyword) return true
-  const text = [record.student_name, record.prize_name, record.redeem_id].join(' ').toLowerCase()
-  return text.includes(keyword.toLowerCase())
-}
-
 async function listRecords(event = {}) {
   const keyword = normalizeString(event.keyword)
   const isRedeemed = event.is_redeemed
 
-  const where = {}
+  const queryConditions = []
   if (isRedeemed === 'true' || isRedeemed === true) {
-    where.is_redeemed = true
+    queryConditions.push({ is_redeemed: true })
   } else if (isRedeemed === 'false' || isRedeemed === false) {
-    where.is_redeemed = db.command.or(db.command.eq(false), db.command.exists(false))
+    queryConditions.push({ is_redeemed: _.or(_.eq(false), _.exists(false)) })
   }
 
+  if (keyword) {
+    const escapedKeyword = keyword.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+    queryConditions.push(_.or([
+      { student_name: db.RegExp({ regexp: escapedKeyword, options: 'i' }) },
+      { prize_name: db.RegExp({ regexp: escapedKeyword, options: 'i' }) },
+      { redeem_id: db.RegExp({ regexp: escapedKeyword, options: 'i' }) }
+    ]))
+  }
+
+  const queryData = queryConditions.length ? _.and(queryConditions) : {}
   const res = await db.collection(COLLECTION_NAME)
-    .where(Object.keys(where).length ? where : {})
+    .where(queryData)
     .orderBy('create_time', 'desc')
     .limit(LIMIT)
     .get()
 
-  const list = (res.data || [])
-    .map(normalizeRecord)
-    .filter((item) => matchKeyword(item, keyword))
+  const list = (res.data || []).map(normalizeRecord)
 
   return success('获取抽奖记录成功', {
     list,
@@ -83,24 +86,8 @@ async function redeemRecord(event = {}, admin) {
   const id = normalizeString(event._id || event.id)
   if (!id) return failure('缺少记录ID', 400)
 
-  let record
-  try {
-    const res = await db.collection(COLLECTION_NAME).doc(id).get()
-    record = res.data
-  } catch (error) {
-    return failure('记录不存在', 404)
-  }
-
-  if (!record) {
-    return failure('记录不存在', 404)
-  }
-
-  if (record.is_redeemed) {
-    return failure('该记录已兑奖，无需重复操作', 409)
-  }
-
   const now = new Date()
-  await db.collection(COLLECTION_NAME).doc(id).update({
+  const updateRes = await db.collection(COLLECTION_NAME).where({ _id: id, is_redeemed: false }).update({
     data: {
       is_redeemed: true,
       redeem_time: now,
@@ -108,6 +95,19 @@ async function redeemRecord(event = {}, admin) {
       update_time: now
     }
   })
+  if (!updateRes.updated) {
+    try {
+      const currentRes = await db.collection(COLLECTION_NAME).doc(id).get()
+      return currentRes.data
+        ? failure('该记录已兑奖，无需重复操作', 409)
+        : failure('记录不存在', 404)
+    } catch (error) {
+      return failure('记录不存在', 404)
+    }
+  }
+
+  const recordRes = await db.collection(COLLECTION_NAME).doc(id).get()
+  const record = recordRes.data || {}
 
   await writeAdminOperationLog(db, {
     module: 'draw_records',

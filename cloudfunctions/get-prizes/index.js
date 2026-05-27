@@ -14,7 +14,7 @@ exports.main = async () => {
 
     try {
       const res = await db.collection('prizes')
-        .where({ status: 'active', stock: db.command.gt(0) })
+        .where({ status: 'active', stock: db.command.gt(0), is_deleted: db.command.neq(true) })
         .orderBy('sort_order', 'asc')
         .get()
       prizes = res.data || []

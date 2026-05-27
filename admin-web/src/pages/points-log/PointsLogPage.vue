@@ -1,6 +1,16 @@
 <template>
   <div class="points-log-page">
-    <t-card title="积分明细" :bordered="false">
+    <PageHeader
+      eyebrow="Points"
+      title="积分明细"
+      description="查询用户积分变动记录，支持按类型、来源、关键词和时间范围筛选。"
+    >
+      <template #actions>
+        <t-button variant="outline" :loading="loading" @click="loadData">刷新</t-button>
+      </template>
+    </PageHeader>
+
+    <t-card :bordered="false" class="points-log-card">
       <!-- 筛选条件 -->
       <div class="filter-bar">
         <t-input
@@ -80,7 +90,7 @@
           {{ getSourceText(row.source) }}
         </template>
         <template #create_time="{ row }">
-          {{ formatTime(row.create_time) }}
+          {{ formatDateTime(row.create_time) }}
         </template>
       </t-table>
     </t-card>
@@ -89,7 +99,10 @@
 
 <script setup>
 import { ref, reactive, onMounted } from 'vue';
-import { callAdminFunction } from '@/api/cloudbase';
+import { MessagePlugin } from 'tdesign-vue-next';
+import PageHeader from '@/components/PageHeader.vue';
+import { getPointsLogList } from '@/api/points-log';
+import { formatDateTime } from '@/utils/format';
 
 const loading = ref(false);
 const tableData = ref([]);
@@ -132,17 +145,6 @@ function getSourceText(source) {
   return sourceMap[source] || source;
 }
 
-function formatTime(date) {
-  if (!date) return '';
-  const d = new Date(date);
-  const year = d.getFullYear();
-  const month = String(d.getMonth() + 1).padStart(2, '0');
-  const day = String(d.getDate()).padStart(2, '0');
-  const hours = String(d.getHours()).padStart(2, '0');
-  const minutes = String(d.getMinutes()).padStart(2, '0');
-  return `${year}-${month}-${day} ${hours}:${minutes}`;
-}
-
 async function loadData() {
   loading.value = true;
   try {
@@ -165,11 +167,11 @@ async function loadData() {
       params.end_time = filters.dateRange[1];
     }
 
-    const res = await callAdminFunction('get-points-log', params);
+    const res = await getPointsLogList(params);
     tableData.value = res.list || [];
     pagination.total = res.total || 0;
   } catch (err) {
-    console.error('加载积分明细失败:', err);
+    MessagePlugin.error(err.message || '加载积分明细失败');
   } finally {
     loading.value = false;
   }
@@ -203,6 +205,10 @@ onMounted(() => {
 <style scoped>
 .points-log-page {
   padding: 16px;
+}
+
+.points-log-card {
+  margin-top: 16px;
 }
 
 .filter-bar {
