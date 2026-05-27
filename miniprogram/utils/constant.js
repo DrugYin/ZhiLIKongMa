@@ -109,6 +109,18 @@ const DRAW_RECORD_STATUS = {
   EXPIRED: 'expired'
 };
 
+const PRIZE_TYPE_TEXT = {
+  [PRIZE_TYPE.PHYSICAL]: '实物',
+  [PRIZE_TYPE.VIRTUAL]: '虚拟',
+  [PRIZE_TYPE.POINTS]: '积分'
+};
+
+const DRAW_RECORD_STATUS_TEXT = {
+  [DRAW_RECORD_STATUS.DRAWN]: '已抽中',
+  [DRAW_RECORD_STATUS.CLAIMED]: '已领取',
+  [DRAW_RECORD_STATUS.EXPIRED]: '已过期'
+};
+
 // ========== 项目相关 ==========
 const PROJECT_STATUS = {
   ACTIVE: 'active',
@@ -254,6 +266,8 @@ module.exports = {
   APPLICATION_STATUS,
   PRIZE_TYPE,
   DRAW_RECORD_STATUS,
+  PRIZE_TYPE_TEXT,
+  DRAW_RECORD_STATUS_TEXT,
   PROJECT_STATUS,
   PROJECT_CODES,
   PROJECT_NAMES,

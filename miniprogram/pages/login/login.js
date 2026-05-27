@@ -40,12 +40,6 @@ Page({
     },
   },
 
-  /**
-   * 生命周期函数--监听页面加载
-   */
-  onLoad(options) {
-  },
-
   onLogin() {
     if (!this.data.hasConfirmedAgreement) {
       toast.showToast('请先阅读并同意《用户协议》和《隐私政策》')

@@ -36,6 +36,14 @@
 - 迁移用户、班级两个主列表页面接入 `useTablePage`
 - 新增 admin-web 工具与组合式函数测试
 
+**阶段三：小程序代码统一**（分支 `codex-phase-3-miniprogram-cleanup`）
+- 抽奖记录页复用 `utils/format.js` 和 `utils/constant.js`
+- 补充 `PRIZE_TYPE_TEXT`、`DRAW_RECORD_STATUS_TEXT`
+- 删除登录页、导航栏、加载组件中的空生命周期/空数据/空方法
+- `announcement-panel` 阅读逻辑复用当前公告读取结果
+- 合并生日选择器中的两次 `setData`
+- 新增小程序常量回归测试
+
 ---
 
 ## 待办
@@ -54,11 +62,11 @@
 - [x] 2.4 提取 `useTablePage` 组合式函数（已迁移用户、班级主列表，其余复杂页面可后续分批接入）
 
 ### 阶段三：小程序代码统一
-- [ ] 3.1 复用 `utils/format.js`
-- [ ] 3.2 补充 `utils/constant.js` 文本映射
-- [ ] 3.3 清理空生命周期/方法/数据块
-- [ ] 3.4 `announcement-panel` 复用方法
-- [ ] 3.5 `form.js` 合并 `setData`
+- [x] 3.1 复用 `utils/format.js`
+- [x] 3.2 补充 `utils/constant.js` 文本映射
+- [x] 3.3 清理空生命周期/方法/数据块
+- [x] 3.4 `announcement-panel` 复用方法
+- [x] 3.5 `form.js` 合并 `setData`
 
 ### 阶段四：云函数效率优化
 - [ ] 4.1 admin 列表查询下推过滤
