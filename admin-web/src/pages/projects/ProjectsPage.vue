@@ -208,6 +208,7 @@
 import { computed, onMounted, reactive, ref } from 'vue';
 import { MessagePlugin } from 'tdesign-vue-next';
 import PageHeader from '@/components/PageHeader.vue';
+import { formatDateTime } from '@/utils/format';
 import {
   createProject,
   deleteProject,
@@ -418,21 +419,6 @@ function openCreateDialog() {
 function openEditDialog(row) {
   resetForm(row);
   dialogVisible.value = true;
-}
-
-function formatDateTime(value) {
-  if (!value) {
-    return '--';
-  }
-
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) {
-    return '--';
-  }
-
-  return date.toLocaleString('zh-CN', {
-    hour12: false
-  });
 }
 
 async function loadProjects() {

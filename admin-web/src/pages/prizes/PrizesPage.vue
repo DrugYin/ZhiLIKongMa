@@ -32,8 +32,7 @@
           @change="loadPrizes"
           @clear="loadPrizes"
         >
-          <t-option label="上架" value="active" />
-          <t-option label="下架" value="disabled" />
+          <t-option v-for="item in statusOptions" :key="item.value" :label="item.label" :value="item.value" />
         </t-select>
         <t-button :loading="loading" @click="loadPrizes">查询</t-button>
       </div>
@@ -177,6 +176,8 @@
 import { computed, onMounted, reactive, ref } from 'vue';
 import { MessagePlugin } from 'tdesign-vue-next';
 import PageHeader from '@/components/PageHeader.vue';
+import { PRIZE_STATUS_OPTIONS, PRIZE_TYPE_OPTIONS, getPrizeTypeLabel } from '@/constants/prize';
+import { formatDateTime, formatPercent } from '@/utils/format';
 import {
   createPrize,
   deletePrize,
@@ -199,11 +200,8 @@ const DEFAULT_FORM = {
   sort_order: 0
 };
 
-const typeOptions = [
-  { label: '实物', value: 'physical' },
-  { label: '虚拟', value: 'virtual' },
-  { label: '积分', value: 'points' }
-];
+const typeOptions = PRIZE_TYPE_OPTIONS;
+const statusOptions = PRIZE_STATUS_OPTIONS;
 
 const columns = [
   { colKey: 'name', title: '奖品名称', width: 160, ellipsis: true },
@@ -272,21 +270,7 @@ function openEditDialog(row) {
   dialogVisible.value = true;
 }
 
-function getTypeLabel(type) {
-  return typeOptions.find((item) => item.value === type)?.label || type || '--';
-}
-
-function formatPercent(value) {
-  if (value === undefined || value === null) return '--';
-  return `${(Number(value) * 100).toFixed(1)}%`;
-}
-
-function formatDateTime(value) {
-  if (!value) return '--';
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return '--';
-  return date.toLocaleString('zh-CN', { hour12: false });
-}
+const getTypeLabel = getPrizeTypeLabel;
 
 function normalizePayload() {
   return {
