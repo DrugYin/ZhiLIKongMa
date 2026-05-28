@@ -6,7 +6,7 @@
       description="查看所有学生的抽奖记录，支持按兑奖状态筛选，对未兑奖记录执行人工兑奖操作。"
     >
       <template #actions>
-        <t-button variant="outline" :loading="loading" @click="loadRecords">刷新</t-button>
+        <t-button variant="outline" :loading="loading" @click="loadData">刷新</t-button>
       </template>
     </PageHeader>
 
@@ -17,30 +17,31 @@
           clearable
           placeholder="搜索学生姓名、奖品名称或兑奖码"
           class="records-search"
-          @enter="loadRecords"
-          @clear="loadRecords"
+          @enter="handleSearch"
+          @clear="handleSearch"
         />
         <t-select
           v-model="filters.isRedeemed"
           clearable
           placeholder="全部兑奖状态"
           class="records-redeemed"
-          @change="loadRecords"
-          @clear="loadRecords"
+          @change="handleSearch"
+          @clear="handleSearch"
         >
           <t-option label="已兑奖" value="true" />
           <t-option label="未兑奖" value="false" />
         </t-select>
-        <t-button :loading="loading" @click="loadRecords">查询</t-button>
+        <t-button :loading="loading" @click="handleSearch">查询</t-button>
       </div>
 
       <t-table
         row-key="_id"
-        :data="recordRows"
+        :data="list"
         :columns="columns"
         :loading="loading"
         :pagination="pagination"
         hover
+        @page-change="handlePageChange"
       >
         <template #is_redeemed="{ row }">
           <t-tag :theme="row.is_redeemed ? 'success' : 'warning'" variant="light">
@@ -54,11 +55,11 @@
         </template>
 
         <template #prize_type="{ row }">
-          <t-tag variant="light">{{ getTypeLabel(row.prize_type) }}</t-tag>
+          <t-tag variant="light">{{ getPrizeTypeLabel(row.prize_type) }}</t-tag>
         </template>
 
         <template #redeem_time="{ row }">
-          {{ formatDateTime(row.redeem_time) || '--' }}
+          {{ formatDateTime(row.redeem_time) }}
         </template>
 
         <template #create_time="{ row }">
@@ -83,12 +84,13 @@
 </template>
 
 <script setup>
-import { computed, onMounted, reactive, ref } from 'vue';
+import { onMounted } from 'vue';
 import { MessagePlugin } from 'tdesign-vue-next';
 import PageHeader from '@/components/PageHeader.vue';
 import { getDrawRecordList, redeemDrawRecord } from '@/api/draw-records';
 import { getPrizeTypeLabel } from '@/constants/prize';
 import { formatDateTime } from '@/utils/format';
+import { useTablePage } from '@/composables/useTablePage';
 
 const columns = [
   { colKey: 'student_name', title: '学生', width: 120, ellipsis: true },
@@ -103,50 +105,41 @@ const columns = [
   { colKey: 'op', title: '操作', width: 90, fixed: 'right' }
 ];
 
-const loading = ref(false);
-const recordRows = ref([]);
-const filters = reactive({
-  keyword: '',
-  isRedeemed: ''
+const {
+  filters,
+  list,
+  loading,
+  pagination,
+  loadData,
+  handleSearch,
+  handlePageChange
+} = useTablePage({
+  initialFilters: { keyword: '', isRedeemed: '' },
+  initialPageSize: 20,
+  async request({ filters: f, pagination: p }) {
+    return getDrawRecordList({
+      keyword: f.keyword.trim(),
+      is_redeemed: f.isRedeemed,
+      page: p.page,
+      page_size: p.page_size
+    });
+  },
+  onError(error) {
+    MessagePlugin.error(error.message || '抽奖记录加载失败');
+  }
 });
 
-const pagination = computed(() => ({
-  defaultPageSize: 15,
-  showJumper: true,
-  total: recordRows.value.length
-}));
-
-const getTypeLabel = getPrizeTypeLabel;
-
-async function loadRecords() {
-  loading.value = true;
-  try {
-    const data = await getDrawRecordList({
-      keyword: filters.keyword.trim(),
-      is_redeemed: filters.isRedeemed
-    });
-    recordRows.value = data.list || [];
-  } catch (error) {
-    MessagePlugin.error(error.message || '抽奖记录加载失败');
-  } finally {
-    loading.value = false;
-  }
-}
-
 async function handleRedeem(row) {
-  loading.value = true;
   try {
     await redeemDrawRecord(row._id);
     MessagePlugin.success('兑奖成功');
-    await loadRecords();
+    await loadData();
   } catch (error) {
     MessagePlugin.error(error.message || '兑奖操作失败');
-  } finally {
-    loading.value = false;
   }
 }
 
-onMounted(loadRecords);
+onMounted(loadData);
 </script>
 
 <style scoped>

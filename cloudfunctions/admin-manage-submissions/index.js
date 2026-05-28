@@ -8,7 +8,7 @@ const { writeAdminOperationLog } = require('/opt/admin-operation-log')
 const { addPointsLog, POINTS_SOURCE, POINTS_TYPE } = require('/opt/points-log')
 const { success, failure } = require('/opt/response')
 const { verifyAdmin, hasRole } = require('/opt/admin-auth')
-const { normalizeString } = require('/opt/utils')
+const { normalizeString, normalizePage, normalizePageSize } = require('/opt/utils')
 
 cloud.init({
   env: cloud.DYNAMIC_CURRENT_ENV
@@ -22,20 +22,6 @@ const USER_COLLECTION = 'users'
 const TASK_COLLECTION = 'tasks'
 const PAGE_SIZE = 100
 const VALID_STATUSES = ['pending', 'approved', 'rejected']
-
-function normalizePage(value) {
-  const page = Number(value || 1)
-  return Number.isInteger(page) && page > 0 ? page : 1
-}
-
-function normalizePageSize(value) {
-  const pageSize = Number(value || 20)
-  if (!Number.isInteger(pageSize) || pageSize <= 0) {
-    return 20
-  }
-
-  return Math.min(pageSize, 100)
-}
 
 function normalizeStatus(value) {
   const status = normalizeString(value)

@@ -56,7 +56,7 @@
         </template>
 
         <template #type="{ row }">
-          <t-tag variant="light">{{ getTypeLabel(row.type) }}</t-tag>
+          <t-tag variant="light">{{ getPrizeTypeLabel(row.type) }}</t-tag>
         </template>
 
         <template #probability="{ row }">
@@ -269,8 +269,6 @@ function openEditDialog(row) {
   resetForm(row);
   dialogVisible.value = true;
 }
-
-const getTypeLabel = getPrizeTypeLabel;
 
 function normalizePayload() {
   return {

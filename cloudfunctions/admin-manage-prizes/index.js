@@ -3,7 +3,7 @@ const { writeAdminOperationLog } = require('/opt/admin-operation-log')
 const { DEFAULT_PRIZES } = require('/opt/prize-defaults')
 const { success, failure } = require('/opt/response')
 const { verifyAdmin, hasRole } = require('/opt/admin-auth')
-const { normalizeString, tryParseInt, tryParseFloat } = require('/opt/utils')
+const { normalizeString, tryParseInt, tryParseFloat, escapeRegExp } = require('/opt/utils')
 
 cloud.init({
   env: cloud.DYNAMIC_CURRENT_ENV
@@ -103,7 +103,7 @@ async function listPrizes(event = {}) {
 
   const queryConditions = [where]
   if (keyword) {
-    const escapedKeyword = keyword.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+    const escapedKeyword = escapeRegExp(keyword)
     queryConditions.push(_.or([
       { name: db.RegExp({ regexp: escapedKeyword, options: 'i' }) },
       { description: db.RegExp({ regexp: escapedKeyword, options: 'i' }) },

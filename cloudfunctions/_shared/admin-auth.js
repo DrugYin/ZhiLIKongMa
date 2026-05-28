@@ -1,8 +1,10 @@
 const tcb = require('@cloudbase/node-sdk')
 const { failure } = require('./response')
 
+const DEFAULT_ENV_ID = 'zhi-li-kong-ma-7gy2aqcr1add21a7'
+
 const app = tcb.init({
-  env: process.env.TCB_ENV || process.env.SCB_ENV || process.env.CLOUDBASE_ENV || 'zhi-li-kong-ma-7gy2aqcr1add21a7'
+  env: process.env.TCB_ENV || process.env.SCB_ENV || process.env.CLOUDBASE_ENV || DEFAULT_ENV_ID
 })
 const auth = app.auth()
 

@@ -151,8 +151,23 @@ function formatCountdown(seconds) {
   return `${pad(minutes)}:${pad(secs)}`;
 }
 
+/**
+ * 格式化日期时间（带空值保护）
+ * @param value 日期值
+ * @param fallback 空值时的替代文本
+ * @returns 格式化后的日期字符串
+ */
+function formatDateTime(value, fallback) {
+  if (fallback === undefined) {
+    fallback = '--';
+  }
+  if (!value) return fallback;
+  return formatDate(value, 'YYYY-MM-DD HH:mm');
+}
+
 module.exports = {
   formatDate,
+  formatDateTime,
   formatRelativeTime,
   formatFileSize,
   formatPhone,
