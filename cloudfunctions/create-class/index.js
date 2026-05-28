@@ -1,13 +1,14 @@
 const cloud = require('wx-server-sdk');
 const { verifyTeacherRole } = require('/opt/auth');
 const { writeOperationLog } = require('/opt/operation-log');
-const { getConfigValue } = require('/opt/config');
+const { getConfigValue, createCachedConfigValue } = require('/opt/config');
 
 cloud.init({
   env: cloud.DYNAMIC_CURRENT_ENV
 });
 
 const db = cloud.database();
+const getCachedConfigValue = createCachedConfigValue(db);
 
 function generateClassCode() {
   const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
@@ -50,7 +51,7 @@ exports.main = async (event) => {
     const description = String(event.description || '').trim();
     let maxMembers = Number(event.max_members || 0);
     if (!event.max_members) {
-      maxMembers = await getConfigValue(db, 'class_max_members', 50)
+      maxMembers = await getCachedConfigValue('class_max_members', 50)
     }
 
     if (!className) {

@@ -24,7 +24,7 @@ Component({
       this._canvas = null
       this._ctx = null
       this._currentAngle = 0
-      this._animTimer = null
+      this._animFrame = null
     },
     ready() {
       this.initCanvas()
@@ -156,7 +156,7 @@ Component({
         this.drawWheel()
 
         if (progress < 1) {
-          this._animTimer = setTimeout(animStep, 16)
+          this._animFrame = this._canvas.requestAnimationFrame(animStep)
         } else {
           this.setData({ spinning: false })
           this.triggerEvent('result', { index: targetIndex, prize: prizes[targetIndex] })
@@ -167,9 +167,9 @@ Component({
     },
 
     stopAnimation() {
-      if (this._animTimer) {
-        clearTimeout(this._animTimer)
-        this._animTimer = null
+      if (this._animFrame && this._canvas && typeof this._canvas.cancelAnimationFrame === 'function') {
+        this._canvas.cancelAnimationFrame(this._animFrame)
+        this._animFrame = null
       }
     }
   }

@@ -7,7 +7,7 @@ const cloud = require('wx-server-sdk')
 const { writeAdminOperationLog } = require('/opt/admin-operation-log')
 const { success, failure } = require('/opt/response')
 const { verifyAdmin, hasRole } = require('/opt/admin-auth')
-const { normalizeString } = require('/opt/utils')
+const { normalizeString, normalizeNumber, normalizePage, normalizePageSize } = require('/opt/utils')
 
 cloud.init({
   env: cloud.DYNAMIC_CURRENT_ENV
@@ -23,25 +23,6 @@ const USER_COLLECTION = 'users'
 const PAGE_SIZE = 100
 const VALID_STATUS = ['active', 'inactive', 'deleted']
 const CLASS_CODE_PATTERN = /^[A-Z0-9]{4,12}$/
-
-function normalizeNumber(value, fallback = 0) {
-  const numberValue = Number(value)
-  return Number.isNaN(numberValue) ? fallback : numberValue
-}
-
-function normalizePage(value) {
-  const page = Number(value || 1)
-  return Number.isInteger(page) && page > 0 ? page : 1
-}
-
-function normalizePageSize(value) {
-  const pageSize = Number(value || 20)
-  if (!Number.isInteger(pageSize) || pageSize <= 0) {
-    return 20
-  }
-
-  return Math.min(pageSize, 100)
-}
 
 function normalizeStatus(value, fallback = 'active') {
   const status = normalizeString(value)

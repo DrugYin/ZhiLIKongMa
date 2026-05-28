@@ -2,16 +2,16 @@ const cloud = require('wx-server-sdk')
 const { writeAdminOperationLog } = require('/opt/admin-operation-log')
 const { success, failure } = require('/opt/response')
 const { verifyAdmin, hasRole } = require('/opt/admin-auth')
-const { normalizeString } = require('/opt/utils')
+const { normalizeString, normalizePage, normalizePageSize, escapeRegExp } = require('/opt/utils')
 
 cloud.init({
   env: cloud.DYNAMIC_CURRENT_ENV
 })
 
 const db = cloud.database()
+const _ = db.command
 
 const COLLECTION_NAME = 'draw_records'
-const LIMIT = 1000
 
 function normalizeRecord(doc = {}) {
   return {
@@ -31,36 +31,47 @@ function normalizeRecord(doc = {}) {
   }
 }
 
-function matchKeyword(record, keyword) {
-  if (!keyword) return true
-  const text = [record.student_name, record.prize_name, record.redeem_id].join(' ').toLowerCase()
-  return text.includes(keyword.toLowerCase())
-}
-
 async function listRecords(event = {}) {
   const keyword = normalizeString(event.keyword)
   const isRedeemed = event.is_redeemed
+  const page = normalizePage(event.page)
+  const pageSize = normalizePageSize(event.page_size, 50)
 
-  const where = {}
+  const queryConditions = []
   if (isRedeemed === 'true' || isRedeemed === true) {
-    where.is_redeemed = true
+    queryConditions.push({ is_redeemed: true })
   } else if (isRedeemed === 'false' || isRedeemed === false) {
-    where.is_redeemed = db.command.or(db.command.eq(false), db.command.exists(false))
+    queryConditions.push({ is_redeemed: _.or(_.eq(false), _.exists(false)) })
   }
 
-  const res = await db.collection(COLLECTION_NAME)
-    .where(Object.keys(where).length ? where : {})
-    .orderBy('create_time', 'desc')
-    .limit(LIMIT)
-    .get()
+  if (keyword) {
+    const escapedKeyword = escapeRegExp(keyword)
+    queryConditions.push(_.or([
+      { student_name: db.RegExp({ regexp: escapedKeyword, options: 'i' }) },
+      { prize_name: db.RegExp({ regexp: escapedKeyword, options: 'i' }) },
+      { redeem_id: db.RegExp({ regexp: escapedKeyword, options: 'i' }) }
+    ]))
+  }
 
-  const list = (res.data || [])
-    .map(normalizeRecord)
-    .filter((item) => matchKeyword(item, keyword))
+  const queryData = queryConditions.length ? _.and(queryConditions) : {}
+
+  const [countRes, dataRes] = await Promise.all([
+    db.collection(COLLECTION_NAME).where(queryData).count(),
+    db.collection(COLLECTION_NAME)
+      .where(queryData)
+      .orderBy('create_time', 'desc')
+      .skip((page - 1) * pageSize)
+      .limit(pageSize)
+      .get()
+  ])
+
+  const list = (dataRes.data || []).map(normalizeRecord)
 
   return success('获取抽奖记录成功', {
     list,
-    total: list.length
+    total: countRes.total,
+    page,
+    page_size: pageSize
   })
 }
 
@@ -85,19 +96,13 @@ async function redeemRecord(event = {}, admin) {
 
   let record
   try {
-    const res = await db.collection(COLLECTION_NAME).doc(id).get()
-    record = res.data
+    const recordRes = await db.collection(COLLECTION_NAME).doc(id).get()
+    record = recordRes.data
   } catch (error) {
     return failure('记录不存在', 404)
   }
-
-  if (!record) {
-    return failure('记录不存在', 404)
-  }
-
-  if (record.is_redeemed) {
-    return failure('该记录已兑奖，无需重复操作', 409)
-  }
+  if (!record) return failure('记录不存在', 404)
+  if (record.is_redeemed) return failure('该记录已兑奖，无需重复操作', 409)
 
   const now = new Date()
   await db.collection(COLLECTION_NAME).doc(id).update({

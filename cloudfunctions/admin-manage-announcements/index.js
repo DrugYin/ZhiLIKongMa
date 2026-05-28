@@ -7,7 +7,7 @@ const cloud = require('wx-server-sdk')
 const { writeAdminOperationLog } = require('/opt/admin-operation-log')
 const { success, failure } = require('/opt/response')
 const { verifyAdmin, hasRole } = require('/opt/admin-auth')
-const { normalizeString } = require('/opt/utils')
+const { normalizeString, normalizePage, normalizePageSize } = require('/opt/utils')
 
 cloud.init({
   env: cloud.DYNAMIC_CURRENT_ENV
@@ -23,20 +23,6 @@ const VALID_STATUSES = ['draft', 'published', 'closed']
 const VALID_DISPLAY_MODES = ['always', 'once']
 const VALID_VISIBILITY_TYPES = ['all', 'role', 'users']
 const VALID_ROLES = ['student', 'teacher', 'admin']
-
-function normalizePage(value) {
-  const page = Number(value || 1)
-  return Number.isInteger(page) && page > 0 ? page : 1
-}
-
-function normalizePageSize(value) {
-  const pageSize = Number(value || 20)
-  if (!Number.isInteger(pageSize) || pageSize <= 0) {
-    return 20
-  }
-
-  return Math.min(pageSize, 100)
-}
 
 function normalizeStringArray(value) {
   if (Array.isArray(value)) {

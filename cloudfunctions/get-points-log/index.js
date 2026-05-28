@@ -8,7 +8,7 @@ const cloud = require('wx-server-sdk')
 const { getCurrentUser } = require('/opt/auth')
 const { success, failure } = require('/opt/response')
 const { verifyAdmin, hasRole } = require('/opt/admin-auth')
-const { normalizeString } = require('/opt/utils')
+const { normalizeString, normalizePage, normalizePageSize, escapeRegExp } = require('/opt/utils')
 
 cloud.init({
   env: cloud.DYNAMIC_CURRENT_ENV
@@ -20,19 +20,6 @@ const _ = db.command
 const COLLECTION_NAME = 'points_log'
 const USER_COLLECTION = 'users'
 const PAGE_SIZE_ALL = 100
-
-function normalizePage(value) {
-  const page = Number(value || 1)
-  return Number.isInteger(page) && page > 0 ? page : 1
-}
-
-function normalizePageSize(value) {
-  const pageSize = Number(value || 20)
-  if (!Number.isInteger(pageSize) || pageSize <= 0) {
-    return 20
-  }
-  return Math.min(pageSize, 100)
-}
 
 async function fetchAllUsers() {
   const totalRes = await db.collection(USER_COLLECTION).count()
@@ -147,7 +134,7 @@ exports.main = async (event = {}) => {
     }
 
     if (keyword) {
-      const escapedKeyword = keyword.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+      const escapedKeyword = escapeRegExp(keyword)
       const keywordOr = [
         { user_openid: db.RegExp({ regexp: escapedKeyword, options: 'i' }) },
         { remark: db.RegExp({ regexp: escapedKeyword, options: 'i' }) },

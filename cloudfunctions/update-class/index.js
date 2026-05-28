@@ -1,7 +1,7 @@
 const cloud = require('wx-server-sdk');
 const { verifyTeacherRole } = require('/opt/auth');
 const { writeOperationLog } = require('/opt/operation-log');
-const { getConfigValue } = require('/opt/config');
+const { getConfigValue, createCachedConfigValue } = require('/opt/config');
 
 cloud.init({
   env: cloud.DYNAMIC_CURRENT_ENV
@@ -9,6 +9,7 @@ cloud.init({
 
 const db = cloud.database();
 const PAGE_SIZE = 100;
+const getCachedConfigValue = createCachedConfigValue(db);
 
 async function getAllUsersInClass(classId) {
   const totalRes = await db.collection('users').where({
@@ -84,7 +85,7 @@ exports.main = async (event) => {
     const description = String(event.description || '').trim();
     let maxMembers = Number(event.max_members || 0);
     if (!event.max_members) {
-      maxMembers = await getConfigValue(db, 'class_max_members', 50)
+      maxMembers = await getCachedConfigValue('class_max_members', 50)
     }
 
     if (!className) {

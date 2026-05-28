@@ -11,7 +11,6 @@ export function useTablePage({
   const filters = reactive({ ...initialFilters });
   const list = ref([]);
   const loading = ref(false);
-  const saving = ref(false);
   const pagination = reactive({
     current: 1,
     pageSize: initialPageSize,
@@ -61,7 +60,6 @@ export function useTablePage({
     filters,
     list,
     loading,
-    saving,
     pagination,
     loadData,
     handleSearch,

@@ -12,6 +12,17 @@ export function formatPercent(value, fallback = '--') {
   return `${(Number(value) * 100).toFixed(1)}%`;
 }
 
+const dateTimeFormatter = new Intl.DateTimeFormat('zh-CN', {
+  timeZone: 'Asia/Hong_Kong',
+  year: 'numeric',
+  month: '2-digit',
+  day: '2-digit',
+  hour: '2-digit',
+  minute: '2-digit',
+  second: '2-digit',
+  hour12: false
+});
+
 export function formatDateTime(value, fallback = '--') {
   if (!value) {
     return fallback;
@@ -22,19 +33,5 @@ export function formatDateTime(value, fallback = '--') {
     return fallback;
   }
 
-  const parts = new Intl.DateTimeFormat('zh-CN', {
-    timeZone: 'Asia/Hong_Kong',
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-    hour: '2-digit',
-    minute: '2-digit',
-    second: '2-digit',
-    hour12: false
-  }).formatToParts(date).reduce((result, part) => {
-    result[part.type] = part.value;
-    return result;
-  }, {});
-
-  return `${parts.year}-${parts.month}-${parts.day} ${parts.hour}:${parts.minute}:${parts.second}`;
+  return dateTimeFormatter.format(date);
 }

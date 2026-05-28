@@ -108,6 +108,10 @@ function normalizeTempFileURLResponse(response) {
   return [];
 }
 
+function pickFirst(...values) {
+  return values.find(v => v != null && v !== '') || '';
+}
+
 function getCachedTempFileURL(fileID) {
   const cached = tempFileURLCache.get(fileID);
   if (!cached || cached.expiresAt <= Date.now()) {
@@ -186,14 +190,15 @@ export async function resolveImageURL(value, maxAge = 3600) {
 }
 
 function normalizeUploadFileResponse(response) {
-  return response?.fileID
-    || response?.fileId
-    || response?.fileid
-    || response?.data?.fileID
-    || response?.data?.fileId
-    || response?.result?.fileID
-    || response?.result?.fileId
-    || '';
+  return pickFirst(
+    response?.fileID,
+    response?.fileId,
+    response?.fileid,
+    response?.data?.fileID,
+    response?.data?.fileId,
+    response?.result?.fileID,
+    response?.result?.fileId
+  );
 }
 
 export async function uploadCloudFile(file, cloudPath, onUploadProgress) {
