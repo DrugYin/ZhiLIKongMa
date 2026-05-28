@@ -5,7 +5,7 @@
 
 const cloud = require('wx-server-sdk')
 const { success, failure } = require('/opt/response')
-const { normalizeString } = require('/opt/utils')
+const { normalizeString, normalizePage, normalizePageSize } = require('/opt/utils')
 
 cloud.init({
   env: cloud.DYNAMIC_CURRENT_ENV
@@ -18,20 +18,6 @@ const ANNOUNCEMENT_COLLECTION = 'announcements'
 const READ_COLLECTION = 'announcement_reads'
 const USER_COLLECTION = 'users'
 const PAGE_SIZE = 100
-
-function normalizePage(value) {
-  const page = Number(value || 1)
-  return Number.isInteger(page) && page > 0 ? page : 1
-}
-
-function normalizePageSize(value) {
-  const pageSize = Number(value || 20)
-  if (!Number.isInteger(pageSize) || pageSize <= 0) {
-    return 20
-  }
-
-  return Math.min(pageSize, 50)
-}
 
 async function getCurrentUser(openid) {
   const res = await db.collection(USER_COLLECTION)

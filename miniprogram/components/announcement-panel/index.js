@@ -38,7 +38,7 @@ Component({
         })
       }
 
-      const list = current ? this.data.announcements : []
+      const list = Array.isArray(this.data.announcements) ? this.data.announcements : []
       const nextIndex = this.data.currentIndex + 1
       if (nextIndex < list.length) {
         this.setData({

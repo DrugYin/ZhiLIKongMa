@@ -2,7 +2,7 @@ const cloud = require('wx-server-sdk')
 const { writeAdminOperationLog } = require('/opt/admin-operation-log')
 const { success, failure } = require('/opt/response')
 const { verifyAdmin, hasRole } = require('/opt/admin-auth')
-const { normalizeString } = require('/opt/utils')
+const { normalizeString, normalizePage, normalizePageSize, escapeRegExp } = require('/opt/utils')
 
 cloud.init({
   env: cloud.DYNAMIC_CURRENT_ENV
@@ -12,7 +12,6 @@ const db = cloud.database()
 const _ = db.command
 
 const COLLECTION_NAME = 'draw_records'
-const LIMIT = 200
 
 function normalizeRecord(doc = {}) {
   return {
@@ -35,6 +34,8 @@ function normalizeRecord(doc = {}) {
 async function listRecords(event = {}) {
   const keyword = normalizeString(event.keyword)
   const isRedeemed = event.is_redeemed
+  const page = normalizePage(event.page)
+  const pageSize = normalizePageSize(event.page_size, 50)
 
   const queryConditions = []
   if (isRedeemed === 'true' || isRedeemed === true) {
@@ -44,7 +45,7 @@ async function listRecords(event = {}) {
   }
 
   if (keyword) {
-    const escapedKeyword = keyword.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+    const escapedKeyword = escapeRegExp(keyword)
     queryConditions.push(_.or([
       { student_name: db.RegExp({ regexp: escapedKeyword, options: 'i' }) },
       { prize_name: db.RegExp({ regexp: escapedKeyword, options: 'i' }) },
@@ -53,17 +54,24 @@ async function listRecords(event = {}) {
   }
 
   const queryData = queryConditions.length ? _.and(queryConditions) : {}
-  const res = await db.collection(COLLECTION_NAME)
-    .where(queryData)
-    .orderBy('create_time', 'desc')
-    .limit(LIMIT)
-    .get()
 
-  const list = (res.data || []).map(normalizeRecord)
+  const [countRes, dataRes] = await Promise.all([
+    db.collection(COLLECTION_NAME).where(queryData).count(),
+    db.collection(COLLECTION_NAME)
+      .where(queryData)
+      .orderBy('create_time', 'desc')
+      .skip((page - 1) * pageSize)
+      .limit(pageSize)
+      .get()
+  ])
+
+  const list = (dataRes.data || []).map(normalizeRecord)
 
   return success('获取抽奖记录成功', {
     list,
-    total: list.length
+    total: countRes.total,
+    page,
+    page_size: pageSize
   })
 }
 
@@ -86,8 +94,18 @@ async function redeemRecord(event = {}, admin) {
   const id = normalizeString(event._id || event.id)
   if (!id) return failure('缺少记录ID', 400)
 
+  let record
+  try {
+    const recordRes = await db.collection(COLLECTION_NAME).doc(id).get()
+    record = recordRes.data
+  } catch (error) {
+    return failure('记录不存在', 404)
+  }
+  if (!record) return failure('记录不存在', 404)
+  if (record.is_redeemed) return failure('该记录已兑奖，无需重复操作', 409)
+
   const now = new Date()
-  const updateRes = await db.collection(COLLECTION_NAME).where({ _id: id, is_redeemed: false }).update({
+  await db.collection(COLLECTION_NAME).doc(id).update({
     data: {
       is_redeemed: true,
       redeem_time: now,
@@ -95,19 +113,6 @@ async function redeemRecord(event = {}, admin) {
       update_time: now
     }
   })
-  if (!updateRes.updated) {
-    try {
-      const currentRes = await db.collection(COLLECTION_NAME).doc(id).get()
-      return currentRes.data
-        ? failure('该记录已兑奖，无需重复操作', 409)
-        : failure('记录不存在', 404)
-    } catch (error) {
-      return failure('记录不存在', 404)
-    }
-  }
-
-  const recordRes = await db.collection(COLLECTION_NAME).doc(id).get()
-  const record = recordRes.data || {}
 
   await writeAdminOperationLog(db, {
     module: 'draw_records',

@@ -62,6 +62,46 @@
 
 ---
 
+## 2026-05-28 第二轮审查
+
+### 已完成
+
+**第二轮代码审查**（3个并行代理）
+- 代码复用审查：发现6个问题（2高/2中/2低）
+- 代码质量审查：发现12个问题（2严重/4中/6低）
+- 效率审查：发现9个问题（2高/4中/3低）
+
+**第二轮修复**（分支 `fix/round2-code-review`）
+
+效率修复：
+- formatDateTime Intl 实例提升为模块级常量
+- start-draw 事务范围缩小（奖品查询移出事务）
+- redeemRecord 消除多余数据库读取（先读后写）
+- getProperty → pickFirst 简化
+- 抽奖记录添加服务端分页 + 前端迁移 useTablePage
+
+代码复用修复：
+- normalizePage/normalizePageSize 提取到 _shared/utils.js（9个文件）
+- normalizeNumber 提取到 _shared/utils.js（3个文件）
+- escapeRegExp 提取到 _shared/utils.js（3个文件）
+- getCachedConfigValue 提取到 _shared/config.js（2个文件）
+
+代码质量修复：
+- useTablePage 移除未使用的 saving 状态
+- DrawRecordsPage/PrizesPage 删除多余别名赋值
+- admin-auth.js 环境ID提取为 DEFAULT_ENV_ID 常量
+
+### 仍待处理
+
+| 问题 | 原因 |
+|------|------|
+| 小程序 formatDateTime 包装在9个页面中重复 | 已添加 formatDateTime 到 utils/format.js，但页面迁移需逐个处理 |
+| PrizesPage 未迁移 useTablePage | 页面逻辑较复杂，需单独处理 |
+| 跨端常量同步 | 架构层面改进，优先级低 |
+| 云函数文件头注释不一致 | 低优先级 |
+
+---
+
 ## 待办
 
 ### 阶段一：云函数共享模块提取

@@ -72,10 +72,24 @@ function checkAndSelectPrize(prizes) {
 async function executeDraw(openid, user, costPoints, now) {
   const redeemId = generateRedeemId()
 
+  // 在事务外查询奖品列表，缩小事务范围
+  const prizesRes = await db.collection('prizes')
+    .where({ status: 'active', stock: db.command.gt(0) })
+    .get()
+  const availablePrizes = prizesRes.data || []
+  if (!availablePrizes.length) {
+    throw Object.assign(new Error('暂无可用奖品'), { error_code: 5003 })
+  }
+
   for (let attempt = 1; attempt <= TRANSACTION_RETRY_LIMIT; attempt += 1) {
     let transaction = null
 
     try {
+      const prize = selectPrize(availablePrizes)
+      if (!prize) {
+        throw new Error('抽奖失败，请重试')
+      }
+
       transaction = await db.startTransaction()
 
       const userRef = transaction.collection('users').doc(user._id)
@@ -90,11 +104,6 @@ async function executeDraw(openid, user, costPoints, now) {
       if (currentPoints < costPoints) {
         throw Object.assign(new Error('积分不足'), { error_code: 4001 })
       }
-
-      const prizesRes = await transaction.collection('prizes')
-        .where({ status: 'active', stock: db.command.gt(0) })
-        .get()
-      const prize = checkAndSelectPrize(prizesRes.data || [])
 
       const isPointsPrize = (prize.type || 'virtual') === 'points'
       const prizeValue = Number(prize.value) || 0

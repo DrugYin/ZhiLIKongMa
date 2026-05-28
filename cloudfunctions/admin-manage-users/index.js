@@ -8,7 +8,7 @@ const { writeAdminOperationLog } = require('/opt/admin-operation-log')
 const { addPointsLog, POINTS_SOURCE, POINTS_TYPE } = require('/opt/points-log')
 const { success, failure } = require('/opt/response')
 const { verifyAdmin, hasRole } = require('/opt/admin-auth')
-const { normalizeString } = require('/opt/utils')
+const { normalizeString, normalizeNumber, normalizePage, normalizePageSize } = require('/opt/utils')
 
 cloud.init({
   env: cloud.DYNAMIC_CURRENT_ENV
@@ -21,25 +21,6 @@ const PAGE_SIZE = 100
 const VALID_ROLES = ['student', 'teacher', 'admin']
 const VALID_STATUS = ['active', 'disabled']
 const VALID_ADMIN_ROLES = ['', 'admin', 'super_admin']
-
-function normalizeNumber(value, fallback = 0) {
-  const numberValue = Number(value)
-  return Number.isNaN(numberValue) ? fallback : numberValue
-}
-
-function normalizePage(value) {
-  const page = Number(value || 1)
-  return Number.isInteger(page) && page > 0 ? page : 1
-}
-
-function normalizePageSize(value) {
-  const pageSize = Number(value || 20)
-  if (!Number.isInteger(pageSize) || pageSize <= 0) {
-    return 20
-  }
-
-  return Math.min(pageSize, 100)
-}
 
 function normalizeRoles(value) {
   const source = Array.isArray(value) ? value : String(value || '').split(/[,，]/)

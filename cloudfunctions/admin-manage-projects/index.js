@@ -7,7 +7,7 @@ const cloud = require('wx-server-sdk')
 const { writeAdminOperationLog } = require('/opt/admin-operation-log')
 const { success, failure } = require('/opt/response')
 const { verifyAdmin, hasRole } = require('/opt/admin-auth')
-const { normalizeString } = require('/opt/utils')
+const { normalizeString, normalizeNumber } = require('/opt/utils')
 
 cloud.init({
   env: cloud.DYNAMIC_CURRENT_ENV
@@ -70,11 +70,6 @@ const DEFAULT_PROJECTS = [
     is_default: true
   }
 ]
-
-function normalizeNumber(value, fallback = 0) {
-  const numberValue = Number(value)
-  return Number.isNaN(numberValue) ? fallback : numberValue
-}
 
 function normalizeStringArray(value) {
   if (Array.isArray(value)) {

@@ -1,7 +1,7 @@
 const cloud = require('wx-server-sdk');
 const { verifyTeacherRole } = require('/opt/auth');
 const { writeOperationLog } = require('/opt/operation-log');
-const { getConfigValue } = require('/opt/config');
+const { getConfigValue, createCachedConfigValue } = require('/opt/config');
 
 cloud.init({
   env: cloud.DYNAMIC_CURRENT_ENV
@@ -9,22 +9,7 @@ cloud.init({
 
 const db = cloud.database();
 const PAGE_SIZE = 100;
-const CONFIG_CACHE_TTL = 30 * 1000;
-const configCache = new Map();
-
-async function getCachedConfigValue(configKey, defaultValue) {
-  const cached = configCache.get(configKey);
-  if (cached && cached.expiresAt > Date.now()) {
-    return cached.value;
-  }
-
-  const value = await getConfigValue(db, configKey, defaultValue);
-  configCache.set(configKey, {
-    value,
-    expiresAt: Date.now() + CONFIG_CACHE_TTL
-  });
-  return value;
-}
+const getCachedConfigValue = createCachedConfigValue(db);
 
 async function getAllUsersInClass(classId) {
   const totalRes = await db.collection('users').where({
