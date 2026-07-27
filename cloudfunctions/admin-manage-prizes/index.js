@@ -14,6 +14,7 @@ const _ = db.command
 
 const COLLECTION_NAME = 'prizes'
 const LIMIT = 200
+const PROBABILITY_SCALE = 100000
 const PRIZE_TYPES = ['physical', 'virtual', 'points']
 const STATUS_VALUES = ['active', 'disabled']
 
@@ -28,10 +29,12 @@ function normalizePrizePayload(payload = {}) {
     return { ok: false, error: `奖品类型必须是 ${PRIZE_TYPES.join('/')}` }
   }
 
-  const probability = tryParseFloat(payload.probability, 0)
-  if (probability < 0 || probability > 1) {
+  const rawProbability = tryParseFloat(payload.probability, 0)
+  if (rawProbability < 0 || rawProbability > 1) {
     return { ok: false, error: '中奖概率必须在 0-1 之间' }
   }
+  const probability = Math.round((rawProbability + Number.EPSILON) * PROBABILITY_SCALE)
+    / PROBABILITY_SCALE
 
   const stock = tryParseInt(payload.stock, 0)
   if (stock < 0) {

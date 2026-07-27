@@ -149,11 +149,11 @@
             v-model="form.probability"
             :min="0"
             :max="1"
-            :step="0.01"
-            :decimalPlaces="2"
+            :step="0.00001"
+            :decimalPlaces="5"
             theme="normal"
           />
-          <span class="form-tip">取值范围 0-1，例如 0.30 表示 30%</span>
+          <span class="form-tip">取值范围 0-1，支持五位小数；0.00010 表示万分之一</span>
         </t-form-item>
 
         <t-form-item label="排序" name="sort_order">
