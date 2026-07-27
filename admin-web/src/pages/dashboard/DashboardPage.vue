@@ -36,7 +36,7 @@
             </div>
             <div>
               <span>审核通过率</span>
-              <strong>{{ formatPercent(overview.approval_rate, '0.0%') }}</strong>
+              <strong>{{ formatPercentValue(overview.approval_rate) }}</strong>
             </div>
             <div>
               <span>统计更新时间</span>
@@ -65,7 +65,7 @@ import { MessagePlugin } from 'tdesign-vue-next';
 import PageHeader from '@/components/PageHeader.vue';
 import StatCard from '@/components/StatCard.vue';
 import { getStatistics } from '@/api/dashboard';
-import { formatNumber, formatPercent } from '@/utils/format';
+import { formatNumber, formatPercentValue } from '@/utils/format';
 
 const loading = ref(false);
 const trendChartRef = ref(null);

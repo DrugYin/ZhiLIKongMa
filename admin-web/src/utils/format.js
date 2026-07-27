@@ -12,6 +12,13 @@ export function formatPercent(value, fallback = '--') {
   return `${(Number(value) * 100).toFixed(1)}%`;
 }
 
+export function formatPercentValue(value, fallback = '--') {
+  if (value === null || value === undefined || value === '') {
+    return fallback;
+  }
+  return `${Number(value).toFixed(1)}%`;
+}
+
 const dateTimeFormatter = new Intl.DateTimeFormat('zh-CN', {
   timeZone: 'Asia/Hong_Kong',
   year: 'numeric',
