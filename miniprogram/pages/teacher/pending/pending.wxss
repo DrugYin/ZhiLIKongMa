@@ -267,7 +267,7 @@
 
 .popup-shell {
   box-sizing: border-box;
-  height: 82vh;
+  height: 72vh;
   display: flex;
   flex-direction: column;
   overflow: hidden;
