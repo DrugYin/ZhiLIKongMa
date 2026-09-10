@@ -2,6 +2,7 @@ const AuthService = require('../../services/auth')
 const ClassService = require('../../services/class')
 const TaskService = require('../../services/task')
 const AnnouncementService = require('../../services/announcement')
+const SubscribeMessageService = require('../../services/subscribe-message')
 const formatUtils = require('../../utils/format')
 const Toast = require('../../utils/toast')
 
@@ -25,6 +26,8 @@ Page({
       pendingCount: 0
     },
     announcementVisible: false,
+    subscribeGuideVisible: false,
+    subscribing: false,
     popupAnnouncements: [],
     quickActions: [
       {
@@ -62,8 +65,18 @@ Page({
       tabBar.changeData({ type: 'teacher' })
     }
 
+    this._subscribeGuidePending = true
     const app = getApp()
-    await app.awaitLogin()
+    try {
+      await app.awaitLogin()
+    } finally {
+      this._subscribeGuidePending = false
+    }
+
+    this.setData({
+      subscribeGuideVisible: true,
+      announcementVisible: false
+    })
 
     this.initPage()
   },
@@ -471,10 +484,62 @@ Page({
       const popupAnnouncements = data.popup_list || data.list || []
       this.setData({
         popupAnnouncements,
-        announcementVisible: popupAnnouncements.length > 0
+        announcementVisible: !this._subscribeGuidePending
+          && !this.data.subscribeGuideVisible
+          && popupAnnouncements.length > 0
       })
     } catch (error) {
       console.error('[teacher-index] loadPopupAnnouncements error:', error)
+    }
+  },
+
+  showQueuedAnnouncements() {
+    this.setData({
+      announcementVisible: this.data.popupAnnouncements.length > 0
+    })
+  },
+
+  handleSubscribeGuideClose() {
+    if (this.data.subscribing) {
+      return
+    }
+
+    this.setData({
+      subscribeGuideVisible: false
+    }, () => {
+      this.showQueuedAnnouncements()
+    })
+  },
+
+  async handleEnableSubmissionReminder() {
+    if (this.data.subscribing) {
+      return
+    }
+
+    this.setData({
+      subscribing: true
+    })
+
+    try {
+      const result = await SubscribeMessageService.requestTeacherSubmissionReminder()
+      const accepted = Array.isArray(result.accepted)
+        && result.accepted.includes(SubscribeMessageService.TEMPLATE_IDS.TASK_SUBMITTED)
+
+      if (accepted) {
+        Toast.showSuccess('提交提醒已开启')
+      } else {
+        Toast.showToast('未开启提醒，可下次进入时重试')
+      }
+    } catch (error) {
+      console.warn('[teacher-index] request subscribe message failed:', error)
+      Toast.showToast('未开启提醒，可下次进入时重试')
+    } finally {
+      this.setData({
+        subscribing: false,
+        subscribeGuideVisible: false
+      }, () => {
+        this.showQueuedAnnouncements()
+      })
     }
   },
 

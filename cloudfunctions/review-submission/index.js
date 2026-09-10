@@ -2,6 +2,7 @@ const cloud = require('wx-server-sdk')
 const { verifyTeacherRole } = require('/opt/auth')
 const { writeOperationLog } = require('/opt/operation-log')
 const { createSystemNotification, safeCreateNotification } = require('/opt/notification')
+const { buildSubmissionReviewedMessage, safeSendSubscribeMessage } = require('/opt/subscribe-message')
 const { addPointsLog, POINTS_SOURCE, POINTS_TYPE } = require('/opt/points-log')
 const { normalizeString } = require('/opt/utils')
 
@@ -261,6 +262,18 @@ exports.main = async (event) => {
       senderName: teacher.user_name || teacher.nick_name || '',
       now
     }), 'review-submission submission_reviewed')
+
+    await safeSendSubscribeMessage(cloud, buildSubmissionReviewedMessage({
+      studentOpenid: submissionInfo.student_openid,
+      taskId: submissionInfo.task_id,
+      taskTitle: submissionInfo.task_title || taskInfo.title,
+      teacherName: teacher.user_name || teacher.nick_name || submissionInfo.teacher_name,
+      status,
+      feedback: reviewFeedback,
+      reviewTime: now
+    }), {
+      contextLabel: 'review-submission submission_reviewed'
+    })
 
     return {
       success: true,

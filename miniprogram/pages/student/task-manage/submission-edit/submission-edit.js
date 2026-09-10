@@ -1,5 +1,6 @@
 const TaskService = require('../../../../services/task')
 const { uploadFile } = require('../../../../services/api')
+const SubscribeMessageService = require('../../../../services/subscribe-message')
 const Toast = require('../../../../utils/toast')
 const formatUtils = require('../../../../utils/format')
 const fileResource = require('../../../../utils/file-resource')
@@ -488,6 +489,12 @@ Page({
     })
 
     try {
+      try {
+        await SubscribeMessageService.requestStudentTaskNotifications()
+      } catch (subscribeError) {
+        console.warn('[submission-edit] request subscribe message failed:', subscribeError)
+      }
+
       await TaskService.submitTask(this.buildPayload())
       await Toast.showSuccess('任务提交成功', 1800)
 

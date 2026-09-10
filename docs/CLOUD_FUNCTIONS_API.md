@@ -974,6 +974,14 @@ ClassService.removeMember(classId, memberOpenid)
 - 教师任务页已支持项目/类型/班级/可见范围/状态多维筛选；学生任务中心已支持项目/类型/班级/可见范围筛选与排序
 - 截止时间展示统一由 `utils/task-deadline.js` 处理，已覆盖任务列表、详情、提交页与排行榜相关时间判断
 - 服务层已提供 `services/task.js`，统一封装任务创建、查询、详情、更新、删除、提交、记录查询与审核
+- 任务发布、作业提交和审核完成后，在保留站内通知的同时尽力发送微信一次性订阅消息；微信发送失败只记录日志，不影响业务结果
+
+订阅消息部署要求：
+
+- `create-task`、`update-task`、`submit-task`、`review-submission` 的 `config.json` 必须声明 `subscribeMessage.send` 云调用权限
+- 部署上述云函数前需同步上传最新 `_shared.zip`，保证四个函数使用同一套模板字段与发送逻辑
+- 可通过云函数环境变量 `SUBSCRIBE_MESSAGE_STATE` 指定跳转版本：联调使用 `developer`，体验版使用 `trial`，未设置时默认为 `formal`
+- 三个订阅模板必须属于当前小程序 AppID；用户未授权、订阅次数已用完或微信接口报错时不会自动重试
 
 ### 1. `create-task`
 
@@ -1014,6 +1022,7 @@ ClassService.removeMember(classId, memberOpenid)
 - `task_type = 'class'` 时必须传 `class_id`，且班级必须属于当前教师
 - 难度限制为 `1-5` 整数，积分限制为大于等于 `0` 的整数
 - 截止日期和截止时间要么同时为空，要么同时合法
+- 创建即发布的班级任务会向班级学生发送“作业通知”；公开任务和草稿不发送
 
 返回示例：
 
@@ -1147,6 +1156,7 @@ ClassService.removeMember(classId, memberOpenid)
 - 仅任务所属教师可更新
 - 所有字段按“传了才更新”的策略处理
 - 若任务所属班级或状态变化，会同步调整 `classes.task_count / published_task_count`
+- 班级任务首次从非发布状态切换为 `published` 时会向班级学生发送“作业通知”；已发布任务的普通编辑不会重复发送
 
 返回示例：
 
@@ -1220,6 +1230,7 @@ ClassService.removeMember(classId, memberOpenid)
 - 会校验任务是否可见、是否已删除、是否已发布
 - 会按 `system_config.task_max_submissions` 与任务自身 `max_submissions` 限制提交次数
 - 超过截止时间仍可提交，但会写入 `is_overtime = true`
+- 每条提交记录创建成功后会向任务所属教师发送“作业提交提醒”，消息状态固定为“待审核”
 
 返回示例：
 
@@ -1321,6 +1332,7 @@ ClassService.removeMember(classId, memberOpenid)
 - 仅 `pending` 状态的提交记录可审核
 - 审核通过会增加学生积分；驳回时无论传什么积分，都会写入 `0`
 - 未填写处理意见时会自动补默认反馈文案
+- 审核完成后会向对应学生发送“作业批改完成通知”，结果按 `approved/rejected` 显示为“通过/拒绝”
 
 返回示例：
 

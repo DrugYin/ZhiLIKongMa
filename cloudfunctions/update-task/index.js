@@ -1,7 +1,12 @@
 const cloud = require('wx-server-sdk');
 const { verifyTeacherRole } = require('/opt/auth');
 const { writeOperationLog } = require('/opt/operation-log');
-const { createClassTaskNotification, safeCreateNotification } = require('/opt/notification');
+const { createClassTaskNotification, getClassStudentOpenids, safeCreateNotification } = require('/opt/notification');
+const {
+  buildTaskPublishedMessage,
+  safeSendSubscribeMessages,
+  shouldSendTaskPublishedMessage
+} = require('/opt/subscribe-message');
 const { normalizeString } = require('/opt/utils');
 
 cloud.init({
@@ -358,7 +363,13 @@ exports.main = async (event) => {
       await adjustClassTaskStats(nextClassId, nextTotal, nextPublished, now);
     }
 
-    if (taskType === 'class' && rawStatus === 'published' && taskInfo.status !== 'published') {
+    const shouldNotifyPublishedTask = shouldSendTaskPublishedMessage({
+      taskType,
+      status: rawStatus,
+      previousStatus: taskInfo.status
+    });
+
+    if (shouldNotifyPublishedTask) {
       await safeCreateNotification(() => createClassTaskNotification(db, {
         taskId,
         classId,
@@ -368,6 +379,25 @@ exports.main = async (event) => {
         senderName: teacher.user_name || teacher.nick_name || '',
         now
       }), 'update-task class_task_published');
+
+      try {
+        const studentOpenids = await getClassStudentOpenids(db, classId);
+        await safeSendSubscribeMessages(cloud, studentOpenids.map((studentOpenid) => (
+          buildTaskPublishedMessage({
+            studentOpenid,
+            taskId,
+            taskTitle: title,
+            projectName: updateData.project_name,
+            projectCode: updateData.project_code,
+            teacherName: teacher.user_name || teacher.nick_name || taskInfo.teacher_name || '',
+            publishTime
+          })
+        )), {
+          contextLabel: 'update-task task_published'
+        });
+      } catch (subscribeError) {
+        console.error('[update-task] subscribe message error:', subscribeError);
+      }
     }
 
     await writeOperationLog(db, {
