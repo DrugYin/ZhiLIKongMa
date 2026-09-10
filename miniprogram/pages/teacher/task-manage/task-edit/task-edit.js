@@ -2,6 +2,7 @@ const projectService = require('../../../../config/project')
 const ClassService = require('../../../../services/class')
 const TaskService = require('../../../../services/task')
 const { uploadFile } = require('../../../../services/api')
+const SubscribeMessageService = require('../../../../services/subscribe-message')
 const Toast = require('../../../../utils/toast')
 const fileResource = require('../../../../utils/file-resource')
 const {
@@ -932,6 +933,17 @@ Page({
 
     try {
       const payload = this.buildPayload()
+      const shouldRequestSubmissionReminder = payload.status === 'published'
+        && (!this.data.isEdit || !this.data.taskInfo || this.data.taskInfo.status !== 'published')
+
+      if (shouldRequestSubmissionReminder) {
+        try {
+          await SubscribeMessageService.requestTeacherSubmissionReminder()
+        } catch (subscribeError) {
+          console.warn('[task-edit] request subscribe message failed:', subscribeError)
+        }
+      }
+
       const result = this.data.isEdit
         ? await TaskService.updateTask({
           task_id: this.data.taskId,

@@ -108,27 +108,4 @@
     bindviewall="goToAnnouncements"
     bindaction="handleAnnouncementAction"
   />
-
-  <view wx:if="{{subscribeGuideVisible}}" class="subscribe-guide-mask">
-    <view class="subscribe-guide-card">
-      <view class="subscribe-guide-mark">信</view>
-      <text class="subscribe-guide-title">开启作业提交提醒</text>
-      <text class="subscribe-guide-desc">学生提交作业后，微信会通过服务通知提醒你及时审核。一次授权可接收一条提醒，下次进入教师端时可以继续订阅。</text>
-      <button
-        class="subscribe-guide-primary"
-        loading="{{subscribing}}"
-        disabled="{{subscribing}}"
-        bindtap="handleEnableSubmissionReminder"
-      >
-        开启提交提醒
-      </button>
-      <button
-        class="subscribe-guide-secondary"
-        disabled="{{subscribing}}"
-        bindtap="handleSubscribeGuideClose"
-      >
-        暂不开启
-      </button>
-    </view>
-  </view>
 </view>

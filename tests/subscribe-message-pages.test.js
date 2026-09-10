@@ -109,16 +109,191 @@ async function testStudentRequestsBeforeSubmitting() {
   assert.strictEqual(context.data.saving, false)
 }
 
-async function testTeacherGuideQueuesAnnouncements() {
+async function testStudentRequestsBeforeJoiningClass() {
   const events = []
-  const toast = {
-    showSuccess(message) {
-      events.push(message)
+  const page = loadPage('miniprogram/pages/student/class-manage/join-confirm/join-confirm.js', {
+    '../../../../services/auth': {},
+    '../../../../services/class': {
+      async joinClass() {
+        events.push('join')
+      }
     },
-    showToast() {},
-    showLoading() {},
-    hideLoading() {}
+    '../../../../services/subscribe-message': {
+      async requestStudentTaskNotifications() {
+        events.push('subscribe')
+        throw new Error('subscription unavailable')
+      }
+    },
+    '../../../../utils/toast': {
+      async showSuccess() {},
+      showToast() {},
+      showLoading() {
+        events.push('loading')
+      },
+      hideLoading() {}
+    }
+  })
+  const context = createPageContext(page, {
+    submitting: false,
+    isLoggedIn: true,
+    isRegistered: true,
+    inviteInfo: { isFull: false },
+    hasJoinedCurrentClass: false,
+    hasPendingCurrentApplication: false,
+    classCode: 'ABC123',
+    applyReason: ''
+  })
+  context.goToClassManage = () => {}
+
+  const originalSetTimeout = global.setTimeout
+  const originalWarn = console.warn
+  global.setTimeout = () => 0
+  console.warn = () => {}
+  try {
+    await context.onApplyJoin()
+  } finally {
+    global.setTimeout = originalSetTimeout
+    console.warn = originalWarn
   }
+
+  assert.deepStrictEqual(events, ['subscribe', 'loading', 'join'])
+  assert.strictEqual(context.data.submitting, false)
+}
+
+async function testTeacherRequestsBeforeCreatingClass() {
+  const events = []
+  const page = loadPage('miniprogram/pages/teacher/class-manage/class-edit/class-edit.js', {
+    '../../../../config/project': {},
+    '../../../../services/class': {
+      async createClass() {
+        events.push('create')
+        return {}
+      },
+      async updateClass() {
+        events.push('update')
+        return {}
+      }
+    },
+    '../../../../services/subscribe-message': {
+      async requestTeacherSubmissionReminder() {
+        events.push('subscribe')
+        throw new Error('subscription unavailable')
+      }
+    },
+    '../../../../utils/toast': {
+      async showSuccess() {},
+      showToast() {}
+    }
+  })
+  const classForm = {
+    class_name: '测试班级',
+    project_code: 'CSP-J',
+    project_name: 'CSP-J',
+    max_members: 30,
+    class_time: '',
+    location: '',
+    description: ''
+  }
+  const createContext = createPageContext(page, {
+    isEdit: false,
+    saving: false,
+    classForm
+  })
+  createContext.validateForm = () => true
+
+  const originalWarn = console.warn
+  console.warn = () => {}
+  try {
+    await createContext.onSubmit()
+  } finally {
+    console.warn = originalWarn
+  }
+  assert.deepStrictEqual(events, ['subscribe', 'create'])
+
+  events.length = 0
+  const editContext = createPageContext(page, {
+    isEdit: true,
+    classId: 'class-1',
+    saving: false,
+    classForm
+  })
+  editContext.validateForm = () => true
+  await editContext.onSubmit()
+  assert.deepStrictEqual(events, ['update'])
+}
+
+async function testTeacherRequestsOnlyWhenPublishingTask() {
+  const events = []
+  const page = loadPage('miniprogram/pages/teacher/task-manage/task-edit/task-edit.js', {
+    '../../../../config/project': {},
+    '../../../../services/class': {},
+    '../../../../services/task': {
+      async createTask() {
+        events.push('create')
+        return {}
+      },
+      async updateTask() {
+        events.push('update')
+        return {}
+      }
+    },
+    '../../../../services/api': { uploadFile() {} },
+    '../../../../services/subscribe-message': {
+      async requestTeacherSubmissionReminder() {
+        events.push('subscribe')
+        throw new Error('subscription unavailable')
+      }
+    },
+    '../../../../utils/toast': {
+      async showSuccess() {},
+      showToast() {}
+    },
+    '../../../../utils/file-resource': {},
+    '../../../../utils/constant': {
+      IMAGE_MAX_COUNT: { TASK: 3 },
+      IMAGE_MAX_SIZE: 5 * 1024 * 1024,
+      FILE_MAX_COUNT: 3,
+      FILE_MAX_SIZE: 20 * 1024 * 1024,
+      FILE_ALLOWED_TYPES: ['pdf']
+    }
+  })
+
+  async function submit({ isEdit, previousStatus, nextStatus }) {
+    const context = createPageContext(page, {
+      isEdit,
+      taskId: isEdit ? 'task-1' : '',
+      taskInfo: isEdit ? { status: previousStatus } : null,
+      saving: false
+    })
+    context.validateForm = () => true
+    context.buildPayload = () => ({ status: nextStatus })
+    await context.onSubmit()
+  }
+
+  const originalWarn = console.warn
+  console.warn = () => {}
+  try {
+    await submit({ isEdit: false, previousStatus: '', nextStatus: 'published' })
+    assert.deepStrictEqual(events, ['subscribe', 'create'])
+
+    events.length = 0
+    await submit({ isEdit: false, previousStatus: '', nextStatus: 'draft' })
+    assert.deepStrictEqual(events, ['create'])
+
+    events.length = 0
+    await submit({ isEdit: true, previousStatus: 'draft', nextStatus: 'published' })
+    assert.deepStrictEqual(events, ['subscribe', 'update'])
+
+    events.length = 0
+    await submit({ isEdit: true, previousStatus: 'published', nextStatus: 'published' })
+    assert.deepStrictEqual(events, ['update'])
+  } finally {
+    console.warn = originalWarn
+  }
+}
+
+async function testTeacherHomeDoesNotShowSubscriptionGuide() {
+  const events = []
   const page = loadPage('miniprogram/pages/teacher/index.js', {
     '../../services/auth': {},
     '../../services/class': {},
@@ -129,14 +304,16 @@ async function testTeacherGuideQueuesAnnouncements() {
       }
     },
     '../../services/subscribe-message': {
-      TEMPLATE_IDS: { TASK_SUBMITTED: 'template-1' },
       async requestTeacherSubmissionReminder() {
         events.push('subscribe')
-        return { accepted: ['template-1'] }
+        return { accepted: [] }
       }
     },
     '../../utils/format': {},
-    '../../utils/toast': toast
+    '../../utils/toast': {
+      showLoading() {},
+      hideLoading() {}
+    }
   })
 
   let resolveLogin
@@ -144,7 +321,6 @@ async function testTeacherGuideQueuesAnnouncements() {
     resolveLogin = resolve
   })
   const lifecycleContext = createPageContext(page, {
-    subscribeGuideVisible: false,
     popupAnnouncements: [],
     announcementVisible: false
   })
@@ -156,7 +332,6 @@ async function testTeacherGuideQueuesAnnouncements() {
   let onLoadPromise
   try {
     onLoadPromise = lifecycleContext.onLoad()
-    assert.strictEqual(lifecycleContext.data.subscribeGuideVisible, false)
     await lifecycleContext.loadPopupAnnouncements()
     assert.strictEqual(lifecycleContext.data.announcementVisible, false)
     resolveLogin()
@@ -164,29 +339,17 @@ async function testTeacherGuideQueuesAnnouncements() {
   } finally {
     global.getApp = originalGetApp
   }
-  assert.strictEqual(lifecycleContext.data.subscribeGuideVisible, true)
+  assert.strictEqual(Boolean(lifecycleContext.data.subscribeGuideVisible), false)
+  assert.strictEqual(lifecycleContext.data.announcementVisible, true)
   assert.deepStrictEqual(events, ['init'])
-  events.length = 0
-
-  const context = createPageContext(page, {
-    subscribeGuideVisible: true,
-    popupAnnouncements: [],
-    announcementVisible: false
-  })
-
-  await context.loadPopupAnnouncements()
-  assert.strictEqual(context.data.popupAnnouncements.length, 1)
-  assert.strictEqual(context.data.announcementVisible, false)
-
-  await context.handleEnableSubmissionReminder()
-  assert.deepStrictEqual(events, ['subscribe', '提交提醒已开启'])
-  assert.strictEqual(context.data.subscribeGuideVisible, false)
-  assert.strictEqual(context.data.announcementVisible, true)
 }
 
 Promise.resolve()
   .then(testStudentRequestsBeforeSubmitting)
-  .then(testTeacherGuideQueuesAnnouncements)
+  .then(testStudentRequestsBeforeJoiningClass)
+  .then(testTeacherRequestsBeforeCreatingClass)
+  .then(testTeacherRequestsOnlyWhenPublishingTask)
+  .then(testTeacherHomeDoesNotShowSubscriptionGuide)
   .catch((error) => {
     console.error(error)
     process.exitCode = 1
