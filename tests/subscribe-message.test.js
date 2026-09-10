@@ -22,7 +22,7 @@ async function run() {
   })
   assert.deepStrictEqual(submitMessage, {
     touser: 'teacher-openid',
-    templateId: 'HO4rLQjLFnID1yBejQB7v-zm2QIRbNIIFci5EeMvmnI',
+    templateId: 'HO4rLQjLFnID1yBejQB7v-zm2QIRbNIlFci5EeMvmnI',
     page: 'pages/teacher/pending/pending?type=submission&record_id=submission-1',
     data: {
       thing9: { value: '第一行 第二行而且标题非常非常非常长需要' },
@@ -119,6 +119,24 @@ async function run() {
   ])
   assert.deepStrictEqual(subscriptionResult.accepted, [client.TEMPLATE_IDS.TASK_PUBLISHED])
   assert.deepStrictEqual(subscriptionResult.rejected, [client.TEMPLATE_IDS.SUBMISSION_REVIEWED])
+
+  const invalidTemplateResult = await client.requestTeacherSubmissionReminder({
+    requestSubscribeMessage(options) {
+      options.fail({
+        errCode: 20001,
+        errMsg: 'requestSubscribeMessage:fail No template data return, verify the template id exist'
+      })
+    }
+  })
+  assert.deepStrictEqual(invalidTemplateResult, {
+    success: false,
+    unavailable: false,
+    accepted: [],
+    rejected: [],
+    statuses: {},
+    errorCode: 20001,
+    errorMessage: 'requestSubscribeMessage:fail No template data return, verify the template id exist'
+  })
 
   const calls = []
   const fakeCloud = {

@@ -1,5 +1,5 @@
 const TEMPLATE_IDS = Object.freeze({
-  TASK_SUBMITTED: 'HO4rLQjLFnID1yBejQB7v-zm2QIRbNIIFci5EeMvmnI',
+  TASK_SUBMITTED: 'HO4rLQjLFnID1yBejQB7v-zm2QIRbNIlFci5EeMvmnI',
   TASK_PUBLISHED: '-YZw9XHRKIlte5uQ20dO4lRuaXGFI4gPM_2Z_isBpbo',
   SUBMISSION_REVIEWED: 'WToHJbW9SD8z86AlvCQMMkigfpzIL4AtWtMhVd7gr7w'
 })
@@ -54,7 +54,7 @@ function requestSubscribeMessages(templateIds, api) {
             success: false,
             unavailable: false,
             accepted: [],
-            rejected: ids,
+            rejected: [],
             statuses: {},
             errorCode: Number(error.errCode || 0),
             errorMessage: String(error.errMsg || error.message || '')
@@ -66,7 +66,7 @@ function requestSubscribeMessages(templateIds, api) {
         success: false,
         unavailable: false,
         accepted: [],
-        rejected: ids,
+        rejected: [],
         statuses: {},
         errorCode: Number(error && error.errCode || 0),
         errorMessage: String(error && (error.errMsg || error.message) || '')
