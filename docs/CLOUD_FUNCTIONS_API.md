@@ -62,6 +62,7 @@ const { OPENID } = cloud.getWXContext();
 - `announcements`
 - `announcement_reads`
 - `operation_logs`
+- `subscribe_message_logs`
 
 ## 一、用户系统
 
@@ -1615,6 +1616,15 @@ userApi.getPointsLog(data)
 - 列表支持关键词、模块、操作者类型、动作和时间范围筛选
 - 后台入口：`admin-web/src/pages/logs/LogsPage.vue`
 
+### 后台订阅消息统计模块
+
+- `admin-manage-subscribe-messages`：查询 `subscribe_message_logs` 的发送统计、明细和单条详情
+- 支持 `action`: `statistics`、`list`、`get`
+- 默认统计最近 30 天，可切换 7、30、90、365 天；支持消息类型、状态、错误码和小程序版本筛选
+- 发送成功仅表示微信接口受理，不表示用户已读；发送及记录失败均不回滚业务
+- `cleanup-subscribe-message-logs` 每日清理超过 365 天的记录
+- 后台入口：`admin-web/src/pages/subscribe-messages/SubscribeMessagesPage.vue`
+
 ## 七、当前未落地但已预留的调用入口
 
 以下方法已经在 `services/api.js` 中预留，但仓库中还没有对应云函数实现：
@@ -1628,7 +1638,7 @@ userApi.getPointsLog(data)
 
 ---
 
-**文档版本**: v3.12.0
-**最后更新**: 2026-05-14
+**文档版本**: v3.13.0
+**最后更新**: 2026-09-16
 **编写者**: 开发团队
-**更新说明**: 新增积分明细云函数文档，同步后台页面接入情况
+**更新说明**: 新增订阅消息发送统计、明细查询与一年清理说明
