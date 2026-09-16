@@ -1,5 +1,6 @@
 const AuthService = require('../../../../services/auth');
 const ClassService = require('../../../../services/class');
+const SubscribeMessageService = require('../../../../services/subscribe-message');
 const Toast = require('../../../../utils/toast');
 
 Page({
@@ -216,9 +217,14 @@ Page({
       submitting: true
     });
 
-    Toast.showLoading('正在提交申请...');
-
     try {
+      try {
+        await SubscribeMessageService.requestStudentTaskNotifications();
+      } catch (subscribeError) {
+        console.warn('[join-confirm] request subscribe message failed:', subscribeError);
+      }
+
+      Toast.showLoading('正在提交申请...');
       await ClassService.joinClass(this.data.classCode, this.data.applyReason.trim());
       Toast.hideLoading();
       await Toast.showSuccess('申请已提交');

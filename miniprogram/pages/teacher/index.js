@@ -62,9 +62,15 @@ Page({
       tabBar.changeData({ type: 'teacher' })
     }
 
+    this._loginPending = true
     const app = getApp()
-    await app.awaitLogin()
+    try {
+      await app.awaitLogin()
+    } finally {
+      this._loginPending = false
+    }
 
+    this.showQueuedAnnouncements()
     this.initPage()
   },
 
@@ -471,11 +477,17 @@ Page({
       const popupAnnouncements = data.popup_list || data.list || []
       this.setData({
         popupAnnouncements,
-        announcementVisible: popupAnnouncements.length > 0
+        announcementVisible: !this._loginPending && popupAnnouncements.length > 0
       })
     } catch (error) {
       console.error('[teacher-index] loadPopupAnnouncements error:', error)
     }
+  },
+
+  showQueuedAnnouncements() {
+    this.setData({
+      announcementVisible: this.data.popupAnnouncements.length > 0
+    })
   },
 
   async handleAnnouncementRead(e) {

@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 
-import { formatDateTime, formatPercent } from '../src/utils/format.js';
+import { formatDateTime, formatPercent, formatPercentValue } from '../src/utils/format.js';
 import {
   PRIZE_STATUS_OPTIONS,
   PRIZE_TYPE_OPTIONS,
@@ -13,6 +13,9 @@ assert.equal(formatDateTime(null), '--');
 assert.equal(formatPercent(0.125), '12.5%');
 assert.equal(formatPercent(1), '100.0%');
 assert.equal(formatPercent(null), '--');
+assert.equal(formatPercentValue(93.9), '93.9%');
+assert.equal(formatPercentValue(0), '0.0%');
+assert.equal(formatPercentValue(null), '--');
 
 assert.deepEqual(PRIZE_TYPE_OPTIONS.map((item) => item.value), ['physical', 'virtual', 'points']);
 assert.equal(getPrizeTypeLabel('physical'), '实物奖品');

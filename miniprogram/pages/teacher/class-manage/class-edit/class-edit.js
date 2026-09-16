@@ -1,6 +1,7 @@
 // pages/teacher/class-manage/class-edit/class-edit.js
 const projectService = require('../../../../config/project')
 const ClassService = require('../../../../services/class')
+const SubscribeMessageService = require('../../../../services/subscribe-message')
 const Toast = require('../../../../utils/toast')
 
 Page({
@@ -237,6 +238,14 @@ Page({
         class_time: this.data.classForm.class_time.trim(),
         description: this.data.classForm.description.trim(),
         max_members: Number(this.data.classForm.max_members)
+      }
+
+      if (!this.data.isEdit) {
+        try {
+          await SubscribeMessageService.requestTeacherSubmissionReminder()
+        } catch (subscribeError) {
+          console.warn('[class-edit] request subscribe message failed:', subscribeError)
+        }
       }
 
       const result = this.data.isEdit

@@ -1,7 +1,12 @@
 const cloud = require('wx-server-sdk');
 const { verifyTeacherRole } = require('/opt/auth');
 const { writeOperationLog } = require('/opt/operation-log');
-const { createClassTaskNotification, safeCreateNotification } = require('/opt/notification');
+const { createClassTaskNotification, getClassStudentOpenids, safeCreateNotification } = require('/opt/notification');
+const {
+  buildTaskPublishedMessage,
+  safeSendSubscribeMessages,
+  shouldSendTaskPublishedMessage
+} = require('/opt/subscribe-message');
 const { normalizeString } = require('/opt/utils');
 const { getConfigValue } = require('/opt/config');
 
@@ -320,6 +325,37 @@ exports.main = async (event) => {
           senderName: teacher.user_name || teacher.nick_name || '',
           now
         }), 'create-task class_task_published');
+
+      }
+
+      if (shouldSendTaskPublishedMessage({ taskType, status })) {
+        try {
+          const studentOpenids = await getClassStudentOpenids(db, classId);
+          await safeSendSubscribeMessages(cloud, studentOpenids.map((studentOpenid) => (
+            buildTaskPublishedMessage({
+              studentOpenid,
+              taskId: result._id,
+              taskTitle: title,
+              projectName: taskData.project_name,
+              projectCode: taskData.project_code,
+              teacherName: taskData.teacher_name,
+              publishTime: now
+            })
+          )), {
+            contextLabel: 'create-task task_published',
+            db,
+            now,
+            logContext: {
+              messageType: 'task_published',
+              sourceFunction: 'create-task',
+              eventKey: `task_published:${result._id}`,
+              taskId: result._id,
+              classId
+            }
+          });
+        } catch (subscribeError) {
+          console.error('[create-task] subscribe message error:', subscribeError);
+        }
       }
     }
 

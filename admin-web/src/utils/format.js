@@ -9,7 +9,19 @@ export function formatPercent(value, fallback = '--') {
   if (value === null || value === undefined || value === '') {
     return fallback;
   }
-  return `${(Number(value) * 100).toFixed(1)}%`;
+  const percent = Number(value) * 100;
+  const formatted = percent.toLocaleString('zh-CN', {
+    minimumFractionDigits: 1,
+    maximumFractionDigits: 3
+  });
+  return `${formatted}%`;
+}
+
+export function formatPercentValue(value, fallback = '--') {
+  if (value === null || value === undefined || value === '') {
+    return fallback;
+  }
+  return `${Number(value).toFixed(1)}%`;
 }
 
 const dateTimeFormatter = new Intl.DateTimeFormat('zh-CN', {
@@ -33,5 +45,5 @@ export function formatDateTime(value, fallback = '--') {
     return fallback;
   }
 
-  return dateTimeFormatter.format(date);
+  return dateTimeFormatter.format(date).replace(/\//g, '-');
 }

@@ -5,6 +5,7 @@ const { canStudentAccessTask } = require('/opt/task-access')
 const { failure, success } = require('/opt/response')
 const { writeOperationLog } = require('/opt/operation-log')
 const { createSystemNotification, safeCreateNotification } = require('/opt/notification')
+const { buildTaskSubmittedMessage, safeSendSubscribeMessage } = require('/opt/subscribe-message')
 const { normalizeString } = require('/opt/utils')
 const { getConfigValue } = require('/opt/config')
 
@@ -389,6 +390,27 @@ exports.main = async (event) => {
         senderName: user.user_name || user.nick_name || '',
         now
       }), 'submit-task task_submitted')
+
+      await safeSendSubscribeMessage(cloud, buildTaskSubmittedMessage({
+        teacherOpenid: taskInfo.teacher_openid,
+        submissionId: submitResult._id,
+        taskTitle: taskInfo.title,
+        className: taskInfo.class_name || user.class_name,
+        studentName: user.user_name || user.nick_name,
+        submitTime: now
+      }), {
+        contextLabel: 'submit-task task_submitted',
+        db,
+        now,
+        logContext: {
+          messageType: 'task_submitted',
+          sourceFunction: 'submit-task',
+          eventKey: `task_submitted:${submitResult._id}`,
+          taskId,
+          classId: taskInfo.class_id || user.class_id || '',
+          submissionId: submitResult._id
+        }
+      })
     }
 
     return success('提交任务成功', {

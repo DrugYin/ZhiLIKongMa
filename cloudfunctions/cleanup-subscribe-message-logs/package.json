@@ -1,0 +1,9 @@
+{
+  "name": "cleanup-subscribe-message-logs",
+  "version": "1.0.0",
+  "description": "清理超过一年订阅消息发送记录",
+  "main": "index.js",
+  "dependencies": {
+    "wx-server-sdk": "~2.6.3"
+  }
+}

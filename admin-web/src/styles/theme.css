@@ -1020,6 +1020,25 @@ body {
   margin-bottom: 16px;
 }
 
+.message-stat-grid { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:14px; margin-bottom:16px; }
+.message-stat-card { border:1px solid rgba(219,229,239,.72); box-shadow:0 18px 50px rgba(24,48,76,.08); }
+.message-stat-card span,.message-stat-card em { display:block; color:var(--admin-muted); font-size:13px; font-style:normal; }
+.message-stat-card strong { display:block; margin:8px 0 4px; font-size:28px; }
+.message-chart-row { margin-bottom:16px; }
+.message-chart { height:320px; }
+.message-error-list { display:grid; gap:10px; }
+.message-error-list div { display:flex; justify-content:space-between; gap:12px; padding:12px; border:1px solid var(--admin-border); border-radius:12px; background:#f8fbfd; }
+.message-toolbar { flex-wrap:wrap; }
+.message-filter { width:150px; }
+.message-template-strip { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:12px; }
+.message-table-shell { width:100%; overflow-x:auto; }
+.message-table { min-width:1160px; }
+.message-detail { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; }
+.message-detail div { padding:14px; border:1px solid var(--admin-border); border-radius:14px; background:#f8fbfd; }
+.message-detail span { display:block; margin-bottom:8px; color:var(--admin-muted); font-size:12px; }
+.message-detail strong { display:block; overflow-wrap:anywhere; }
+.message-detail-wide { grid-column:1 / -1; }
+
 .log-stat-card {
   border: 1px solid rgba(219, 229, 239, 0.72);
   box-shadow: 0 18px 50px rgba(24, 48, 76, 0.08);
@@ -1499,7 +1518,8 @@ body {
 
   .submission-stat-grid,
   .ranking-stat-grid,
-  .log-stat-grid {
+  .log-stat-grid,
+  .message-stat-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
@@ -1529,6 +1549,8 @@ body {
     max-width: 100%;
   }
 
+  .message-filter { width:100%; max-width:100%; }
+
   .class-detail-summary,
   .task-detail-summary,
   .task-info-grid,
@@ -1536,9 +1558,11 @@ body {
   .submission-info-grid,
   .ranking-detail-summary,
   .log-detail-summary,
-  .log-detail-grid {
+    .log-detail-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
+
+  .message-detail { grid-template-columns:1fr; }
 
     .project-editor-row,
     .project-difficulty-row,
@@ -1590,7 +1614,8 @@ body {
   .submission-info-grid,
   .ranking-stat-grid,
   .ranking-detail-summary,
-  .log-stat-grid,
+    .log-stat-grid,
+    .message-stat-grid,
   .log-detail-summary,
   .log-detail-grid {
     grid-template-columns: 1fr;
