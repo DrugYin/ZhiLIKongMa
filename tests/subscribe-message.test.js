@@ -173,6 +173,62 @@ async function run() {
     skipped: 1
   })
 
+  const subscribeLogs = []
+  const logDb = {
+    collection(name) {
+      assert.strictEqual(name, 'subscribe_message_logs')
+      return {
+        async add(payload) {
+          subscribeLogs.push(payload.data)
+          return { _id: `log-${subscribeLogs.length}` }
+        }
+      }
+    }
+  }
+  const loggedResult = await server.safeSendSubscribeMessage(fakeCloud, {
+    touser: 'student-1',
+    templateId: 'template',
+    page: 'pages/student/index',
+    data: {}
+  }, {
+    db: logDb,
+    now: new Date('2026-09-16T01:02:03.000Z'),
+    logContext: {
+      messageType: 'task_published',
+      sourceFunction: 'create-task',
+      taskId: 'task-1',
+      classId: 'class-1'
+    },
+    logger: { error() {} }
+  })
+  assert.strictEqual(loggedResult.success, true)
+  assert.strictEqual(subscribeLogs.length, 1)
+  assert.strictEqual(subscribeLogs[0].status, 'success')
+  assert.strictEqual(subscribeLogs[0].message_type, 'task_published')
+  assert.strictEqual(subscribeLogs[0].recipient_openid, 'student-1')
+  assert.strictEqual(subscribeLogs[0].task_id, 'task-1')
+  assert.strictEqual(subscribeLogs[0].miniprogram_state, 'formal')
+  assert.strictEqual(subscribeLogs[0].expire_time.toISOString(), '2027-09-16T01:02:03.000Z')
+
+  await server.safeSendSubscribeMessage(fakeCloud, {
+    touser: 'student-2',
+    templateId: 'template',
+    page: 'pages/student/index',
+    data: {}
+  }, {
+    db: logDb,
+    now: new Date('2026-09-16T01:02:03.000Z'),
+    logContext: {
+      messageType: 'submission_reviewed',
+      sourceFunction: 'review-submission',
+      submissionId: 'submission-1'
+    },
+    logger: { error() {} }
+  })
+  assert.strictEqual(subscribeLogs[1].status, 'failed')
+  assert.strictEqual(subscribeLogs[1].error_code, 43101)
+  assert.strictEqual(subscribeLogs[1].submission_id, 'submission-1')
+
   const rows = {
     class_memberships: [
       { student_openid: 'student-1' },

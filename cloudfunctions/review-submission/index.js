@@ -272,7 +272,17 @@ exports.main = async (event) => {
       feedback: reviewFeedback,
       reviewTime: now
     }), {
-      contextLabel: 'review-submission submission_reviewed'
+      contextLabel: 'review-submission submission_reviewed',
+      db,
+      now,
+      logContext: {
+        messageType: 'submission_reviewed',
+        sourceFunction: 'review-submission',
+        eventKey: `submission_reviewed:${submissionId}`,
+        taskId: submissionInfo.task_id,
+        classId: submissionInfo.class_id || '',
+        submissionId
+      }
     })
 
     return {

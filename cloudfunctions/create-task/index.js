@@ -342,7 +342,16 @@ exports.main = async (event) => {
               publishTime: now
             })
           )), {
-            contextLabel: 'create-task task_published'
+            contextLabel: 'create-task task_published',
+            db,
+            now,
+            logContext: {
+              messageType: 'task_published',
+              sourceFunction: 'create-task',
+              eventKey: `task_published:${result._id}`,
+              taskId: result._id,
+              classId
+            }
           });
         } catch (subscribeError) {
           console.error('[create-task] subscribe message error:', subscribeError);

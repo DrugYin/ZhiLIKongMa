@@ -393,7 +393,16 @@ exports.main = async (event) => {
             publishTime
           })
         )), {
-          contextLabel: 'update-task task_published'
+          contextLabel: 'update-task task_published',
+          db,
+          now,
+          logContext: {
+            messageType: 'task_published',
+            sourceFunction: 'update-task',
+            eventKey: `task_published:${taskId}`,
+            taskId,
+            classId
+          }
         });
       } catch (subscribeError) {
         console.error('[update-task] subscribe message error:', subscribeError);

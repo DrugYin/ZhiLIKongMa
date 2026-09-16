@@ -6,6 +6,8 @@ const TEMPLATE_IDS = Object.freeze({
 
 const VALID_MINIPROGRAM_STATES = new Set(['developer', 'trial', 'formal'])
 const DEFAULT_BATCH_SIZE = 10
+const SUBSCRIBE_LOG_COLLECTION = 'subscribe_message_logs'
+const ONE_YEAR_MS = 365 * 24 * 60 * 60 * 1000
 
 function cleanText(value, maxLength, fallback = '') {
   const normalized = String(value || '')
@@ -114,6 +116,48 @@ function getMiniProgramState() {
   return VALID_MINIPROGRAM_STATES.has(value) ? value : 'formal'
 }
 
+function normalizeError(error) {
+  return {
+    errorCode: Number(error && (error.errCode || error.errcode) || 0),
+    errorMessage: cleanText(error && (error.errMsg || error.errmsg || error.message), 300)
+  }
+}
+
+async function safeRecordSubscribeMessage(db, payload, sendResult, options = {}) {
+  if (!db || typeof db.collection !== 'function') {
+    return false
+  }
+
+  const now = options.now instanceof Date ? options.now : new Date()
+  const context = options.logContext || {}
+  const errorCode = Number(sendResult.errorCode || 0)
+  const record = {
+    message_type: cleanText(context.messageType, 40),
+    template_id: cleanText(payload.templateId, 100),
+    status: sendResult.success ? 'success' : 'failed',
+    error_code: errorCode,
+    error_message: cleanText(sendResult.errorMessage, 300),
+    recipient_openid: cleanText(payload.touser, 100),
+    miniprogram_state: cleanText(sendResult.miniprogramState, 20, 'formal'),
+    source_function: cleanText(context.sourceFunction, 60),
+    event_key: cleanText(context.eventKey, 160),
+    task_id: cleanText(context.taskId, 100),
+    class_id: cleanText(context.classId, 100),
+    submission_id: cleanText(context.submissionId, 100),
+    create_time: now,
+    expire_time: new Date(now.getTime() + ONE_YEAR_MS)
+  }
+
+  try {
+    await db.collection(SUBSCRIBE_LOG_COLLECTION).add({ data: record })
+    return true
+  } catch (error) {
+    const logger = options.logger || console
+    logger.error('[subscribe-message] record send result failed', normalizeError(error))
+    return false
+  }
+}
+
 async function safeSendSubscribeMessage(cloud, payload, options = {}) {
   const logger = options.logger || console
   const contextLabel = options.contextLabel || 'send'
@@ -122,19 +166,40 @@ async function safeSendSubscribeMessage(cloud, payload, options = {}) {
     return { success: false, skipped: true }
   }
 
+  const miniprogramState = options.miniprogramState || getMiniProgramState()
   try {
     const result = await cloud.openapi.subscribeMessage.send({
       ...payload,
-      miniprogramState: options.miniprogramState || getMiniProgramState(),
+      miniprogramState,
       lang: 'zh_CN'
     })
-    return { success: true, result }
+    const returnedError = normalizeError(result)
+    const success = returnedError.errorCode === 0
+    const sendResult = {
+      success,
+      skipped: false,
+      result,
+      errorCode: returnedError.errorCode,
+      errorMessage: success ? '' : returnedError.errorMessage,
+      miniprogramState
+    }
+    await safeRecordSubscribeMessage(options.db, payload, sendResult, options)
+    return sendResult
   } catch (error) {
+    const normalizedError = normalizeError(error)
     logger.error(`[subscribe-message] ${contextLabel} failed`, {
-      errCode: Number(error && (error.errCode || error.errcode) || 0),
-      errMsg: String(error && (error.errMsg || error.errmsg || error.message) || '')
+      errCode: normalizedError.errorCode,
+      errMsg: normalizedError.errorMessage
     })
-    return { success: false, skipped: false }
+    const sendResult = {
+      success: false,
+      skipped: false,
+      errorCode: normalizedError.errorCode,
+      errorMessage: normalizedError.errorMessage,
+      miniprogramState
+    }
+    await safeRecordSubscribeMessage(options.db, payload, sendResult, options)
+    return sendResult
   }
 }
 
@@ -182,10 +247,12 @@ async function safeSendSubscribeMessages(cloud, messages, options = {}) {
 
 module.exports = {
   TEMPLATE_IDS,
+  SUBSCRIBE_LOG_COLLECTION,
   shouldSendTaskPublishedMessage,
   buildTaskSubmittedMessage,
   buildTaskPublishedMessage,
   buildSubmissionReviewedMessage,
+  safeRecordSubscribeMessage,
   safeSendSubscribeMessage,
   safeSendSubscribeMessages
 }

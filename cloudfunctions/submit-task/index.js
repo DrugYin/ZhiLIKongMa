@@ -399,7 +399,17 @@ exports.main = async (event) => {
         studentName: user.user_name || user.nick_name,
         submitTime: now
       }), {
-        contextLabel: 'submit-task task_submitted'
+        contextLabel: 'submit-task task_submitted',
+        db,
+        now,
+        logContext: {
+          messageType: 'task_submitted',
+          sourceFunction: 'submit-task',
+          eventKey: `task_submitted:${submitResult._id}`,
+          taskId,
+          classId: taskInfo.class_id || user.class_id || '',
+          submissionId: submitResult._id
+        }
       })
     }
 
