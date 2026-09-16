@@ -8,6 +8,7 @@ const VALID_MINIPROGRAM_STATES = new Set(['developer', 'trial', 'formal'])
 const DEFAULT_BATCH_SIZE = 10
 const SUBSCRIBE_LOG_COLLECTION = 'subscribe_message_logs'
 const ONE_YEAR_MS = 365 * 24 * 60 * 60 * 1000
+const CHINA_TIME_OFFSET_MS = 8 * 60 * 60 * 1000
 
 function cleanText(value, maxLength, fallback = '') {
   const normalized = String(value || '')
@@ -31,14 +32,26 @@ function padNumber(value) {
   return String(value).padStart(2, '0')
 }
 
-function formatDate(value) {
+function getChinaDateParts(value) {
   const date = normalizeDate(value) || new Date()
-  return `${date.getFullYear()}年${date.getMonth() + 1}月${date.getDate()}日`
+  const chinaDate = new Date(date.getTime() + CHINA_TIME_OFFSET_MS)
+  return {
+    year: chinaDate.getUTCFullYear(),
+    month: chinaDate.getUTCMonth() + 1,
+    day: chinaDate.getUTCDate(),
+    hour: chinaDate.getUTCHours(),
+    minute: chinaDate.getUTCMinutes()
+  }
+}
+
+function formatDate(value) {
+  const parts = getChinaDateParts(value)
+  return `${parts.year}年${parts.month}月${parts.day}日`
 }
 
 function formatDateTime(value) {
-  const date = normalizeDate(value) || new Date()
-  return `${formatDate(date)} ${padNumber(date.getHours())}:${padNumber(date.getMinutes())}`
+  const parts = getChinaDateParts(value)
+  return `${parts.year}年${parts.month}月${parts.day}日 ${padNumber(parts.hour)}:${padNumber(parts.minute)}`
 }
 
 function encodeQueryValue(value) {

@@ -1,5 +1,7 @@
 const assert = require('assert')
 
+process.env.TZ = 'UTC'
+
 async function run() {
   const server = require('../cloudfunctions/_shared/subscribe-message')
   const client = require('../miniprogram/services/subscribe-message')
@@ -18,7 +20,7 @@ async function run() {
     taskTitle: ' 第一行\n第二行而且标题非常非常非常长需要截断 ',
     className: '三年级一班',
     studentName: '张同学名字非常非常长',
-    submitTime: new Date(2026, 8, 10, 16, 5)
+    submitTime: new Date('2026-09-10T08:05:00.000Z')
   })
   assert.deepStrictEqual(submitMessage, {
     touser: 'teacher-openid',
@@ -40,7 +42,7 @@ async function run() {
     projectName: '',
     projectCode: 'CSP-J',
     teacherName: '王老师',
-    publishTime: new Date(2026, 8, 11, 8, 30)
+    publishTime: new Date('2026-09-11T00:30:00.000Z')
   })
   assert.deepStrictEqual(publishedMessage, {
     touser: 'student-openid',
@@ -62,7 +64,7 @@ async function run() {
     teacherName: '李老师',
     status: 'rejected',
     feedback: '',
-    reviewTime: new Date(2026, 8, 12, 9, 7)
+    reviewTime: new Date('2026-09-12T01:07:00.000Z')
   })
   assert.deepStrictEqual(reviewedMessage, {
     touser: 'student-openid',
@@ -84,7 +86,7 @@ async function run() {
     teacherName: '陈老师',
     status: 'approved',
     feedback: ' 第一行\n第二行，继续保持这份认真细致的学习状态 ',
-    reviewTime: new Date(2026, 8, 12, 10, 8)
+    reviewTime: new Date('2026-09-12T02:08:00.000Z')
   })
   assert.strictEqual(approvedMessage.data.thing3.value, '审核结果：通过')
   assert.strictEqual(approvedMessage.data.thing8.value, '第一行 第二行，继续保持这份认真细致的学')

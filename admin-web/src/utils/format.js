@@ -45,5 +45,5 @@ export function formatDateTime(value, fallback = '--') {
     return fallback;
   }
 
-  return dateTimeFormatter.format(date);
+  return dateTimeFormatter.format(date).replace(/\//g, '-');
 }
