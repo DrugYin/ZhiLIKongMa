@@ -25,6 +25,7 @@ Thumbs.db
 tmp/
 temp/
 *.tmp
+.worktrees/
 
 # 云函数相关
 cloudfunctions/node_modules/
