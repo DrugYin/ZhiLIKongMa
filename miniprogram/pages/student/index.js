@@ -1,8 +1,6 @@
 const AuthService = require('../../services/auth')
-const ClassService = require('../../services/class')
 const AnnouncementService = require('../../services/announcement')
-const RankingService = require('../../services/ranking')
-const TaskService = require('../../services/task')
+const OverviewService = require('../../services/overview')
 const formatUtils = require('../../utils/format')
 const taskDeadline = require('../../utils/task-deadline')
 
@@ -137,13 +135,35 @@ Page({
     })
 
     try {
-      const [userInfo, classSummary, weeklyRankText] = await Promise.all([
-        this.loadCurrentUserInfo(cachedUserInfo, isLoggedIn),
-        this.loadClassSummary(),
-        this.loadWeeklyRankText(isLoggedIn)
-      ])
+      if (!isLoggedIn) {
+        this.setData({
+          notice: this.buildNoticeText(false, {
+            joinedCount: 0,
+            pendingCount: 0
+          }),
+          showNotice: true,
+          featuredTask: this.buildFeaturedTask(cachedUserInfo, {
+            joinedCount: 0,
+            pendingCount: 0
+          }, null)
+        })
+        this._pageReady = true
+        return
+      }
 
-      const weeklyTaskSummary = await this.loadWeeklyTaskSummary(classSummary)
+      const overview = await OverviewService.getStudentOverview()
+      const userInfo = overview.user_info || cachedUserInfo
+      const classSummary = {
+        joinedCount: Number(overview.class_summary && overview.class_summary.joined_count || 0),
+        pendingCount: Number(overview.class_summary && overview.class_summary.pending_count || 0)
+      }
+      const weeklyTaskSummary = this.normalizeWeeklyTaskSummary(overview.weekly_task)
+      const weeklyRankText = overview.weekly_rank && overview.weekly_rank.text || '未上榜'
+
+      AuthService.updateLocalUserInfo({
+        ...userInfo,
+        is_registered: true
+      })
 
       if (requestId !== this._initRequestId) {
         return
@@ -198,38 +218,6 @@ Page({
     }
   },
 
-  async loadClassSummary() {
-    if (!AuthService.isLoggedIn()) {
-      return {
-        joinedCount: 0,
-        pendingCount: 0
-      }
-    }
-
-    try {
-      const status = await ClassService.getMyClassStatus()
-      const joinedClasses = Array.isArray(status.joined_classes) ? status.joined_classes : []
-      const pendingApplications = Array.isArray(status.pending_applications) ? status.pending_applications : []
-
-      return {
-        joinedCount: joinedClasses.length,
-        pendingCount: pendingApplications.length,
-        joinedClasses,
-        joinedClassIds: joinedClasses
-          .map((item) => String(item.class_id || item._id || '').trim())
-          .filter(Boolean)
-      }
-    } catch (error) {
-      console.error('[student-index] loadClassSummary error:', error)
-      return {
-        joinedCount: 0,
-        pendingCount: 0,
-        joinedClasses: [],
-        joinedClassIds: []
-      }
-    }
-  },
-
   buildNoticeText(isLoggedIn, classSummary) {
     if (!isLoggedIn) {
       return '登录后可同步任务、班级和个人积分，首页数据会自动切换为你的学习看板。'
@@ -246,88 +234,14 @@ Page({
     return '还没有加入班级时，也可以先浏览公开任务与排行榜，后续再补充班级学习内容。'
   },
 
-  async loadWeeklyTaskSummary(classSummary = {}) {
-    if (!AuthService.isLoggedIn()) {
-      return null
+  normalizeWeeklyTaskSummary(weeklyTask = {}) {
+    const latestPendingTask = weeklyTask.latest_pending_task || null
+    return {
+      weeklyTaskCount: Number(weeklyTask.total || 0),
+      submittedCount: Number(weeklyTask.submitted || 0),
+      latestTask: latestPendingTask ? this.formatWeeklyTask(latestPendingTask) : null,
+      hasPendingTask: Boolean(latestPendingTask)
     }
-
-    try {
-      const joinedClassIds = Array.isArray(classSummary.joinedClassIds)
-        ? classSummary.joinedClassIds.filter(Boolean)
-        : []
-
-      if (!joinedClassIds.length) {
-        return {
-          weeklyTaskCount: 0,
-          submittedCount: 0,
-          latestTask: null,
-          hasPendingTask: false
-        }
-      }
-
-      const taskResponse = await TaskService.getTasks({
-        page: 1,
-        page_size: 50,
-        sort_by: 'publish_time',
-        sort_order: 'desc'
-      })
-      const taskList = (Array.isArray(taskResponse.list) ? taskResponse.list : []).filter((item) => {
-        if (!item || item.task_type !== 'class') {
-          return false
-        }
-
-        const taskClassId = String(item.class_id || item.classId || '').trim()
-        return Boolean(taskClassId) && joinedClassIds.includes(taskClassId)
-      })
-      let submissionTaskIds = new Set()
-
-      try {
-        submissionTaskIds = await this.loadSubmittedTaskIds()
-      } catch (error) {
-        console.error('[student-index] loadSubmittedTaskIds error:', error)
-      }
-
-      const weeklyTasks = taskList.filter((item) => this.isCurrentWeekTask(item))
-      const submittedCount = weeklyTasks.filter((item) => submissionTaskIds.has(item._id)).length
-      const pendingTasks = weeklyTasks
-        .filter((item) => !submissionTaskIds.has(item._id))
-        .sort((left, right) => this.getTaskReferenceTime(right) - this.getTaskReferenceTime(left))
-      const latestTask = pendingTasks[0] || null
-
-      return {
-        weeklyTaskCount: weeklyTasks.length,
-        submittedCount,
-        latestTask: latestTask ? this.formatWeeklyTask(latestTask) : null,
-        hasPendingTask: pendingTasks.length > 0
-      }
-    } catch (error) {
-      console.error('[student-index] loadWeeklyTaskSummary error:', error)
-      return null
-    }
-  },
-
-  async loadSubmittedTaskIds() {
-    const taskIds = new Set()
-    let page = 1
-    let hasMore = true
-    const maxPages = 4
-
-    while (hasMore && page <= maxPages) {
-      const response = await TaskService.getSubmissions({
-        page,
-        page_size: 50
-      })
-      const list = Array.isArray(response.list) ? response.list : []
-      list.forEach((item) => {
-        if (item && item.task_id) {
-          taskIds.add(item.task_id)
-        }
-      })
-      hasMore = Boolean(response.has_more)
-      page += 1
-    }
-
-    return taskIds
   },
 
   buildFeaturedTask(userInfo, classSummary, weeklyTaskSummary) {
@@ -357,7 +271,7 @@ Page({
       }
     }
 
-    if (!weeklyTaskCount || !latestTask) {
+    if (!weeklyTaskCount) {
       return {
         title: '本周还没有待跟进任务',
         description: joinedCount > 0
@@ -382,13 +296,13 @@ Page({
       return {
         title: '本周任务已全部提交',
         description: `你本周共有 ${weeklyTaskCount} 个任务，已经全部完成提交，记得留意后续审核反馈。`,
-        taskId: latestTask.taskId,
-        deadlineText: latestTask.deadlineText,
+        taskId: '',
+        deadlineText: '本周已完成',
         progressText: `${submittedCount} / ${weeklyTaskCount}`,
         progressPercent,
-        assistantText: latestTask.projectText,
-        projectText: latestTask.projectText,
-        classText: latestTask.classText,
+        assistantText: userInfo.grade || userInfo.school || '综合训练',
+        projectText: '全部任务已提交',
+        classText: joinedCount > 0 ? `已加入 ${joinedCount} 个班级` : '暂未加入班级',
         statusText: '已全部提交',
         statusStyle: 'color:#2f8f57;background:rgba(47, 143, 87, 0.12);',
         weeklyTaskCount,
@@ -434,91 +348,6 @@ Page({
     }
 
     return `截止 ${formatUtils.formatDate(deadline, 'MM-DD HH:mm')}`
-  },
-
-  isCurrentWeekTask(item = {}) {
-    // 排除截止时间已过的任务，避免将过期任务推送到首页
-    const deadline = taskDeadline.getTaskDeadlineDate(item)
-    if (deadline && deadline.getTime() < Date.now()) {
-      return false
-    }
-
-    const { start, end } = this.getCurrentWeekRange()
-    const candidateDates = [
-      this.parseTaskDate(item.publish_time),
-      this.parseTaskDate(item.create_time),
-      this.parseTaskDate(item.update_time),
-      deadline
-    ].filter(Boolean)
-
-    return candidateDates.some((date) => this.isDateInRange(date, start, end))
-  },
-
-  getTaskReferenceTime(item = {}) {
-    const referenceDate = this.getTaskReferenceDate(item)
-    return referenceDate ? referenceDate.getTime() : 0
-  },
-
-  getTaskReferenceDate(item = {}) {
-    return this.parseTaskDate(item.publish_time)
-      || this.parseTaskDate(item.create_time)
-      || this.parseTaskDate(item.update_time)
-      || taskDeadline.getTaskDeadlineDate(item)
-  },
-
-  parseTaskDate(value) {
-    if (!value) {
-      return null
-    }
-
-    if (value instanceof Date) {
-      return Number.isNaN(value.getTime()) ? null : value
-    }
-
-    if (typeof value === 'number') {
-      const timestampDate = new Date(value)
-      return Number.isNaN(timestampDate.getTime()) ? null : timestampDate
-    }
-
-    const text = String(value).trim()
-    if (!text) {
-      return null
-    }
-
-    let normalizedText = text
-    if (text.includes(' ') && !text.includes('T')) {
-      normalizedText = text.replace(' ', 'T')
-    }
-
-    const primaryDate = new Date(normalizedText)
-    if (!Number.isNaN(primaryDate.getTime())) {
-      return primaryDate
-    }
-
-    const slashDate = new Date(text.replace(/-/g, '/'))
-    return Number.isNaN(slashDate.getTime()) ? null : slashDate
-  },
-
-  getCurrentWeekRange() {
-    const start = new Date()
-    const day = start.getDay()
-    const offset = (day + 1) % 7
-    start.setHours(0, 0, 0, 0)
-    start.setDate(start.getDate() - offset)
-
-    const end = new Date(start)
-    end.setDate(end.getDate() + 7)
-
-    return { start, end }
-  },
-
-  isDateInRange(date, start, end) {
-    if (!date) {
-      return false
-    }
-
-    const time = date.getTime()
-    return time >= start.getTime() && time < end.getTime()
   },
 
   closeNotice() {
@@ -674,44 +503,4 @@ Page({
     }
   },
 
-  async loadCurrentUserInfo(fallbackUserInfo = {}, isLoggedIn = false) {
-    if (!isLoggedIn) {
-      return fallbackUserInfo
-    }
-
-    try {
-      const userInfo = await AuthService.getUserInfo()
-      if (userInfo) {
-        AuthService.updateLocalUserInfo({
-          ...userInfo,
-          is_registered: true
-        })
-        return userInfo
-      }
-    } catch (error) {
-      console.error('[student-index] loadCurrentUserInfo error:', error)
-    }
-
-    return fallbackUserInfo
-  },
-
-  async loadWeeklyRankText(isLoggedIn) {
-    if (!isLoggedIn) {
-      return '未登录'
-    }
-
-    try {
-      const rankRes = await RankingService.getRanking({
-        rank_type: 'week'
-      })
-      const currentUser = rankRes.current_user || null
-
-      return currentUser && Number(currentUser.rank || 0) > 0
-        ? `第 ${currentUser.rank} 名`
-        : '未上榜'
-    } catch (error) {
-      console.error('[student-index] loadWeeklyRankText error:', error)
-      return '同步中'
-    }
-  },
 })

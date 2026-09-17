@@ -21,11 +21,8 @@ App({
           this._redirectTeacherIfNeeded(res.user_info)
         }
       } else {
-        const res = await AuthService.getUserInfo()
-        if (res.is_registered) {
-          AuthService.updateLocalUserInfo(res)
-          this._redirectTeacherIfNeeded(res)
-        }
+        const cachedUserInfo = AuthService.getLocalUserInfo()
+        this._redirectTeacherIfNeeded(cachedUserInfo)
       }
     } catch (error) {
       console.error('自动登录失败:', error)

@@ -186,6 +186,15 @@ const rankingApi = {
 };
 
 /**
+ * 首页聚合 API
+ */
+const overviewApi = {
+  getStudentOverview() {
+    return callFunction({ name: 'get-student-overview' });
+  }
+};
+
+/**
  * 配置相关 API
  */
 const configApi = {
@@ -206,5 +215,6 @@ module.exports = {
   taskApi,
   lotteryApi,
   rankingApi,
+  overviewApi,
   configApi
 };

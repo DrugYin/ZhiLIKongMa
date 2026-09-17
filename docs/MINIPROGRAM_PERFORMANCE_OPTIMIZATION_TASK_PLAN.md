@@ -293,7 +293,7 @@ Get-ChildItem tests -Filter '*.test.js' | Sort-Object Name | ForEach-Object { no
 
   对学生首页、教师首页、教师审核中心分别测试 20 次，记录：页面初始化时间、云函数调用数、首屏 `setData` 次数、主包体积。结果追加到本文件“6. 验收记录”。
 
-- [ ] **步骤 5：提交**
+- [x] **步骤 5：提交**
 
 ```bash
 git add tests/phase4-efficiency.test.js tests/phase5-cleanup.test.js tests/miniprogram-performance-contract.test.js docs/MINIPROGRAM_PERFORMANCE_OPTIMIZATION_TASK_PLAN.md
@@ -318,7 +318,7 @@ git commit -m "test: 更新性能回归基线"
 - 消费：`/opt/auth`、`/opt/membership`、`/opt/response`。
 - 产出：`OverviewService.getStudentOverview()`，返回第 2.3 节定义的学生首页数据。
 
-- [ ] **步骤 1：为聚合结果写失败测试**
+- [x] **步骤 1：为聚合结果写失败测试**
 
 ```js
 const assert = require('assert')
@@ -334,11 +334,11 @@ assert.doesNotMatch(source, /getAllUsers/)
 
   预期：失败，提示目标文件不存在。
 
-- [ ] **步骤 2：实现 `get-student-overview`**
+- [x] **步骤 2：实现 `get-student-overview`**
 
   一次读取当前用户；一次读取其有效班级关系；直接读取 `ranking_snapshots/week`；只查询当前周、当前用户已加入班级的已发布任务；只查询这些任务 ID 对应的当前学生提交记录。任务和提交查询必须使用 `.field()`，不得返回附件正文。
 
-- [ ] **步骤 3：新增服务层入口**
+- [x] **步骤 3：新增服务层入口**
 
 ```js
 const OverviewService = {
@@ -350,15 +350,15 @@ const OverviewService = {
 
   `miniprogram/services/overview.js` 负责检查 `success` 并返回 `res.data`，页面不得直接解析底层 CloudBase 响应。
 
-- [ ] **步骤 4：替换学生首页瀑布请求**
+- [x] **步骤 4：替换学生首页瀑布请求**
 
   删除首页对 `get-user-info`、`get-my-class-status`、`get-ranking`、`get-tasks`、`get-submissions` 的独立调用。保留本地缓存用于首帧占位，聚合接口返回后一次更新首页主体数据。
 
-- [ ] **步骤 5：取消启动阶段的重复用户刷新**
+- [x] **步骤 5：取消启动阶段的重复用户刷新**
 
   `app.js` 在已有有效本地用户信息时不再阻塞页面等待 `get-user-info`；教师角色跳转先读取本地角色，聚合接口返回后再校正缓存。未注册用户仍走现有 `login + get-user-info` 流程。
 
-- [ ] **步骤 6：运行测试**
+- [x] **步骤 6：运行测试**
 
 ```powershell
 node tests/student-overview.test.js

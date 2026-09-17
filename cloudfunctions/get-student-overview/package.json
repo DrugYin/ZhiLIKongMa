@@ -1,0 +1,9 @@
+{
+  "name": "get-student-overview",
+  "version": "1.0.0",
+  "description": "Get the current student's home page overview",
+  "main": "index.js",
+  "dependencies": {
+    "wx-server-sdk": "^2.6.3"
+  }
+}

@@ -1,0 +1,13 @@
+const { overviewApi } = require('./api')
+
+class OverviewService {
+  static async getStudentOverview() {
+    const res = await overviewApi.getStudentOverview()
+    if (!res.success) {
+      throw new Error(res.message || '获取学生首页数据失败')
+    }
+    return res.data || {}
+  }
+}
+
+module.exports = OverviewService
