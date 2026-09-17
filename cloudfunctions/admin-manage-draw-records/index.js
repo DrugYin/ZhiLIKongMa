@@ -94,18 +94,8 @@ async function redeemRecord(event = {}, admin) {
   const id = normalizeString(event._id || event.id)
   if (!id) return failure('缺少记录ID', 400)
 
-  let record
-  try {
-    const recordRes = await db.collection(COLLECTION_NAME).doc(id).get()
-    record = recordRes.data
-  } catch (error) {
-    return failure('记录不存在', 404)
-  }
-  if (!record) return failure('记录不存在', 404)
-  if (record.is_redeemed) return failure('该记录已兑奖，无需重复操作', 409)
-
   const now = new Date()
-  await db.collection(COLLECTION_NAME).doc(id).update({
+  const updateRes = await db.collection(COLLECTION_NAME).where({ _id: id, is_redeemed: false }).update({
     data: {
       is_redeemed: true,
       redeem_time: now,
@@ -113,6 +103,19 @@ async function redeemRecord(event = {}, admin) {
       update_time: now
     }
   })
+  if (!updateRes.updated) {
+    try {
+      const currentRes = await db.collection(COLLECTION_NAME).doc(id).get()
+      return currentRes.data
+        ? failure('该记录已兑奖，无需重复操作', 409)
+        : failure('记录不存在', 404)
+    } catch (error) {
+      return failure('记录不存在', 404)
+    }
+  }
+
+  const recordRes = await db.collection(COLLECTION_NAME).doc(id).get()
+  const record = recordRes.data || {}
 
   await writeAdminOperationLog(db, {
     module: 'draw_records',
