@@ -10,14 +10,18 @@ const loading = fs.readFileSync('miniprogram/components/loading/loading.js', 'ut
 const navbar = fs.readFileSync('miniprogram/components/custom-navbar/index.js', 'utf8')
 const pointsLog = fs.readFileSync('cloudfunctions/_shared/points-log.js', 'utf8')
 
-assert.match(cloudbaseApi, /function getProperty\(source, paths\)/)
-assert.doesNotMatch(cloudbaseApi, /response\?\.fileID[\s\S]*response\?\.result\?\.fileId/)
+assert.match(cloudbaseApi, /function normalizeTempFileURLResponse\(response\)/)
+assert.match(cloudbaseApi, /function pickFirst\(\.\.\.values\)/)
+assert.match(cloudbaseApi, /const tempFileURLCache = new Map\(\)/)
+assert.match(cloudbaseApi, /function normalizeUploadFileResponse\(response\)[\s\S]*return pickFirst\(/)
 
 assert.match(lotteryWheel, /requestAnimationFrame/)
 assert.doesNotMatch(lotteryWheel, /setTimeout\(animStep, 16\)/)
 
-assert.match(createClass, /CONFIG_CACHE_TTL/)
-assert.match(updateClass, /CONFIG_CACHE_TTL/)
+assert.match(createClass, /createCachedConfigValue/)
+assert.match(createClass, /const getCachedConfigValue = createCachedConfigValue\(db\)/)
+assert.match(updateClass, /createCachedConfigValue/)
+assert.match(updateClass, /const getCachedConfigValue = createCachedConfigValue\(db\)/)
 
 assert.doesNotMatch(empty, /^\/\/ components\//m)
 assert.doesNotMatch(empty, /data:\s*\{\}/)

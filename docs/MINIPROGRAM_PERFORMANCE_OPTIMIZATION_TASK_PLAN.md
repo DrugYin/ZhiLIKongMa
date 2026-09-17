@@ -257,13 +257,13 @@ tests/phase5-cleanup.test.js
 - 输入：仓库当前源码与 `miniprogram/app.json`。
 - 输出：请求聚合、分包、公告裁剪和审核中心聚合的静态契约测试。
 
-- [ ] **步骤 1：修正两组已经失效的历史断言**
+- [x] **步骤 1：修正两组已经失效的历史断言**
 
   `phase4-efficiency.test.js` 不再要求已经移除的 `const LIMIT = 200`，改为验证后台抽奖记录使用服务端 `count + orderBy + skip + limit` 分页。
 
   `phase5-cleanup.test.js` 不再要求已经移除的 `getProperty(source, paths)`，改为验证 `normalizeTempFileURLResponse`、`pickFirst` 和临时 URL 缓存仍然存在。
 
-- [ ] **步骤 2：新增性能契约测试并先验证失败**
+- [x] **步骤 2：新增性能契约测试并先验证失败**
 
 ```js
 const assert = require('assert')
@@ -281,7 +281,7 @@ assert.match(pendingPage, /OverviewService\.getTeacherReviews/)
 assert.doesNotMatch(pendingPage, /targetClasses\.map\(c => buildAppPromise/)
 ```
 
-- [ ] **步骤 3：逐个运行现有测试，保存真实基线**
+- [x] **步骤 3：逐个运行现有测试，保存真实基线**
 
 ```powershell
 Get-ChildItem tests -Filter '*.test.js' | Sort-Object Name | ForEach-Object { node $_.FullName }
@@ -834,6 +834,8 @@ git commit -m "文档: 记录小程序性能优化验收结果"
 ## 6. 验收记录
 
 实施时在下表追加实测结果，不用主观描述替代数据。
+
+2026-09-17 自动化基线：8 个历史测试全部通过；新增性能契约测试按预期在“尚未配置分包”处失败。当前环境未检测到微信开发者工具或 `miniprogram-ci`，真机 P75、首屏 `setData` 次数和开发者工具包体基线仍需在最终验收前补测。
 
 | 指标 | 优化前 | 优化后 | 目标 | 结果 |
 |---|---:|---:|---:|---|

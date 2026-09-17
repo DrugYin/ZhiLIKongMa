@@ -6,7 +6,8 @@ const prizes = fs.readFileSync('cloudfunctions/admin-manage-prizes/index.js', 'u
 const getPrizes = fs.readFileSync('cloudfunctions/get-prizes/index.js', 'utf8')
 const pointsLogPage = fs.readFileSync('admin-web/src/pages/points-log/PointsLogPage.vue', 'utf8')
 
-assert.match(drawRecords, /const LIMIT = 200/)
+assert.match(drawRecords, /\.where\(queryData\)\.count\(\)/)
+assert.match(drawRecords, /\.orderBy\('create_time', 'desc'\)[\s\S]*\.skip\(\(page - 1\) \* pageSize\)[\s\S]*\.limit\(pageSize\)/)
 assert.match(drawRecords, /db\.RegExp\(/)
 assert.match(drawRecords, /where\(\{\s*_id:\s*id,\s*is_redeemed:\s*false\s*\}\)/s)
 assert.doesNotMatch(drawRecords, /if \(record\.is_redeemed\)/)
