@@ -709,6 +709,8 @@ node tests/subscribe-message-pages.test.js
 
   清理旧构建缓存后执行“构建 npm”，查看代码依赖分析。主包目标不高于 1.5MiB，每个分包不高于平台限制，所有分包均能正常预加载和跳转。
 
+  > 2026-09-18 本地尝试：已定位微信开发者工具 `2.01.2602032`，CLI 构建因账号需要重新登录（错误码 10）中止。当前第一方源码静态统计：主包约 381,207 bytes、学生分包 140,301 bytes、教师分包 121,536 bytes、公共分包 7,886 bytes；最终上传包体仍须登录开发者工具后确认。
+
 - [x] **步骤 7：提交**
 
 ```bash
@@ -769,7 +771,7 @@ node tests/teacher-reviews.test.js
 
   > 本地验证：排行榜分页追加、当前用户摘要和审核列表 200 条上限契约测试已通过；真机连续滚动检查仍需在开发者工具可用后完成。
 
-- [ ] **步骤 6：提交**
+- [x] **步骤 6：提交**
 
 ```bash
 git add cloudfunctions/get-ranking/index.js miniprogram/services/ranking.js miniprogram/pages/student/rank miniprogram/pages/teacher/pending/pending.js tests/long-list-performance.test.js
@@ -787,7 +789,7 @@ git commit -m "性能: 优化排行榜与审核长列表渲染"
 
 **接口：** 无新增业务接口；本任务验证前八项交付物。
 
-- [ ] **步骤 1：运行全部仓库测试**
+- [x] **步骤 1：运行全部仓库测试**
 
 ```powershell
 $testFiles = Get-ChildItem tests -Filter '*.test.js' | Sort-Object Name
@@ -799,6 +801,8 @@ foreach ($testFile in $testFiles) {
 
   预期：所有测试退出码均为 0。
 
+  > 2026-09-18 本地结果：按文件名顺序运行 `tests/*.test.js`，16/16 通过；本轮关键 JavaScript 文件语法检查 4/4 通过，`git diff --check` 通过。
+
 - [ ] **步骤 2：执行核心业务回归**
 
   学生端验证登录、首页、加入班级、任务列表、任务详情、提交、提交记录、排行榜、公告；教师端验证首页、班级、任务、审核、申请处理和公告。
@@ -806,6 +810,8 @@ foreach ($testFile in $testFiles) {
 - [ ] **步骤 3：执行性能验收**
 
   按第 1.3 节统一条件分别测试学生首页、教师首页和审核中心 20 次，计算 P75；记录主包/分包体积、云函数调用数、接口平均耗时和返回体积。
+
+  > 静态验收：已登录后的学生首页和教师首页代码路径均为“1 次聚合接口 + 1 次公告弹窗接口”，教师审核中心首屏为 1 次聚合接口；达到调用次数设计目标。P75、云函数平均耗时、线上返回体积和开发者工具包体需在部署后实测，不能用静态检查替代。
 
 - [ ] **步骤 4：灰度上传体验版**
 
@@ -815,11 +821,11 @@ foreach ($testFile in $testFiles) {
 
   查询 `FunctionInvocation`、`FunctionDuration`、`FunctionError`、`FunctionTimeout`、`FunctionThrottle`；确认错误、超时、限流均为 0，并将核心函数耗时写入验收记录。
 
-- [ ] **步骤 6：更新项目任务文档**
+- [x] **步骤 6：更新项目任务文档**
 
   在 `docs/DEVELOPMENT_TASKS.md` 的性能优化阶段记录完成项和最终指标；未达到目标的指标必须写明实测值、原因和下一轮动作。
 
-- [ ] **步骤 7：提交**
+- [x] **步骤 7：提交**
 
 ```bash
 git add docs/MINIPROGRAM_PERFORMANCE_OPTIMIZATION_TASK_PLAN.md docs/DEVELOPMENT_TASKS.md
