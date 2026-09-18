@@ -255,7 +255,7 @@ exports.main = async (event) => {
       content: `你提交的《${submissionInfo.task_title || taskInfo.title || '未命名任务'}》任务已${status === 'approved' ? '通过' : '被驳回'}`,
       targetOpenid: submissionInfo.student_openid,
       notificationType: 'submission_reviewed',
-      actionUrl: `/pages/student/task-manage/submission-records/submission-records?task_id=${submissionInfo.task_id}`,
+      actionUrl: `/subpackages/student/task-manage/submission-records/submission-records?task_id=${submissionInfo.task_id}`,
       relatedType: 'submission',
       relatedId: submissionId,
       senderOpenid: OPENID,

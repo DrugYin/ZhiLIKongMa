@@ -125,7 +125,7 @@ async function createClassTaskNotification(db, options = {}) {
     content: `${className}班级发布了新的任务《${taskTitle}》`,
     targetOpenids,
     notificationType: 'class_task_published',
-    actionUrl: `/pages/student/task-manage/task-detail/task-detail?task_id=${taskId}`,
+    actionUrl: `/subpackages/student/task-manage/task-detail/task-detail?task_id=${taskId}`,
     relatedType: 'task',
     relatedId: taskId,
     senderOpenid: options.senderOpenid,

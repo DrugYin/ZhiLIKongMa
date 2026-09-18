@@ -62,7 +62,7 @@ async function testStudentRequestsBeforeSubmitting() {
       return { _id: 'submission-1' }
     }
   }
-  const page = loadPage('miniprogram/pages/student/task-manage/submission-edit/submission-edit.js', {
+  const page = loadPage('miniprogram/subpackages/student/task-manage/submission-edit/submission-edit.js', {
     '../../../../services/task': taskService,
     '../../../../services/api': { uploadFile() {} },
     '../../../../services/subscribe-message': {
@@ -111,7 +111,7 @@ async function testStudentRequestsBeforeSubmitting() {
 
 async function testStudentRequestsBeforeJoiningClass() {
   const events = []
-  const page = loadPage('miniprogram/pages/student/class-manage/join-confirm/join-confirm.js', {
+  const page = loadPage('miniprogram/subpackages/student/class-manage/join-confirm/join-confirm.js', {
     '../../../../services/auth': {},
     '../../../../services/class': {
       async joinClass() {
@@ -162,7 +162,7 @@ async function testStudentRequestsBeforeJoiningClass() {
 
 async function testTeacherRequestsBeforeCreatingClass() {
   const events = []
-  const page = loadPage('miniprogram/pages/teacher/class-manage/class-edit/class-edit.js', {
+  const page = loadPage('miniprogram/subpackages/teacher/class-manage/class-edit/class-edit.js', {
     '../../../../config/project': {},
     '../../../../services/class': {
       async createClass() {
@@ -224,7 +224,7 @@ async function testTeacherRequestsBeforeCreatingClass() {
 
 async function testTeacherRequestsOnlyWhenPublishingTask() {
   const events = []
-  const page = loadPage('miniprogram/pages/teacher/task-manage/task-edit/task-edit.js', {
+  const page = loadPage('miniprogram/subpackages/teacher/task-manage/task-edit/task-edit.js', {
     '../../../../config/project': {},
     '../../../../services/class': {},
     '../../../../services/task': {

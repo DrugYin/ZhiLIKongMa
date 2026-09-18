@@ -261,7 +261,7 @@ Page({
       if (classId) {
         setTimeout(() => {
           wx.redirectTo({
-            url: `/pages/teacher/class-manage/class-detail/class-detail?class_id=${classId}`
+            url: `/subpackages/teacher/class-manage/class-detail/class-detail?class_id=${classId}`
           })
           return
         }, 1000)

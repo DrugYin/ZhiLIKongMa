@@ -53,7 +53,7 @@ Page({
 
   goToAnnouncements() {
     wx.navigateTo({
-      url: '/pages/common/announcements/announcements'
+      url: '/subpackages/common/announcements/announcements'
     })
   },
 

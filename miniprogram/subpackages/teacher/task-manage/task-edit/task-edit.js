@@ -960,7 +960,7 @@ Page({
             wx.navigateBack()
           } else {
             wx.redirectTo({
-              url: `/pages/teacher/task-manage/task-detail/task-detail?task_id=${taskId}`
+              url: `/subpackages/teacher/task-manage/task-detail/task-detail?task_id=${taskId}`
             })
           }
         }, 800)

@@ -117,13 +117,13 @@ Page({
 
   goToSubmissionRecords() {
     wx.navigateTo({
-      url: '/pages/student/task-manage/submission-records/submission-records'
+      url: '/subpackages/student/task-manage/submission-records/submission-records'
     })
   },
 
   goToPointsLog() {
     wx.navigateTo({
-      url: '/pages/student/points-log/points-log'
+      url: '/subpackages/student/points-log/points-log'
     })
   },
 
@@ -147,7 +147,7 @@ Page({
 
   goToAnnouncements() {
     wx.navigateTo({
-      url: '/pages/common/announcements/announcements'
+      url: '/subpackages/common/announcements/announcements'
     })
   },
 

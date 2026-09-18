@@ -653,7 +653,7 @@ node tests/teacher-reviews.test.js
 
   对任务列表和提交列表各取 20 条，记录优化前后 JSON 字节数；两个列表返回体积均应减少至少 30%，字段完整性测试必须通过。
 
-- [ ] **步骤 8：提交**
+- [x] **步骤 8：提交**
 
 ```bash
 git add cloudfunctions/get-tasks/index.js cloudfunctions/get-submissions/index.js cloudfunctions/get-classes/index.js cloudfunctions/get-class-applications/index.js tests/list-payload-performance.test.js
@@ -677,23 +677,23 @@ git commit -m "性能: 精简列表载荷并补充查询索引"
 - 主包保留登录页和七个 TabBar 页面。
 - 分包页面继续使用原有业务参数名，不改变页面功能。
 
-- [ ] **步骤 1：建立路由清单测试**
+- [x] **步骤 1：建立路由清单测试**
 
   测试应读取 `app.json`，验证每个代码中的绝对页面路径都存在于主包或分包清单中；验证 TabBar 页面全部位于主包。
 
-- [ ] **步骤 2：拆分学生扩展包**
+- [x] **步骤 2：拆分学生扩展包**
 
   移动任务详情、提交编辑、提交记录、班级详情、入班确认、积分明细、抽奖和抽奖记录页面。学生首页、排行榜、我的、班级管理和任务管理 Tab 页面继续留在主包。
 
-- [ ] **步骤 3：拆分教师扩展包**
+- [x] **步骤 3：拆分教师扩展包**
 
   移动班级详情、班级编辑、任务详情和任务编辑页面。教师首页、审核中心、任务管理和我的 Tab 页面继续留在主包。
 
-- [ ] **步骤 4：拆分公共扩展包**
+- [x] **步骤 4：拆分公共扩展包**
 
   将通知中心放入公共分包；公告动作、系统通知和分享路径统一改为新的分包路径。
 
-- [ ] **步骤 5：执行全仓路由扫描**
+- [x] **步骤 5：执行全仓路由扫描**
 
 ```powershell
 rg -n "pages/(student|teacher|common)/" miniprogram cloudfunctions
@@ -702,6 +702,8 @@ node tests/subscribe-message-pages.test.js
 ```
 
   每一个旧路径都必须确认是 TabBar 保留路径、兼容入口或已替换路径，不允许保留失效跳转。
+
+  > 本地验证：路由清单、性能总契约和订阅消息页面测试均已通过；运行时代码中已无被移动页面的旧绝对路径。
 
 - [ ] **步骤 6：在微信开发者工具重新构建 npm 并检查包体**
 

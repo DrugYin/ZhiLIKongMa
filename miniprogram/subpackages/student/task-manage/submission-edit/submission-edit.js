@@ -506,7 +506,7 @@ Page({
         }
 
         wx.redirectTo({
-          url: `/pages/student/task-manage/task-detail/task-detail?task_id=${this.data.taskId}`
+          url: `/subpackages/student/task-manage/task-detail/task-detail?task_id=${this.data.taskId}`
         })
       }, 700)
     } catch (error) {
@@ -521,7 +521,7 @@ Page({
 
   goToRecords() {
     wx.navigateTo({
-      url: `/pages/student/task-manage/submission-records/submission-records?task_id=${this.data.taskId}`
+      url: `/subpackages/student/task-manage/submission-records/submission-records?task_id=${this.data.taskId}`
     })
   }
 })

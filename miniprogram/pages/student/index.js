@@ -362,7 +362,7 @@ Page({
     }
 
     wx.navigateTo({
-      url: `/pages/student/task-manage/task-detail/task-detail?task_id=${taskId}`
+      url: `/subpackages/student/task-manage/task-detail/task-detail?task_id=${taskId}`
     })
   },
 
@@ -385,7 +385,7 @@ Page({
     }
 
     if (key === 'lottery') {
-      wx.navigateTo({ url: '/pages/student/lottery/lottery' })
+      wx.navigateTo({ url: '/subpackages/student/lottery/lottery' })
       return
     }
 
@@ -475,13 +475,13 @@ Page({
 
   goToAnnouncements() {
     wx.navigateTo({
-      url: '/pages/common/announcements/announcements'
+      url: '/subpackages/common/announcements/announcements'
     })
   },
 
   goToSubmissionRecords() {
     wx.navigateTo({
-      url: '/pages/student/task-manage/submission-records/submission-records'
+      url: '/subpackages/student/task-manage/submission-records/submission-records'
     })
   },
 

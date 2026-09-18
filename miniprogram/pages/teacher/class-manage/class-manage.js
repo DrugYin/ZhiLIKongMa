@@ -271,7 +271,7 @@ Page({
 
   goToAddClass() {
     wx.navigateTo({
-      url: '/pages/teacher/class-manage/class-edit/class-edit'
+      url: '/subpackages/teacher/class-manage/class-edit/class-edit'
     })
   },
 
@@ -282,7 +282,7 @@ Page({
     }
 
     wx.navigateTo({
-      url: `/pages/teacher/class-manage/class-detail/class-detail?class_id=${classId}`
+      url: `/subpackages/teacher/class-manage/class-detail/class-detail?class_id=${classId}`
     })
   },
 
@@ -293,7 +293,7 @@ Page({
     }
 
     wx.navigateTo({
-      url: `/pages/teacher/class-manage/class-edit/class-edit?class_id=${classId}`
+      url: `/subpackages/teacher/class-manage/class-edit/class-edit?class_id=${classId}`
     })
   },
 

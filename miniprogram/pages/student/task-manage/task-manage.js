@@ -645,7 +645,7 @@ Page({
     }
 
     wx.navigateTo({
-      url: `/pages/student/task-manage/task-detail/task-detail?task_id=${taskId}`
+      url: `/subpackages/student/task-manage/task-detail/task-detail?task_id=${taskId}`
     })
   },
 

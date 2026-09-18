@@ -463,7 +463,7 @@ Page({
     }
 
     wx.navigateTo({
-      url: `/pages/teacher/task-manage/task-edit/task-edit?task_id=${this.data.taskId}`
+      url: `/subpackages/teacher/task-manage/task-edit/task-edit?task_id=${this.data.taskId}`
     })
   },
 
@@ -498,7 +498,7 @@ Page({
     const taskTitle = taskInfo.titleText || '任务'
     return {
       title: `${teacherName}邀请你完成${taskTitle}`,
-      path: `/pages/student/task-manage/task-detail/task-detail?task_id=${this.data.taskId}`
+      path: `/subpackages/student/task-manage/task-detail/task-detail?task_id=${this.data.taskId}`
     }
   }
 })

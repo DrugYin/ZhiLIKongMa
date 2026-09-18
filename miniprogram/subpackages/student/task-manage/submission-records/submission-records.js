@@ -361,7 +361,7 @@ Page({
 
   goToSubmit() {
     wx.navigateTo({
-      url: `/pages/student/task-manage/submission-edit/submission-edit?task_id=${this.data.taskId}`
+      url: `/subpackages/student/task-manage/submission-edit/submission-edit?task_id=${this.data.taskId}`
     })
   },
 

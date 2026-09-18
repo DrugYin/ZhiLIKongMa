@@ -115,7 +115,7 @@ Page({
   onShareAppMessage() {
     return {
       title: '智力控码公告',
-      path: '/pages/common/announcements/announcements'
+      path: '/subpackages/common/announcements/announcements'
     }
   }
 })

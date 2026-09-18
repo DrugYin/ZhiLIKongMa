@@ -177,10 +177,10 @@ Page({
   },
 
   goToRecords() {
-    wx.navigateTo({ url: '/pages/student/lottery/draw-records/draw-records' })
+    wx.navigateTo({ url: '/subpackages/student/lottery/draw-records/draw-records' })
   },
 
   goToPointsLog() {
-    wx.navigateTo({ url: '/pages/student/points-log/points-log' })
+    wx.navigateTo({ url: '/subpackages/student/points-log/points-log' })
   }
 })

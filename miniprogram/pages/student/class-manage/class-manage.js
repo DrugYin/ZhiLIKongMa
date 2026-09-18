@@ -164,7 +164,7 @@ Page({
     }
 
     wx.navigateTo({
-      url: `/pages/student/class-manage/join-confirm/join-confirm?class_code=${encodeURIComponent(this.data.inviteCode)}&from=manual_input`
+      url: `/subpackages/student/class-manage/join-confirm/join-confirm?class_code=${encodeURIComponent(this.data.inviteCode)}&from=manual_input`
     });
   },
 
@@ -177,7 +177,7 @@ Page({
     }
 
     wx.navigateTo({
-      url: `/pages/student/class-manage/class-detail/class-detail?class_id=${classId}`
+      url: `/subpackages/student/class-manage/class-detail/class-detail?class_id=${classId}`
     });
   },
 

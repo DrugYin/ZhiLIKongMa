@@ -490,7 +490,7 @@ Page({
     }
 
     wx.navigateTo({
-      url: `/pages/teacher/task-manage/task-detail/task-detail?task_id=${taskId}`
+      url: `/subpackages/teacher/task-manage/task-detail/task-detail?task_id=${taskId}`
     })
   },
 
@@ -502,7 +502,7 @@ Page({
     }
 
     wx.navigateTo({
-      url: `/pages/teacher/task-manage/task-edit/task-edit${query.length ? `?${query.join('&')}` : ''}`
+      url: `/subpackages/teacher/task-manage/task-edit/task-edit${query.length ? `?${query.join('&')}` : ''}`
     })
   },
 

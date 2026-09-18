@@ -326,10 +326,10 @@ Page({
     const classCode = this.data.classInfo ? this.data.classInfo.classCode : ''
 
     if (!classCode || classCode === '--') {
-      return `/pages/teacher/class-manage/class-detail/class-detail?class_id=${this.data.classId}`
+      return `/subpackages/teacher/class-manage/class-detail/class-detail?class_id=${this.data.classId}`
     }
 
-    return `/pages/student/class-manage/join-confirm/join-confirm?class_code=${encodeURIComponent(classCode)}&from=teacher_share`
+    return `/subpackages/student/class-manage/join-confirm/join-confirm?class_code=${encodeURIComponent(classCode)}&from=teacher_share`
   },
 
   goToEditClass() {
@@ -338,7 +338,7 @@ Page({
     }
 
     wx.navigateTo({
-      url: `/pages/teacher/class-manage/class-edit/class-edit?class_id=${this.data.classId}`
+      url: `/subpackages/teacher/class-manage/class-edit/class-edit?class_id=${this.data.classId}`
     })
   },
 
@@ -357,7 +357,7 @@ Page({
     }
 
     wx.navigateTo({
-      url: `/pages/teacher/task-manage/task-detail/task-detail?task_id=${taskId}`
+      url: `/subpackages/teacher/task-manage/task-detail/task-detail?task_id=${taskId}`
     })
   },
 

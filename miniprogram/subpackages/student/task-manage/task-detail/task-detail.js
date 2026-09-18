@@ -285,13 +285,13 @@ Page({
 
   goSubmitTask() {
     wx.navigateTo({
-      url: `/pages/student/task-manage/submission-edit/submission-edit?task_id=${this.data.taskId}`
+      url: `/subpackages/student/task-manage/submission-edit/submission-edit?task_id=${this.data.taskId}`
     })
   },
 
   goSubmissionRecords() {
     wx.navigateTo({
-      url: `/pages/student/task-manage/submission-records/submission-records?task_id=${this.data.taskId}`
+      url: `/subpackages/student/task-manage/submission-records/submission-records?task_id=${this.data.taskId}`
     })
   },
 
@@ -299,7 +299,7 @@ Page({
     const title = this.data.taskInfo ? this.data.taskInfo.titleText : '任务详情'
     return {
       title,
-      path: `/pages/student/task-manage/task-detail/task-detail?task_id=${this.data.taskId}`
+      path: `/subpackages/student/task-manage/task-detail/task-detail?task_id=${this.data.taskId}`
     }
   }
 })

@@ -2,29 +2,49 @@
   "pages": [
     "pages/student/index",
     "pages/student/task-manage/task-manage",
-    "pages/student/task-manage/task-detail/task-detail",
-    "pages/student/task-manage/submission-edit/submission-edit",
-    "pages/student/task-manage/submission-records/submission-records",
     "pages/student/mine/mine",
     "pages/student/class-manage/class-manage",
-    "pages/student/class-manage/class-detail/class-detail",
-    "pages/student/class-manage/join-confirm/join-confirm",
-    "pages/student/points-log/points-log",
-    "pages/student/lottery/lottery",
-    "pages/student/lottery/draw-records/draw-records",
-    "pages/common/announcements/announcements",
     "pages/login/login",
     "pages/teacher/index",
     "pages/student/setting/setting",
     "pages/student/rank/rank",
     "pages/teacher/pending/pending",
     "pages/teacher/class-manage/class-manage",
-    "pages/teacher/class-manage/class-detail/class-detail",
-    "pages/teacher/class-manage/class-edit/class-edit",
     "pages/teacher/task-manage/task-manage",
-    "pages/teacher/task-manage/task-detail/task-detail",
-    "pages/teacher/task-manage/task-edit/task-edit",
     "pages/teacher/mine/mine"
+  ],
+  "subpackages": [
+    {
+      "name": "studentExt",
+      "root": "subpackages/student",
+      "pages": [
+        "task-manage/task-detail/task-detail",
+        "task-manage/submission-edit/submission-edit",
+        "task-manage/submission-records/submission-records",
+        "class-manage/class-detail/class-detail",
+        "class-manage/join-confirm/join-confirm",
+        "points-log/points-log",
+        "lottery/lottery",
+        "lottery/draw-records/draw-records"
+      ]
+    },
+    {
+      "name": "teacherExt",
+      "root": "subpackages/teacher",
+      "pages": [
+        "class-manage/class-detail/class-detail",
+        "class-manage/class-edit/class-edit",
+        "task-manage/task-detail/task-detail",
+        "task-manage/task-edit/task-edit"
+      ]
+    },
+    {
+      "name": "commonExt",
+      "root": "subpackages/common",
+      "pages": [
+        "announcements/announcements"
+      ]
+    }
   ],
   "tabBar": {
     "custom": true,

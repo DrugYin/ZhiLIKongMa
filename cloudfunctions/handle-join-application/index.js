@@ -172,7 +172,7 @@ exports.main = async (event) => {
       targetOpenid: application.student_openid,
       notificationType: 'class_join_reviewed',
       actionUrl: action === 'approve'
-        ? `/pages/student/class-manage/class-detail/class-detail?class_id=${classInfo._id}`
+        ? `/subpackages/student/class-manage/class-detail/class-detail?class_id=${classInfo._id}`
         : '/pages/student/class-manage/class-manage',
       relatedType: 'class_join_application',
       relatedId: applicationId,
