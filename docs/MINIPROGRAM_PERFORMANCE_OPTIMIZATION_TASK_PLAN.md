@@ -372,6 +372,8 @@ node tests/miniprogram-constants.test.js
 
   使用 CloudBase MCP 部署 `get-student-overview`，再查询函数详情确认运行时、层绑定与超时配置。用学生账号验证未加入班级、存在待审核申请、已加入多个班级、本周无任务、本周任务已全部提交五种场景。
 
+  > 2026-09-18 部署进度：函数已创建并回读为 `Active / Available`，运行时 `Nodejs18.15`、超时 20 秒、内存 256MB，已绑定 `shared` 第 11 版。无微信身份的空调用稳定返回业务 `401`，未访问用户集合；五种真实学生场景仍需在体验版中验收。
+
 - [x] **步骤 8：提交**
 
 ```bash
@@ -436,6 +438,8 @@ node tests/miniprogram-performance-contract.test.js
 - [ ] **步骤 6：部署并回读验证**
 
   使用教师账号验证零班级、多个班级、无任务、有待审核提交、有待审核入班申请五种场景。CloudBase 监控中该函数活跃时段平均耗时应不高于 500ms。
+
+  > 2026-09-18 部署进度：`get-teacher-overview` 已创建并回读为 `Active / Available`，配置与学生聚合函数一致；无微信身份的空调用返回业务 `401`。真实教师场景和活跃时段平均耗时尚未验收。
 
 - [x] **步骤 7：提交**
 
@@ -504,6 +508,8 @@ node tests/miniprogram-performance-contract.test.js
 - [ ] **步骤 7：部署并验证调用次数**
 
   使用拥有至少 5 个班级的教师账号打开审核中心，首屏网络记录只能出现一次业务云函数调用；滚动加载每页只增加一次调用。
+
+  > 2026-09-18 部署进度：`get-teacher-reviews` 已创建并回读为 `Active / Available`，无微信身份的空调用返回业务 `401`。多班级教师的首屏与翻页调用次数仍需在体验版中验证。
 
 - [x] **步骤 8：提交**
 
@@ -623,7 +629,7 @@ assert.match(submissions, /view === 'task_ids'/)
 
   > 2026-09-18 回读结果：七个集合均已核对。`announcements` 已有 `status + is_deleted + sort_order + publish_time`，`announcement_reads` 已有 `user_openid + read_time` 与唯一的 `announcement_id + user_openid`，`class_memberships` 已有 `student_openid` 和唯一的 `class_id + student_openid`；下表八个目标复合索引均无同等索引。待创建参数已保存到 `docs/cloudbase-performance-indexes.json`。
 
-- [ ] **步骤 5：新增复合索引**
+- [x] **步骤 5：新增复合索引**
 
   在没有同等索引时新增：
 
@@ -639,6 +645,8 @@ assert.match(submissions, /view === 'task_ids'/)
 | `class_join_applications` | `class_id ASC, status ASC, create_time DESC` |
 
   索引字段顺序必须与实际 `where + orderBy` 查询一致；创建后回读并记录索引名称、字段和方向。
+
+  > 2026-09-18 线上结果：8 个非唯一复合索引已全部创建并回读确认。`tasks`：`idx_teacher_deleted_update`、`idx_status_type_visibility_publish`、`idx_class_status_publish`；`submissions`：`idx_teacher_status_submit`、`idx_student_submit`、`idx_student_task`；`classes`：`idx_teacher_status_update`；`class_join_applications`：`idx_class_status_create`。字段顺序和升降序均与上表一致。
 
 - [x] **步骤 6：运行测试**
 
@@ -854,6 +862,8 @@ git commit -m "文档: 记录小程序性能优化验收结果"
 实施时在下表追加实测结果，不用主观描述替代数据。
 
 2026-09-17 自动化基线：8 个历史测试全部通过；新增性能契约测试按预期在“尚未配置分包”处失败。当前环境未检测到微信开发者工具或 `miniprogram-ci`，真机 P75、首屏 `setData` 次数和开发者工具包体基线仍需在最终验收前补测。
+
+2026-09-18 灰度部署进度：已新增三个聚合云函数并确认状态可用，未覆盖现有线上函数；8 个复合索引已创建并回读。三个新函数的无身份空调用均由业务层返回 `401`，平台调用成功且耗时分别为 4ms、5ms、6ms。该结果仅证明函数可加载及身份保护生效，不代表真实角色数据或页面性能已通过验收。
 
 | 指标 | 优化前 | 优化后 | 目标 | 结果 |
 |---|---:|---:|---:|---|
