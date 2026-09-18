@@ -191,6 +191,10 @@ const rankingApi = {
 const overviewApi = {
   getStudentOverview() {
     return callFunction({ name: 'get-student-overview' });
+  },
+
+  getTeacherOverview() {
+    return callFunction({ name: 'get-teacher-overview' });
   }
 };
 

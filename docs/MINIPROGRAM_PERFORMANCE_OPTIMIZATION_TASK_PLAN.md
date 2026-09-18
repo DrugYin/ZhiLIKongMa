@@ -372,7 +372,7 @@ node tests/miniprogram-constants.test.js
 
   使用 CloudBase MCP 部署 `get-student-overview`，再查询函数详情确认运行时、层绑定与超时配置。用学生账号验证未加入班级、存在待审核申请、已加入多个班级、本周无任务、本周任务已全部提交五种场景。
 
-- [ ] **步骤 8：提交**
+- [x] **步骤 8：提交**
 
 ```bash
 git add cloudfunctions/get-student-overview miniprogram/app.js miniprogram/services/api.js miniprogram/services/overview.js miniprogram/pages/student/index.js tests/student-overview.test.js
@@ -397,7 +397,7 @@ git commit -m "性能: 合并学生首页数据请求"
 - 消费：教师身份、班级、任务、提交和入班申请集合。
 - 产出：`OverviewService.getTeacherOverview()`，返回第 2.3 节定义的教师首页数据。
 
-- [ ] **步骤 1：写失败测试**
+- [x] **步骤 1：写失败测试**
 
 ```js
 const assert = require('assert')
@@ -410,19 +410,19 @@ assert.doesNotMatch(source, /page <= 10/)
 assert.doesNotMatch(source, /list\.push\(\.\.\.currentList\)/)
 ```
 
-- [ ] **步骤 2：实现教师统计查询**
+- [x] **步骤 2：实现教师统计查询**
 
   使用数据库 `count()` 或聚合查询得到班级数、任务数、待审核提交数和本周已提交学生数。班级只投影 `_id`、`class_name`、`member_count`、`update_time`；最近动态每种数据源最多读取 1 条，禁止读取 500 条提交后在前端计数。
 
-- [ ] **步骤 3：批量统计入班申请**
+- [x] **步骤 3：批量统计入班申请**
 
   将教师班级 ID 按 20 个一组，通过 `class_id: _.in(batchIds)` 查询待审核申请总数和最新一条申请。数据库操作数应与“班级批次数”相关，不得与单个班级数一一对应。
 
-- [ ] **步骤 4：替换教师首页请求**
+- [x] **步骤 4：替换教师首页请求**
 
   删除 `fetchAllTeacherSubmissions`、`fetchAllPendingApplications`、`fetchClassPendingApplications`、`fetchAllClasses` 和 `fetchAllTasks`。页面只调用 `OverviewService.getTeacherOverview()`，公告仍独立懒加载。
 
-- [ ] **步骤 5：运行测试并验证降级状态**
+- [x] **步骤 5：运行测试并验证降级状态**
 
 ```powershell
 node tests/teacher-overview.test.js
@@ -430,6 +430,8 @@ node tests/miniprogram-performance-contract.test.js
 ```
 
   模拟排行榜或最近动态缺失时，首页统计仍应正常展示；接口失败时继续显示本地缓存用户和明确的重试提示。
+
+  > 本地验证：`teacher-overview.test.js` 与其余历史回归测试已通过；总契约测试会在后续子包、审核中心和索引任务完成前继续保持红灯。
 
 - [ ] **步骤 6：部署并回读验证**
 
