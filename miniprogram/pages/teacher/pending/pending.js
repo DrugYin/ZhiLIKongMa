@@ -55,6 +55,7 @@ const REVIEW_ACTION_TEXT = {
     feedback: '当前提交未通过，请补充说明或附件后再次提交。'
   }
 }
+const REVIEW_RENDER_LIMIT = 200
 
 Page({
   data: {
@@ -118,7 +119,8 @@ Page({
     pageSize: 20,
     hasMore: true,
     loadingMore: false,
-    currentFilterTotal: 0
+    currentFilterTotal: 0,
+    listLimitNotice: ''
   },
 
   onLoad(options = {}) {
@@ -179,7 +181,8 @@ Page({
       this.setData({
         hasMore: true,
         displayRecords: [],
-        statsLoading: true
+        statsLoading: true,
+        listLimitNotice: ''
       })
 
       await this.loadNextPage({ includeStats: true, requestId })
@@ -203,6 +206,13 @@ Page({
   async loadNextPage({ includeStats = false, requestId = this._loadRequestId } = {}) {
     if (this.data.loadingMore && !includeStats) return
     if (!this.data.hasMore) return
+    if (this._records.length >= REVIEW_RENDER_LIMIT) {
+      this.setData({
+        hasMore: false,
+        listLimitNotice: `已展示前 ${REVIEW_RENDER_LIMIT} 条，请使用筛选条件缩小范围。`
+      })
+      return
+    }
 
     this.setData({ loadingMore: true })
 
@@ -223,12 +233,20 @@ Page({
       ))
       const existingKeys = new Set(this._records.map((item) => item.recordKey))
       const appended = nextRecords.filter((item) => !existingKeys.has(item.recordKey))
-      this._records = this._records.concat(appended)
+      const remaining = Math.max(REVIEW_RENDER_LIMIT - this._records.length, 0)
+      const visibleAppended = appended.slice(0, remaining)
+      const reachedLimit = appended.length > remaining || (
+        this._records.length + visibleAppended.length >= REVIEW_RENDER_LIMIT && response.has_more
+      )
+      this._records = this._records.concat(visibleAppended)
       this._nextCursor = response.next_cursor || ''
 
       const nextData = {
         displayRecords: this._records,
-        hasMore: Boolean(response.has_more),
+        hasMore: reachedLimit ? false : Boolean(response.has_more),
+        listLimitNotice: reachedLimit
+          ? `已展示前 ${REVIEW_RENDER_LIMIT} 条，请使用筛选条件缩小范围。`
+          : '',
         currentFilterTotal: Number(response.total || 0)
       }
       if (includeStats) {

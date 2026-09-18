@@ -13,7 +13,7 @@
     </view>
   </view>
 
-  <scroll-view class="content" scroll-y enhanced scroll-top="{{scrollTop}}">
+  <scroll-view class="content" scroll-y enhanced scroll-top="{{scrollTop}}" lower-threshold="120" bindscrolltolower="onScrollToLower">
     <view id="back-top-sentinel" style="height:1rpx;"></view>
     <view class="hero-card">
       <text class="hero-eyebrow">学习排行</text>
@@ -102,9 +102,15 @@
           <text class="rank-score">{{item.points}}</text>
         </view>
       </view>
+      <view wx:if="{{loadingMore}}" class="state-card">
+        <text class="state-desc">正在加载更多排名...</text>
+      </view>
+      <view wx:elif="{{!hasMore}}" class="state-card">
+        <text class="state-desc">已展示全部排名</text>
+      </view>
     </view>
 
-    <view wx:elif="{{!loading}}" class="section-card state-card">
+    <view wx:elif="{{!loading && !topThree.length}}" class="section-card state-card">
       <text class="state-title">当前还没有榜单数据</text>
       <text class="state-desc">等有学生积分或审核数据产生后，这里会自动同步真实排行。</text>
     </view>

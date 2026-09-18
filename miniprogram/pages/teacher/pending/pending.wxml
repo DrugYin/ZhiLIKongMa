@@ -240,7 +240,7 @@
         <text class="loading-more-text">加载中...</text>
       </view>
       <view wx:elif="{{!hasMore && displayRecords.length > 0}}" class="no-more">
-        <text class="no-more-text">没有更多记录了</text>
+        <text class="no-more-text">{{listLimitNotice || '没有更多记录了'}}</text>
       </view>
     </view>
 

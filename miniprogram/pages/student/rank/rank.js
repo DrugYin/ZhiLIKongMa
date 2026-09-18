@@ -1,5 +1,6 @@
 const AuthService = require('../../../services/auth')
 const RankingService = require('../../../services/ranking')
+const RANKING_PAGE_SIZE = 30
 
 Page({
   data: {
@@ -18,7 +19,11 @@ Page({
     },
     topThree: [],
     displayRanks: [],
-    currentUserCard: null
+    currentUserCard: null,
+    page: 1,
+    pageSize: RANKING_PAGE_SIZE,
+    hasMore: true,
+    loadingMore: false
   },
 
   onLoad() {
@@ -62,7 +67,13 @@ Page({
     })
   },
 
+  onScrollToLower() {
+    this.loadNextRankPage()
+  },
+
   async loadRankData() {
+    const requestId = (this._rankRequestId || 0) + 1
+    this._rankRequestId = requestId
     const userInfo = AuthService.getLocalUserInfo() || {}
     const isLoggedIn = AuthService.isLoggedIn()
 
@@ -71,6 +82,11 @@ Page({
       isLoggedIn,
       errorText: '',
       userInfo,
+      page: 1,
+      hasMore: true,
+      topThree: [],
+      displayRanks: [],
+      currentUserCard: null,
       rankTitle: this.getRankTitle(this.data.rankType),
       rankDesc: this.getRankDesc(this.data.rankType)
     })
@@ -93,15 +109,22 @@ Page({
 
     try {
       const rankRes = await RankingService.getRanking({
-        rank_type: this.data.rankType
+        rank_type: this.data.rankType,
+        page: 1,
+        page_size: this.data.pageSize
       })
+      if (requestId !== this._rankRequestId) return
       const rankingList = this.formatRankingList(rankRes.list || [])
-      const currentUserCard = rankingList.find((item) => item.isCurrentUser) || null
+      const currentUserCard = rankRes.current_user
+        ? this.formatRankingList([rankRes.current_user])[0]
+        : null
 
       this.setData({
-        topThree: rankingList.slice(0, 3),
-        displayRanks: rankingList.slice(3),
+        topThree: rankingList.filter((item) => Number(item.rank || 0) <= 3),
+        displayRanks: rankingList.filter((item) => Number(item.rank || 0) > 3),
         currentUserCard,
+        page: 2,
+        hasMore: Boolean(rankRes.has_more),
         summary: {
           participantCount: Number(rankRes.participant_count || rankingList.length || 0),
           myRankText: currentUserCard ? `第 ${currentUserCard.rank} 名` : '未上榜',
@@ -123,10 +146,42 @@ Page({
         }
       })
     } finally {
-      this.setData({
-        loading: false
+      if (requestId === this._rankRequestId) {
+        this.setData({ loading: false })
+        wx.stopPullDownRefresh()
+      }
+    }
+  },
+
+  async loadNextRankPage() {
+    if (this.data.loading || this.data.loadingMore || !this.data.hasMore) return
+    const requestId = this._rankRequestId
+    this.setData({ loadingMore: true })
+
+    try {
+      const rankRes = await RankingService.getRanking({
+        rank_type: this.data.rankType,
+        page: this.data.page,
+        page_size: this.data.pageSize
       })
-      wx.stopPullDownRefresh()
+      if (requestId !== this._rankRequestId) return
+
+      const nextList = this.formatRankingList(rankRes.list || [])
+        .filter((item) => Number(item.rank || 0) > 3)
+      const existingIds = new Set(this.data.displayRanks.map((item) => item._openid || `rank-${item.rank}`))
+      const appended = nextList.filter((item) => !existingIds.has(item._openid || `rank-${item.rank}`))
+
+      this.setData({
+        displayRanks: this.data.displayRanks.concat(appended),
+        page: this.data.page + 1,
+        hasMore: Boolean(rankRes.has_more)
+      })
+    } catch (error) {
+      console.error('[student-rank] loadNextRankPage error:', error)
+    } finally {
+      if (requestId === this._rankRequestId) {
+        this.setData({ loadingMore: false })
+      }
     }
   },
 
@@ -155,14 +210,14 @@ Page({
   },
 
   formatRankingList(list = []) {
-    return (Array.isArray(list) ? list : []).map((item, index) => ({
+    return (Array.isArray(list) ? list : []).map((item) => ({
       ...item,
       name: item.name || '未命名同学',
       grade: item.grade || '待完善',
       trend: item.trend_text || this.getTrendText(item),
       badgeText: this.getBadgeText(item.points, this.data.rankType, item.task_count),
       isCurrentUser: Boolean(item.is_current_user),
-      rankClass: index < 3 ? `rank-top-${index + 1}` : ''
+      rankClass: Number(item.rank || 0) <= 3 ? `rank-top-${Number(item.rank || 0)}` : ''
     }))
   },
 

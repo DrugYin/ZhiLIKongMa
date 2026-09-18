@@ -217,6 +217,34 @@ function markCurrentUser(list = [], currentOpenid = '') {
   }))
 }
 
+function buildRankingData({
+  rankType,
+  rankingList,
+  participantCount,
+  currentOpenid,
+  page,
+  pageSize,
+  currentUserOnly,
+  snapshotTime = null
+}) {
+  const markedList = markCurrentUser(rankingList, currentOpenid)
+  const currentUserCard = markedList.find((item) => item.is_current_user) || null
+  const start = (page - 1) * pageSize
+
+  return {
+    rank_type: rankType,
+    participant_count: Number(participantCount || markedList.length || 0),
+    current_user: currentUserCard,
+    top_three: currentUserOnly ? [] : markedList.slice(0, 3),
+    list: currentUserOnly ? [] : markedList.slice(start, start + pageSize),
+    page,
+    page_size: pageSize,
+    total: markedList.length,
+    has_more: currentUserOnly ? false : start + pageSize < markedList.length,
+    snapshot_time: snapshotTime
+  }
+}
+
 async function getRankingSnapshot(rankType) {
   try {
     const res = await db.collection('ranking_snapshots').doc(rankType).get()
@@ -236,20 +264,22 @@ exports.main = async (event) => {
     }
 
     const rankType = normalizeRankType(event.rank_type)
+    const page = Math.max(Number(event.page || 1), 1)
+    const pageSize = Math.min(Math.max(Number(event.page_size || 30), 1), 50)
+    const currentUserOnly = event.current_user_only === true || event.current_user_only === 'true'
     const snapshot = await getRankingSnapshot(rankType)
 
     if (snapshot && Array.isArray(snapshot.list)) {
-      const rankingList = markCurrentUser(snapshot.list, currentUser._openid)
-      const currentUserCard = rankingList.find((item) => item.is_current_user) || null
-
-      return success('获取排行榜成功', {
-        rank_type: rankType,
-        participant_count: Number(snapshot.participant_count || rankingList.length || 0),
-        current_user: currentUserCard,
-        top_three: rankingList.slice(0, 3),
-        list: rankingList,
-        snapshot_time: snapshot.generated_at || null
-      })
+      return success('获取排行榜成功', buildRankingData({
+        rankType,
+        rankingList: snapshot.list,
+        participantCount: snapshot.participant_count,
+        currentOpenid: currentUser._openid,
+        page,
+        pageSize,
+        currentUserOnly,
+        snapshotTime: snapshot.generated_at || null
+      }))
     }
 
     const users = await getAllUsers()
@@ -262,15 +292,15 @@ exports.main = async (event) => {
     }
 
     const rankingList = buildRankList(users, currentUser, rankType, scoreMap)
-    const currentUserCard = rankingList.find((item) => item.is_current_user) || null
-
-    return success('获取排行榜成功', {
-      rank_type: rankType,
-      participant_count: rankingList.length,
-      current_user: currentUserCard,
-      top_three: rankingList.slice(0, 3),
-      list: rankingList
-    })
+    return success('获取排行榜成功', buildRankingData({
+      rankType,
+      rankingList,
+      participantCount: rankingList.length,
+      currentOpenid: currentUser._openid,
+      page,
+      pageSize,
+      currentUserOnly
+    }))
   } catch (error) {
     console.error('[get-ranking] Error:', error)
     return failure('获取排行榜失败', 500, {

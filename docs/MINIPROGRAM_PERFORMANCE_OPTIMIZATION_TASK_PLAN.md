@@ -709,7 +709,7 @@ node tests/subscribe-message-pages.test.js
 
   清理旧构建缓存后执行“构建 npm”，查看代码依赖分析。主包目标不高于 1.5MiB，每个分包不高于平台限制，所有分包均能正常预加载和跳转。
 
-- [ ] **步骤 7：提交**
+- [x] **步骤 7：提交**
 
 ```bash
 git add miniprogram/app.json miniprogram/pages miniprogram/subpackages miniprogram/services cloudfunctions tests/miniprogram-performance-contract.test.js tests/miniprogram-routes.test.js tests/subscribe-message-pages.test.js
@@ -735,7 +735,7 @@ git commit -m "性能: 拆分小程序非核心页面包"
 - `current_user_only=true` 时返回当前用户排名与参与人数，`list` 为空数组。
 - 排行榜页面默认每页 30 条，滚动到底加载下一页。
 
-- [ ] **步骤 1：写排行榜分页失败测试**
+- [x] **步骤 1：写排行榜分页失败测试**
 
 ```js
 const assert = require('assert')
@@ -746,15 +746,15 @@ assert.match(source, /page_size/)
 assert.match(source, /has_more/)
 ```
 
-- [ ] **步骤 2：为快照结果增加服务端切片**
+- [x] **步骤 2：为快照结果增加服务端切片**
 
   从快照中计算当前用户卡片后，只返回请求页的列表；首页只请求 `current_user_only=true`，排行榜页使用分页列表。
 
-- [ ] **步骤 3：改造排行榜页面增量渲染**
+- [x] **步骤 3：改造排行榜页面增量渲染**
 
   首次加载 30 条，滚动到底追加下一页；切换周榜、月榜、总榜时清空页码和列表。只更新新增列表和分页状态，不重复向视图层发送完整原始快照。
 
-- [ ] **步骤 4：限制审核列表视图节点数**
+- [x] **步骤 4：限制审核列表视图节点数**
 
   审核中心仅保留当前已加载页的展示模型；切换筛选时清空旧列表。连续加载超过 200 条时提示用户使用筛选条件，不继续无限追加。
 
@@ -766,6 +766,8 @@ node tests/teacher-reviews.test.js
 ```
 
   真机滚动排行榜和审核列表，检查无重复项、无跳项、无明显白屏，页面节点数不超过设计上限。
+
+  > 本地验证：排行榜分页追加、当前用户摘要和审核列表 200 条上限契约测试已通过；真机连续滚动检查仍需在开发者工具可用后完成。
 
 - [ ] **步骤 6：提交**
 
