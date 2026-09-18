@@ -195,6 +195,10 @@ const overviewApi = {
 
   getTeacherOverview() {
     return callFunction({ name: 'get-teacher-overview' });
+  },
+
+  getTeacherReviews(data) {
+    return callFunction({ name: 'get-teacher-reviews', data });
   }
 };
 

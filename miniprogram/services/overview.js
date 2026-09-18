@@ -16,6 +16,16 @@ class OverviewService {
     }
     return res.data || {}
   }
+
+  static async getTeacherReviews(params = {}) {
+    const res = await overviewApi.getTeacherReviews(params)
+    if (!res.success) {
+      const error = new Error(res.message || '获取教师审核记录失败')
+      error.code = res.error_code
+      throw error
+    }
+    return res.data || {}
+  }
 }
 
 module.exports = OverviewService

@@ -437,7 +437,7 @@ node tests/miniprogram-performance-contract.test.js
 
   使用教师账号验证零班级、多个班级、无任务、有待审核提交、有待审核入班申请五种场景。CloudBase 监控中该函数活跃时段平均耗时应不高于 500ms。
 
-- [ ] **步骤 7：提交**
+- [x] **步骤 7：提交**
 
 ```bash
 git add cloudfunctions/get-teacher-overview miniprogram/services/api.js miniprogram/services/overview.js miniprogram/pages/teacher/index.js tests/teacher-overview.test.js
@@ -462,7 +462,7 @@ git commit -m "性能: 合并教师首页统计请求"
 - 消费：教师班级 ID、`submissions`、`class_join_applications` 和学生基础信息。
 - 产出：`OverviewService.getTeacherReviews(params)`，返回第 2.3 节定义的统一列表、统计和班级选项。
 
-- [ ] **步骤 1：写失败测试**
+- [x] **步骤 1：写失败测试**
 
 ```js
 const assert = require('assert')
@@ -474,23 +474,23 @@ assert.doesNotMatch(page, /TaskService\.getSubmissions/)
 assert.doesNotMatch(page, /buildAppPromise/)
 ```
 
-- [ ] **步骤 2：实现统一审核查询与稳定游标**
+- [x] **步骤 2：实现统一审核查询与稳定游标**
 
   云函数先校验教师身份并获取其班级 ID；提交记录按 `teacher_openid` 查询；入班申请按 `class_id` 分批查询；两类结果在云函数内按 `sort_time DESC、record_type ASC、_id ASC` 稳定排序后合并。接口使用服务端生成的不透明 `cursor`，游标至少包含快照时间、两类数据各自的读取位置和末条排序键；前端只保存并回传 `next_cursor`，不得解析其内容。首次请求在 `include_stats=true` 时同时返回统计与班级选项，后续请求不重复统计。
 
-- [ ] **步骤 3：限制列表字段**
+- [x] **步骤 3：限制列表字段**
 
   列表只返回卡片展示字段，不返回图片、附件和反馈附件数组。用户打开审核弹层时，继续通过现有提交详情或申请详情接口按 ID 获取完整材料。
 
-- [ ] **步骤 4：替换前端加载流程**
+- [x] **步骤 4：替换前端加载流程**
 
   `initPage` 首次只发起一次 `get-teacher-reviews`；筛选条件变化时清空游标并重新请求；滚动到底部携带上次响应的 `next_cursor`。删除 `loadTeacherClasses`、`loadStats` 以及按班级循环发请求的逻辑。
 
-- [ ] **步骤 5：减少视图层数据复制**
+- [x] **步骤 5：减少视图层数据复制**
 
   原始记录保存在页面实例字段 `this._records`，`data` 中只保留实际渲染的 `displayRecords`。追加分页数据时只把新列表映射为展示模型，避免同时向视图层发送 `records` 和 `displayRecords` 两份完整数组。
 
-- [ ] **步骤 6：运行测试**
+- [x] **步骤 6：运行测试**
 
 ```powershell
 node tests/teacher-reviews.test.js
@@ -498,6 +498,8 @@ node tests/miniprogram-performance-contract.test.js
 ```
 
   验证默认筛选、仅提交、仅申请、待审核、已处理、指定班级和下一游标七种场景；增加两类记录时间相同、翻页期间新增记录、非法或过期游标三组边界测试，确保无重复、无漏项并返回可识别的参数错误。
+
+  > 本地验证：统一列表、字段裁剪、稳定排序、筛选签名、非法游标和过期游标契约测试已通过；线上数据场景与首屏调用次数留待部署步骤验证。
 
 - [ ] **步骤 7：部署并验证调用次数**
 
