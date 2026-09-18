@@ -286,6 +286,9 @@ async function getDetail(recordType, recordId, openid, classMap) {
 exports.main = async (event = {}) => {
   try {
     const { OPENID } = cloud.getWXContext()
+    if (!OPENID) {
+      return failure('无法获取用户身份', 401)
+    }
     const teacher = await verifyTeacherRole(db, OPENID)
     if (!teacher) return failure('仅教师可以查看审核中心', 403)
 

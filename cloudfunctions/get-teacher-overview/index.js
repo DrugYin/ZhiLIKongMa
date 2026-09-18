@@ -152,6 +152,9 @@ async function getLatestTask(openid) {
 exports.main = async () => {
   try {
     const { OPENID } = cloud.getWXContext()
+    if (!OPENID) {
+      return failure('无法获取用户身份', 401)
+    }
     const teacher = await verifyTeacherRole(db, OPENID)
 
     if (!teacher) {

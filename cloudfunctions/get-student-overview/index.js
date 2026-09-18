@@ -105,6 +105,9 @@ async function getStudentSubmissions(openid, taskIds) {
 exports.main = async () => {
   try {
     const { OPENID } = cloud.getWXContext()
+    if (!OPENID) {
+      return failure('无法获取用户身份', 401)
+    }
     const user = await getCurrentUser(db, OPENID)
 
     if (!user) {
