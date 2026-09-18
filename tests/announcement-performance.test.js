@@ -1,0 +1,16 @@
+const assert = require('assert')
+const fs = require('fs')
+
+const source = fs.readFileSync('cloudfunctions/get-announcements/index.js', 'utf8')
+const service = fs.readFileSync('miniprogram/services/announcement.js', 'utf8')
+
+assert.match(source, /ANNOUNCEMENT_CACHE_TTL\s*=\s*60\s*\*\s*1000/)
+assert.match(source, /announcementCache\s*=\s*\{/)
+assert.match(source, /expiresAt/)
+assert.match(source, /\.field\(\{[\s\S]*announcement_id:\s*true/)
+assert.match(source, /ANNOUNCEMENT_FIELDS/)
+assert.match(source, /onlyPopup/)
+assert.match(source, /list:\s*onlyPopup\s*\?\s*\[\]/)
+assert.match(service, /only_popup:\s*true/)
+assert.match(service, /page:\s*1/)
+assert.match(service, /page_size:\s*20/)

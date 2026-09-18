@@ -505,7 +505,7 @@ node tests/miniprogram-performance-contract.test.js
 
   使用拥有至少 5 个班级的教师账号打开审核中心，首屏网络记录只能出现一次业务云函数调用；滚动加载每页只增加一次调用。
 
-- [ ] **步骤 8：提交**
+- [x] **步骤 8：提交**
 
 ```bash
 git add cloudfunctions/get-teacher-reviews miniprogram/services/api.js miniprogram/services/overview.js miniprogram/pages/teacher/pending/pending.js tests/teacher-reviews.test.js
@@ -528,7 +528,7 @@ git commit -m "性能: 合并教师审核中心请求"
 - 保持 `list`、`popup_list`、`total`、`page`、`page_size` 字段兼容。
 - `only_popup=true` 时只返回 `popup_list`，`list` 为空数组。
 
-- [ ] **步骤 1：写公告性能失败测试**
+- [x] **步骤 1：写公告性能失败测试**
 
 ```js
 const assert = require('assert')
@@ -539,11 +539,11 @@ assert.match(source, /\.field\(\{[\s\S]*announcement_id: true/)
 assert.match(source, /onlyPopup/)
 ```
 
-- [ ] **步骤 2：裁剪已读记录与公告字段**
+- [x] **步骤 2：裁剪已读记录与公告字段**
 
   `announcement_reads` 只投影 `announcement_id`；公告只投影客户端实际使用的标题、内容、可见范围、时间、排序和动作字段。
 
-- [ ] **步骤 3：增加 60 秒温实例缓存**
+- [x] **步骤 3：增加 60 秒温实例缓存**
 
 ```js
 const ANNOUNCEMENT_CACHE_TTL = 60 * 1000
@@ -555,7 +555,7 @@ let announcementCache = {
 
   缓存只保存已发布公告，不保存用户已读状态；每个请求仍单独读取当前用户的 `announcement_reads`。缓存过期后重新查询，确保公告变更最多延迟 60 秒生效。
 
-- [ ] **步骤 4：首页只请求弹窗数据**
+- [x] **步骤 4：首页只请求弹窗数据**
 
   `AnnouncementService.getPopupAnnouncements()` 固定传入 `{ only_popup: true, page: 1, page_size: 20 }`，通知中心继续调用普通列表模式。
 
@@ -567,6 +567,8 @@ node tests/subscribe-message-pages.test.js
 ```
 
   部署后观察至少三个活跃小时，`get-announcements` 每小时平均耗时应不高于 400ms，错误和超时保持为 0。
+
+  > 本地验证：公告性能契约与订阅消息页面回归已通过；三个活跃小时的线上监控验收需在部署后完成。
 
 - [ ] **步骤 6：提交**
 

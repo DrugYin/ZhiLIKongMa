@@ -18,6 +18,32 @@ const ANNOUNCEMENT_COLLECTION = 'announcements'
 const READ_COLLECTION = 'announcement_reads'
 const USER_COLLECTION = 'users'
 const PAGE_SIZE = 100
+const ANNOUNCEMENT_CACHE_TTL = 60 * 1000
+const ANNOUNCEMENT_FIELDS = {
+  _id: true,
+  title: true,
+  content: true,
+  display_mode: true,
+  visibility_type: true,
+  target_roles: true,
+  target_user_openids: true,
+  start_time: true,
+  end_time: true,
+  publish_time: true,
+  update_time: true,
+  create_time: true,
+  sort_order: true,
+  source_type: true,
+  notification_type: true,
+  action_label: true,
+  action_url: true,
+  related_type: true,
+  related_id: true
+}
+let announcementCache = {
+  expiresAt: 0,
+  list: []
+}
 
 async function getCurrentUser(openid) {
   const res = await db.collection(USER_COLLECTION)
@@ -31,6 +57,11 @@ async function getCurrentUser(openid) {
 }
 
 async function fetchPublishedAnnouncements() {
+  const now = Date.now()
+  if (announcementCache.expiresAt > now) {
+    return announcementCache.list
+  }
+
   const query = db.collection(ANNOUNCEMENT_COLLECTION).where({
     status: 'published',
     is_deleted: _.neq(true)
@@ -40,15 +71,24 @@ async function fetchPublishedAnnouncements() {
   const tasks = []
 
   for (let skip = 0; skip < total; skip += PAGE_SIZE) {
-    tasks.push(query.skip(skip).limit(PAGE_SIZE).get())
+    tasks.push(query.skip(skip).limit(PAGE_SIZE).field(ANNOUNCEMENT_FIELDS).get())
   }
 
   if (!tasks.length) {
+    announcementCache = {
+      expiresAt: now + ANNOUNCEMENT_CACHE_TTL,
+      list: []
+    }
     return []
   }
 
   const pages = await Promise.all(tasks)
-  return pages.reduce((result, item) => result.concat(item.data || []), [])
+  const list = pages.reduce((result, item) => result.concat(item.data || []), [])
+  announcementCache = {
+    expiresAt: now + ANNOUNCEMENT_CACHE_TTL,
+    list
+  }
+  return list
 }
 
 async function fetchReadAnnouncementIds(openid) {
@@ -61,6 +101,9 @@ async function fetchReadAnnouncementIds(openid) {
       user_openid: openid
     })
     .limit(1000)
+    .field({
+      announcement_id: true
+    })
     .get()
 
   return new Set((res.data || []).map((item) => item.announcement_id).filter(Boolean))
@@ -175,11 +218,12 @@ async function listAnnouncements(event, openid) {
     .map((item) => normalizeAnnouncementForClient(item, readIds))
     .sort(compareAnnouncement)
   const filteredList = onlyPopup ? visibleList.filter((item) => item.should_popup) : visibleList
+  const popupList = visibleList.filter((item) => item.should_popup)
   const start = (page - 1) * pageSize
 
   return success('获取公告成功', {
-    list: filteredList.slice(start, start + pageSize),
-    popup_list: visibleList.filter((item) => item.should_popup),
+    list: onlyPopup ? [] : filteredList.slice(start, start + pageSize),
+    popup_list: onlyPopup ? popupList.slice(start, start + pageSize) : popupList,
     total: filteredList.length,
     page,
     page_size: pageSize
