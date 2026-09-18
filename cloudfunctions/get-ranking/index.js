@@ -217,6 +217,28 @@ function markCurrentUser(list = [], currentOpenid = '') {
   }))
 }
 
+function normalizePositiveInteger(value, fallback, maximum = Number.MAX_SAFE_INTEGER) {
+  const parsed = Number(value)
+  if (!Number.isFinite(parsed) || parsed < 1) {
+    return fallback
+  }
+  return Math.min(Math.floor(parsed), maximum)
+}
+
+function normalizeRankingPagination(event = {}) {
+  const currentUserOnly = event.current_user_only === true || event.current_user_only === 'true'
+  const paginated = currentUserOnly
+    || Object.prototype.hasOwnProperty.call(event, 'page')
+    || Object.prototype.hasOwnProperty.call(event, 'page_size')
+
+  return {
+    page: normalizePositiveInteger(event.page, 1),
+    pageSize: paginated ? normalizePositiveInteger(event.page_size, 30, 50) : 0,
+    currentUserOnly,
+    paginated
+  }
+}
+
 function buildRankingData({
   rankType,
   rankingList,
@@ -225,22 +247,26 @@ function buildRankingData({
   page,
   pageSize,
   currentUserOnly,
+  paginated,
   snapshotTime = null
 }) {
   const markedList = markCurrentUser(rankingList, currentOpenid)
   const currentUserCard = markedList.find((item) => item.is_current_user) || null
-  const start = (page - 1) * pageSize
+  const start = paginated ? (page - 1) * pageSize : 0
+  const visibleList = currentUserOnly
+    ? []
+    : (paginated ? markedList.slice(start, start + pageSize) : markedList)
 
   return {
     rank_type: rankType,
     participant_count: Number(participantCount || markedList.length || 0),
     current_user: currentUserCard,
     top_three: currentUserOnly ? [] : markedList.slice(0, 3),
-    list: currentUserOnly ? [] : markedList.slice(start, start + pageSize),
-    page,
-    page_size: pageSize,
+    list: visibleList,
+    page: paginated ? page : 1,
+    page_size: paginated ? pageSize : markedList.length,
     total: markedList.length,
-    has_more: currentUserOnly ? false : start + pageSize < markedList.length,
+    has_more: currentUserOnly || !paginated ? false : start + pageSize < markedList.length,
     snapshot_time: snapshotTime
   }
 }
@@ -264,9 +290,7 @@ exports.main = async (event) => {
     }
 
     const rankType = normalizeRankType(event.rank_type)
-    const page = Math.max(Number(event.page || 1), 1)
-    const pageSize = Math.min(Math.max(Number(event.page_size || 30), 1), 50)
-    const currentUserOnly = event.current_user_only === true || event.current_user_only === 'true'
+    const pagination = normalizeRankingPagination(event)
     const snapshot = await getRankingSnapshot(rankType)
 
     if (snapshot && Array.isArray(snapshot.list)) {
@@ -275,9 +299,7 @@ exports.main = async (event) => {
         rankingList: snapshot.list,
         participantCount: snapshot.participant_count,
         currentOpenid: currentUser._openid,
-        page,
-        pageSize,
-        currentUserOnly,
+        ...pagination,
         snapshotTime: snapshot.generated_at || null
       }))
     }
@@ -297,9 +319,7 @@ exports.main = async (event) => {
       rankingList,
       participantCount: rankingList.length,
       currentOpenid: currentUser._openid,
-      page,
-      pageSize,
-      currentUserOnly
+      ...pagination
     }))
   } catch (error) {
     console.error('[get-ranking] Error:', error)

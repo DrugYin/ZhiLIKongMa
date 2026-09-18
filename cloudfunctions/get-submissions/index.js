@@ -40,6 +40,14 @@ function applySubmissionView(query, view) {
   return query.field(SUBMISSION_LIST_FIELDS)
 }
 
+function normalizeSubmissionView(event = {}) {
+  const requestedView = normalizeString(event.view)
+  if (requestedView === 'list' || requestedView === 'task_ids') {
+    return requestedView
+  }
+  return 'detail'
+}
+
 async function getTaskById(taskId) {
   try {
     const res = await db.collection('tasks').doc(taskId).get()
@@ -64,9 +72,7 @@ exports.main = async (event) => {
     const classId = normalizeString(event.class_id)
     const page = Math.max(Number(event.page || 1), 1)
     const pageSize = Math.min(Math.max(Number(event.page_size || 20), 1), 50)
-    const view = normalizeString(event.view) === 'detail'
-      ? 'detail'
-      : (normalizeString(event.view) === 'task_ids' ? 'task_ids' : 'list')
+    const view = normalizeSubmissionView(event)
     const queryData = {}
 
     if (role === 'teacher') {

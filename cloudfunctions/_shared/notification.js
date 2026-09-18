@@ -1,5 +1,10 @@
 const PAGE_SIZE = 100
 const ANNOUNCEMENT_COLLECTION = 'announcements'
+const STUDENT_ACTION_PATHS = {
+  task_detail: '/pages/student/task-manage/task-detail/task-detail',
+  submission_records: '/pages/student/task-manage/submission-records/submission-records',
+  class_detail: '/pages/student/class-manage/class-detail/class-detail'
+}
 
 function normalizeString(value) {
   return String(value || '').trim()
@@ -13,6 +18,20 @@ function normalizeOpenids(value) {
       .map((item) => normalizeString(item))
       .filter(Boolean)
   ))
+}
+
+function buildStudentActionUrl(routeName, query = {}) {
+  const route = STUDENT_ACTION_PATHS[normalizeString(routeName)] || ''
+  if (!route) {
+    return ''
+  }
+
+  const queryText = Object.entries(query)
+    .filter(([, value]) => value !== undefined && value !== null && normalizeString(value))
+    .map(([key, value]) => `${encodeURIComponent(key)}=${encodeURIComponent(normalizeString(value))}`)
+    .join('&')
+
+  return queryText ? `${route}?${queryText}` : route
 }
 
 async function fetchAll(query, pageSize = PAGE_SIZE) {
@@ -125,7 +144,7 @@ async function createClassTaskNotification(db, options = {}) {
     content: `${className}班级发布了新的任务《${taskTitle}》`,
     targetOpenids,
     notificationType: 'class_task_published',
-    actionUrl: `/subpackages/student/task-manage/task-detail/task-detail?task_id=${taskId}`,
+    actionUrl: buildStudentActionUrl('task_detail', { task_id: taskId }),
     relatedType: 'task',
     relatedId: taskId,
     senderOpenid: options.senderOpenid,
@@ -144,6 +163,7 @@ async function safeCreateNotification(factory, contextLabel) {
 }
 
 module.exports = {
+  buildStudentActionUrl,
   createSystemNotification,
   createClassTaskNotification,
   getClassStudentOpenids,

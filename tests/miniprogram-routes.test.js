@@ -4,6 +4,7 @@ const path = require('path')
 
 const root = path.resolve('miniprogram')
 const appJson = JSON.parse(fs.readFileSync(path.join(root, 'app.json'), 'utf8'))
+const AnnouncementService = require('../miniprogram/services/announcement')
 const mainPages = new Set((appJson.pages || []).map((page) => `/${page}`))
 const subpackages = Array.isArray(appJson.subpackages) ? appJson.subpackages : []
 
@@ -35,6 +36,10 @@ function walk(directory) {
 
 const routePattern = /\/(?:pages|subpackages)\/[A-Za-z0-9_./-]+/g
 const missingRoutes = []
+const legacyRouteFiles = new Set([
+  path.resolve('miniprogram/services/announcement.js'),
+  path.resolve('cloudfunctions/_shared/notification.js')
+])
 walk(root)
   .concat(walk(path.resolve('cloudfunctions')))
   .filter((file) => /\.(?:js|json|wxml)$/.test(file) && file !== path.join(root, 'app.json'))
@@ -42,6 +47,10 @@ walk(root)
     const source = fs.readFileSync(file, 'utf8')
     const matches = source.match(routePattern) || []
     matches.forEach((route) => {
+      const migratedRoute = AnnouncementService.resolveActionUrl(route).split('?')[0]
+      if (legacyRouteFiles.has(path.resolve(file)) && declaredRoutes.has(migratedRoute)) {
+        return
+      }
       if (!declaredRoutes.has(route)) {
         missingRoutes.push(`${path.relative(process.cwd(), file)} -> ${route}`)
       }

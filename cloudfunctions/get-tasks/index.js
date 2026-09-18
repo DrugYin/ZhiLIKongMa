@@ -49,6 +49,10 @@ function applyTaskView(query, view) {
   return view === 'detail' ? query : query.field(TASK_LIST_FIELDS);
 }
 
+function normalizeTaskView(event = {}) {
+  return normalizeString(event.view) === 'list' ? 'list' : 'detail';
+}
+
 function normalizeTaskType(value) {
   const taskType = normalizeString(value);
   return TASK_TYPES.has(taskType) ? taskType : '';
@@ -304,7 +308,7 @@ exports.main = async (event) => {
     const sortField = normalizeSortField(event.sort_by);
     const sortOrder = normalizeSortOrder(event.sort_order);
     const countOnly = event.count_only === true || event.count_only === 'true';
-    const view = normalizeString(event.view) === 'detail' ? 'detail' : 'list';
+    const view = normalizeTaskView(event);
 
     if (requestedRole === 'teacher') {
       const teacher = await verifyTeacherRole(db, OPENID);

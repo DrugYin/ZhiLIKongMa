@@ -1,6 +1,35 @@
 const { callFunction } = require('./api')
 
+const LEGACY_ROUTE_MAP = {
+  '/pages/student/task-manage/task-detail/task-detail': '/subpackages/student/task-manage/task-detail/task-detail',
+  '/pages/student/task-manage/submission-edit/submission-edit': '/subpackages/student/task-manage/submission-edit/submission-edit',
+  '/pages/student/task-manage/submission-records/submission-records': '/subpackages/student/task-manage/submission-records/submission-records',
+  '/pages/student/class-manage/class-detail/class-detail': '/subpackages/student/class-manage/class-detail/class-detail',
+  '/pages/student/class-manage/join-confirm/join-confirm': '/subpackages/student/class-manage/join-confirm/join-confirm',
+  '/pages/student/points-log/points-log': '/subpackages/student/points-log/points-log',
+  '/pages/student/lottery/lottery': '/subpackages/student/lottery/lottery',
+  '/pages/student/lottery/draw-records/draw-records': '/subpackages/student/lottery/draw-records/draw-records',
+  '/pages/teacher/class-manage/class-detail/class-detail': '/subpackages/teacher/class-manage/class-detail/class-detail',
+  '/pages/teacher/class-manage/class-edit/class-edit': '/subpackages/teacher/class-manage/class-edit/class-edit',
+  '/pages/teacher/task-manage/task-detail/task-detail': '/subpackages/teacher/task-manage/task-detail/task-detail',
+  '/pages/teacher/task-manage/task-edit/task-edit': '/subpackages/teacher/task-manage/task-edit/task-edit',
+  '/pages/common/announcements/announcements': '/subpackages/common/announcements/announcements'
+}
+
 class AnnouncementService {
+  static resolveActionUrl(actionUrl = '') {
+    const url = String(actionUrl || '').trim()
+    if (!url) {
+      return ''
+    }
+
+    const normalizedUrl = url.startsWith('/') ? url : `/${url}`
+    const [baseUrl, ...queryParts] = normalizedUrl.split('?')
+    const mappedBaseUrl = LEGACY_ROUTE_MAP[baseUrl] || baseUrl
+    const queryText = queryParts.join('?')
+    return queryText ? `${mappedBaseUrl}?${queryText}` : mappedBaseUrl
+  }
+
   static parseQuery(queryText = '') {
     return String(queryText || '')
       .split('&')
@@ -62,12 +91,11 @@ class AnnouncementService {
   }
 
   static openAction(announcement = {}) {
-    const url = String(announcement.action_url || '').trim()
-    if (!url) {
+    const normalizedUrl = this.resolveActionUrl(announcement.action_url)
+    if (!normalizedUrl) {
       return false
     }
 
-    const normalizedUrl = url.startsWith('/') ? url : `/${url}`
     const baseUrl = normalizedUrl.split('?')[0]
 
     if (baseUrl === '/pages/teacher/pending/pending' && normalizedUrl.includes('?')) {

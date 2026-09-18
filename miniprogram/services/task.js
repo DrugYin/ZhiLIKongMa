@@ -18,7 +18,10 @@ class TaskService {
   }
 
   static async getTasks(params = {}) {
-    const res = await taskApi.getTasks(params);
+    const res = await taskApi.getTasks({
+      view: 'list',
+      ...params
+    });
     if (!res.success) {
       throw new Error(res.message || '获取任务列表失败');
     }
@@ -34,7 +37,10 @@ class TaskService {
   }
 
   static async getSubmissions(params = {}) {
-    const res = await taskApi.getSubmissions(params)
+    const res = await taskApi.getSubmissions({
+      view: 'list',
+      ...params
+    })
     if (!res.success) {
       throw new Error(res.message || '获取提交记录失败')
     }

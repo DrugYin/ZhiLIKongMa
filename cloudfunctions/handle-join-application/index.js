@@ -1,7 +1,7 @@
 const cloud = require('wx-server-sdk');
 const { getCurrentUser } = require('/opt/auth');
 const { writeOperationLog } = require('/opt/operation-log');
-const { createSystemNotification, safeCreateNotification } = require('/opt/notification');
+const { buildStudentActionUrl, createSystemNotification, safeCreateNotification } = require('/opt/notification');
 
 cloud.init({
   env: cloud.DYNAMIC_CURRENT_ENV
@@ -172,7 +172,7 @@ exports.main = async (event) => {
       targetOpenid: application.student_openid,
       notificationType: 'class_join_reviewed',
       actionUrl: action === 'approve'
-        ? `/subpackages/student/class-manage/class-detail/class-detail?class_id=${classInfo._id}`
+        ? buildStudentActionUrl('class_detail', { class_id: classInfo._id })
         : '/pages/student/class-manage/class-manage',
       relatedType: 'class_join_application',
       relatedId: applicationId,
