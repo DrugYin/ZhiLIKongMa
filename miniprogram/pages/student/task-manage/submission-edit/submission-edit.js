@@ -99,7 +99,8 @@ Page({
         TaskService.getSubmissions({
           task_id: this.data.taskId,
           page: 1,
-          page_size: 1
+          page_size: 1,
+          view: 'detail'
         })
       ])
 

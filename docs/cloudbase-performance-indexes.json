@@ -1,0 +1,101 @@
+{
+  "environment": "zhi-li-kong-ma-7gy2aqcr1add21a7",
+  "verified_at": "2026-09-18",
+  "collections": {
+    "tasks": [
+      {
+        "IndexName": "idx_teacher_deleted_update",
+        "MgoKeySchema": {
+          "MgoIsUnique": false,
+          "MgoIndexKeys": [
+            { "Name": "teacher_openid", "Direction": "1" },
+            { "Name": "is_deleted", "Direction": "1" },
+            { "Name": "update_time", "Direction": "-1" }
+          ]
+        }
+      },
+      {
+        "IndexName": "idx_status_type_visibility_publish",
+        "MgoKeySchema": {
+          "MgoIsUnique": false,
+          "MgoIndexKeys": [
+            { "Name": "status", "Direction": "1" },
+            { "Name": "task_type", "Direction": "1" },
+            { "Name": "visibility", "Direction": "1" },
+            { "Name": "publish_time", "Direction": "-1" }
+          ]
+        }
+      },
+      {
+        "IndexName": "idx_class_status_publish",
+        "MgoKeySchema": {
+          "MgoIsUnique": false,
+          "MgoIndexKeys": [
+            { "Name": "class_id", "Direction": "1" },
+            { "Name": "status", "Direction": "1" },
+            { "Name": "publish_time", "Direction": "-1" }
+          ]
+        }
+      }
+    ],
+    "submissions": [
+      {
+        "IndexName": "idx_teacher_status_submit",
+        "MgoKeySchema": {
+          "MgoIsUnique": false,
+          "MgoIndexKeys": [
+            { "Name": "teacher_openid", "Direction": "1" },
+            { "Name": "status", "Direction": "1" },
+            { "Name": "submit_time", "Direction": "-1" }
+          ]
+        }
+      },
+      {
+        "IndexName": "idx_student_submit",
+        "MgoKeySchema": {
+          "MgoIsUnique": false,
+          "MgoIndexKeys": [
+            { "Name": "student_openid", "Direction": "1" },
+            { "Name": "submit_time", "Direction": "-1" }
+          ]
+        }
+      },
+      {
+        "IndexName": "idx_student_task",
+        "MgoKeySchema": {
+          "MgoIsUnique": false,
+          "MgoIndexKeys": [
+            { "Name": "student_openid", "Direction": "1" },
+            { "Name": "task_id", "Direction": "1" }
+          ]
+        }
+      }
+    ],
+    "classes": [
+      {
+        "IndexName": "idx_teacher_status_update",
+        "MgoKeySchema": {
+          "MgoIsUnique": false,
+          "MgoIndexKeys": [
+            { "Name": "teacher_openid", "Direction": "1" },
+            { "Name": "status", "Direction": "1" },
+            { "Name": "update_time", "Direction": "-1" }
+          ]
+        }
+      }
+    ],
+    "class_join_applications": [
+      {
+        "IndexName": "idx_class_status_create",
+        "MgoKeySchema": {
+          "MgoIsUnique": false,
+          "MgoIndexKeys": [
+            { "Name": "class_id", "Direction": "1" },
+            { "Name": "status", "Direction": "1" },
+            { "Name": "create_time", "Direction": "-1" }
+          ]
+        }
+      }
+    ]
+  }
+}

@@ -81,7 +81,7 @@ Page({
 
       const [taskInfo, submissionRes, stats] = await Promise.all([
         this.data.taskId ? TaskService.getTaskDetail(this.data.taskId) : Promise.resolve(null),
-        TaskService.getSubmissions(requestParams),
+        TaskService.getSubmissions({ ...requestParams, view: 'detail' }),
         this.loadStats()
       ])
 
@@ -229,7 +229,7 @@ Page({
         page_size: this.data.pageSize
       })
 
-      const submissionRes = await TaskService.getSubmissions(requestParams)
+      const submissionRes = await TaskService.getSubmissions({ ...requestParams, view: 'detail' })
       const records = this.data.records.concat(this.formatSubmissionList(submissionRes.list))
 
       this.setData({

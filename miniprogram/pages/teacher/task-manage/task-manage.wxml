@@ -183,7 +183,7 @@
               </view>
               <view class="meta-item">
                 <text class="meta-label">附件情况</text>
-                <text class="meta-value">{{item.imageCountText}} / {{item.fileCountText}}</text>
+                <text class="meta-value">{{item.materialSummaryText}}</text>
               </view>
             </view>
 

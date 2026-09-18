@@ -1,6 +1,6 @@
 const cloud = require('wx-server-sdk');
 const { getCurrentUser } = require('/opt/auth');
-const { getAllMembershipsByStudent, getClassesByIds } = require('/opt/membership');
+const { chunkList, getAllMembershipsByStudent } = require('/opt/membership');
 const { success, failure } = require('/opt/response');
 
 cloud.init({
@@ -19,6 +19,34 @@ const ALLOWED_SORT_FIELDS = new Set([
   'class_name',
   'member_count'
 ]);
+const CLASS_LIST_FIELDS = {
+  _id: true,
+  class_name: true,
+  class_code: true,
+  description: true,
+  teacher_openid: true,
+  teacher_name: true,
+  project_code: true,
+  project_name: true,
+  member_count: true,
+  max_members: true,
+  class_time: true,
+  location: true,
+  status: true,
+  create_time: true,
+  update_time: true
+};
+
+async function getClassListByIds(classIds = []) {
+  const requests = chunkList(classIds, CLASS_BATCH_SIZE).map((batchIds) => (
+    db.collection('classes').where({
+      _id: _.in(batchIds)
+    }).field(CLASS_LIST_FIELDS).get()
+  ));
+  if (!requests.length) return [];
+  const pages = await Promise.all(requests);
+  return pages.reduce((result, page) => result.concat(page.data || []), []);
+}
 
 function normalizeSortField(sortField) {
   const value = String(sortField || DEFAULT_SORT_FIELD).trim();
@@ -55,6 +83,7 @@ exports.main = async (event) => {
         .orderBy(sortField, sortOrder)
         .skip((page - 1) * pageSize)
         .limit(pageSize)
+        .field(CLASS_LIST_FIELDS)
         .get();
 
       return success('获取班级列表成功', {
@@ -104,7 +133,7 @@ exports.main = async (event) => {
       });
     }
 
-    const classInfoList = await getClassesByIds(db, _, classIds, CLASS_BATCH_SIZE);
+    const classInfoList = await getClassListByIds(classIds);
     const classMap = classInfoList.reduce((result, item) => {
       if (!item || !item._id) {
         return result;

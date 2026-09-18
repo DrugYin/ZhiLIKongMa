@@ -24,6 +24,30 @@ const ALLOWED_SORT_FIELDS = new Set([
   'difficulty',
   'points'
 ]);
+const TASK_LIST_FIELDS = {
+  _id: true,
+  title: true,
+  description: true,
+  project_code: true,
+  project_name: true,
+  class_id: true,
+  class_name: true,
+  task_type: true,
+  visibility: true,
+  status: true,
+  points: true,
+  difficulty: true,
+  publish_time: true,
+  deadline: true,
+  deadline_date: true,
+  deadline_time: true,
+  create_time: true,
+  update_time: true
+};
+
+function applyTaskView(query, view) {
+  return view === 'detail' ? query : query.field(TASK_LIST_FIELDS);
+}
 
 function normalizeTaskType(value) {
   const taskType = normalizeString(value);
@@ -170,15 +194,15 @@ async function buildTaskQueryState(queryData, count) {
   };
 }
 
-async function ensureTaskBuffer(state, sortField, sortOrder, pageSize) {
+async function ensureTaskBuffer(state, sortField, sortOrder, pageSize, view) {
   if (!state || state.exhausted || state.index < state.buffer.length) {
     return;
   }
 
-  const listRes = await state.query
+  const listRes = await applyTaskView(state.query
     .orderBy(sortField, sortOrder)
     .skip(state.skip)
-    .limit(pageSize)
+    .limit(pageSize), view)
     .get();
 
   state.buffer = listRes.data || [];
@@ -187,7 +211,7 @@ async function ensureTaskBuffer(state, sortField, sortOrder, pageSize) {
   state.exhausted = state.buffer.length < pageSize || state.skip >= state.count;
 }
 
-async function getStudentTaskPage(queryConfigs, sortField, sortOrder, page, pageSize, countOnly) {
+async function getStudentTaskPage(queryConfigs, sortField, sortOrder, page, pageSize, countOnly, view) {
   if (!queryConfigs.length) {
     return {
       list: [],
@@ -224,7 +248,7 @@ async function getStudentTaskPage(queryConfigs, sortField, sortOrder, page, page
   let mergedIndex = 0;
 
   while (list.length < pageSize) {
-    await Promise.all(states.map((state) => ensureTaskBuffer(state, sortField, sortOrder, pageSize)));
+    await Promise.all(states.map((state) => ensureTaskBuffer(state, sortField, sortOrder, pageSize, view)));
 
     const candidates = states
       .filter((state) => state.index < state.buffer.length)
@@ -280,6 +304,7 @@ exports.main = async (event) => {
     const sortField = normalizeSortField(event.sort_by);
     const sortOrder = normalizeSortOrder(event.sort_order);
     const countOnly = event.count_only === true || event.count_only === 'true';
+    const view = normalizeString(event.view) === 'detail' ? 'detail' : 'list';
 
     if (requestedRole === 'teacher') {
       const teacher = await verifyTeacherRole(db, OPENID);
@@ -321,10 +346,10 @@ exports.main = async (event) => {
         });
       }
 
-      const listRes = await query
+      const listRes = await applyTaskView(query
         .orderBy(sortField, sortOrder)
         .skip((page - 1) * pageSize)
-        .limit(pageSize)
+        .limit(pageSize), view)
         .get();
 
       return success('获取任务列表成功', {
@@ -349,7 +374,8 @@ exports.main = async (event) => {
       sortOrder,
       page,
       pageSize,
-      countOnly
+      countOnly,
+      view
     );
     const list = studentTaskResult.list.filter((item) => canStudentAccessTask(item, joinedClassIds));
 

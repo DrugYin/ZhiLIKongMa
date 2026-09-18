@@ -570,7 +570,7 @@ node tests/subscribe-message-pages.test.js
 
   > 本地验证：公告性能契约与订阅消息页面回归已通过；三个活跃小时的线上监控验收需在部署后完成。
 
-- [ ] **步骤 6：提交**
+- [x] **步骤 6：提交**
 
 ```bash
 git add cloudfunctions/get-announcements/index.js miniprogram/services/announcement.js tests/announcement-performance.test.js tests/subscribe-message-pages.test.js
@@ -595,7 +595,7 @@ git commit -m "性能: 精简公告查询与弹窗加载"
 - `get-submissions` 新增可选参数 `view=list|task_ids`，默认 `list`。
 - 既有调用不传新参数时保持兼容。
 
-- [ ] **步骤 1：写字段裁剪失败测试**
+- [x] **步骤 1：写字段裁剪失败测试**
 
 ```js
 const assert = require('assert')
@@ -609,17 +609,19 @@ assert.match(submissions, /SUBMISSION_LIST_FIELDS/)
 assert.match(submissions, /view === 'task_ids'/)
 ```
 
-- [ ] **步骤 2：为任务列表增加字段白名单**
+- [x] **步骤 2：为任务列表增加字段白名单**
 
   列表保留 `_id`、标题、简述、项目、班级、类型、可见性、状态、积分、难度、发布时间、截止时间和更新时间；图片、附件、长正文只由详情接口返回。
 
-- [ ] **步骤 3：为提交列表增加字段白名单**
+- [x] **步骤 3：为提交列表增加字段白名单**
 
   列表保留 `_id`、任务/班级/学生标识与名称、状态、分数、积分、提交和审核时间；提交正文、图片、附件和反馈附件只在详情模式返回。`task_ids` 模式仅返回 `task_id`。
 
-- [ ] **步骤 4：只读核对线上索引**
+- [x] **步骤 4：只读核对线上索引**
 
   使用 CloudBase MCP 的 `readNoSqlDatabaseStructure(action="listIndexes")` 分别读取 `tasks`、`submissions`、`classes`、`class_join_applications`、`class_memberships`、`announcements`、`announcement_reads`。
+
+  > 2026-09-18 回读结果：七个集合均已核对。`announcements` 已有 `status + is_deleted + sort_order + publish_time`，`announcement_reads` 已有 `user_openid + read_time` 与唯一的 `announcement_id + user_openid`，`class_memberships` 已有 `student_openid` 和唯一的 `class_id + student_openid`；下表八个目标复合索引均无同等索引。待创建参数已保存到 `docs/cloudbase-performance-indexes.json`。
 
 - [ ] **步骤 5：新增复合索引**
 
@@ -638,7 +640,7 @@ assert.match(submissions, /view === 'task_ids'/)
 
   索引字段顺序必须与实际 `where + orderBy` 查询一致；创建后回读并记录索引名称、字段和方向。
 
-- [ ] **步骤 6：运行测试**
+- [x] **步骤 6：运行测试**
 
 ```powershell
 node tests/list-payload-performance.test.js

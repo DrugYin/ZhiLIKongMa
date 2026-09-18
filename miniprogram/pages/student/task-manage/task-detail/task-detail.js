@@ -126,7 +126,8 @@ Page({
       const response = await TaskService.getSubmissions({
         task_id: taskId,
         page: 1,
-        page_size: 2
+        page_size: 2,
+        view: 'detail'
       })
 
       return {

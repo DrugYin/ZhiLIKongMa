@@ -11,6 +11,34 @@ cloud.init({
 
 const db = cloud.database()
 const PAGE_SIZE = 100
+const SUBMISSION_LIST_FIELDS = {
+  _id: true,
+  task_id: true,
+  task_title: true,
+  class_id: true,
+  class_name: true,
+  student_openid: true,
+  student_name: true,
+  teacher_openid: true,
+  status: true,
+  submit_no: true,
+  score: true,
+  points_earned: true,
+  is_overtime: true,
+  submit_time: true,
+  review_time: true,
+  update_time: true,
+  create_time: true
+}
+const SUBMISSION_TASK_ID_FIELDS = {
+  task_id: true
+}
+
+function applySubmissionView(query, view) {
+  if (view === 'detail') return query
+  if (view === 'task_ids') return query.field(SUBMISSION_TASK_ID_FIELDS)
+  return query.field(SUBMISSION_LIST_FIELDS)
+}
 
 async function getTaskById(taskId) {
   try {
@@ -36,6 +64,9 @@ exports.main = async (event) => {
     const classId = normalizeString(event.class_id)
     const page = Math.max(Number(event.page || 1), 1)
     const pageSize = Math.min(Math.max(Number(event.page_size || 20), 1), 50)
+    const view = normalizeString(event.view) === 'detail'
+      ? 'detail'
+      : (normalizeString(event.view) === 'task_ids' ? 'task_ids' : 'list')
     const queryData = {}
 
     if (role === 'teacher') {
@@ -100,10 +131,10 @@ exports.main = async (event) => {
       })
     }
 
-    const listRes = await query
+    const listRes = await applySubmissionView(query
       .orderBy('submit_time', 'desc')
       .skip((page - 1) * pageSize)
-      .limit(pageSize)
+      .limit(pageSize), view)
       .get()
 
     return success('获取提交记录成功', {

@@ -395,8 +395,7 @@ Page({
       deadlineText: taskDeadline.formatTaskDeadline(item),
       publishTimeText: item.publish_time ? this.formatDateTime(item.publish_time) : '待发布',
       updateTimeText: item.update_time ? this.formatDateTime(item.update_time) : '待更新',
-      imageCountText: `${Array.isArray(item.images) ? item.images.length : 0} 张图片`,
-      fileCountText: `${Array.isArray(item.files) ? item.files.length : 0} 个附件`
+      materialSummaryText: '进入详情查看'
     }
   },
 

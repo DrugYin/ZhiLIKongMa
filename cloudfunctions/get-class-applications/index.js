@@ -7,6 +7,21 @@ cloud.init({
 
 const db = cloud.database();
 const _ = db.command;
+const APPLICATION_LIST_FIELDS = {
+  _id: true,
+  class_id: true,
+  class_code: true,
+  class_name: true,
+  student_openid: true,
+  student_name: true,
+  apply_reason: true,
+  status: true,
+  review_remark: true,
+  review_by: true,
+  review_time: true,
+  create_time: true,
+  update_time: true
+};
 
 function normalizeStatus(value) {
   const status = String(value || '').trim();
@@ -88,21 +103,7 @@ exports.main = async (event) => {
       .orderBy('create_time', 'desc')
       .skip((page - 1) * pageSize)
       .limit(pageSize)
-      .field({
-        _id: true,
-        class_id: true,
-        class_code: true,
-        class_name: true,
-        student_openid: true,
-        student_name: true,
-        apply_reason: true,
-        status: true,
-        review_remark: true,
-        review_by: true,
-        review_time: true,
-        create_time: true,
-        update_time: true
-      })
+      .field(APPLICATION_LIST_FIELDS)
       .get();
 
     const openids = Array.from(new Set(
